@@ -4,9 +4,16 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
+# FOR LOCAL
+# MYSQL_HOST = "localhost"
+# MYSQL_USER = "root"
+# MYSQL_PASSWORD = ""
+# MYSQL_DB = "syn_billing"
+
+# FOR SERVER
 MYSQL_HOST = "localhost"
 MYSQL_USER = "root"
-MYSQL_PASSWORD = ""
+MYSQL_PASSWORD = "root"
 MYSQL_DB = "syn_billing"
 
 db_config = {
