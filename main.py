@@ -69,3 +69,16 @@ def login(data_login:UserLogin):
         res_dt = {"suc": 0, "msg": "No user found"}
 
     return res_dt
+
+#Select location
+@app.get('/api/location')
+async def show_location():
+    conn = connect()
+    cursor = conn.cursor()
+    query = "SELECT 'sl_no', 'location_name' FROM md_location"
+    cursor.execute(query)
+    records = cursor.fetchall()
+    result = createResponse(records, cursor.column_names, 1)
+    conn.close()
+    cursor.close()
+    return result
