@@ -75,7 +75,33 @@ def login(data_login:UserLogin):
 async def show_location():
     conn = connect()
     cursor = conn.cursor()
-    query = "SELECT 'sl_no', 'location_name' FROM md_location"
+    query = "SELECT sl_no, location_name FROM md_location"
+    cursor.execute(query)
+    records = cursor.fetchall()
+    result = createResponse(records, cursor.column_names, 1)
+    conn.close()
+    cursor.close()
+    return result
+
+#Select items
+@app.get('/api/items/{comp_id}')
+async def show_items(comp_id:int):
+    conn = connect()
+    cursor = conn.cursor()
+    query = f"SELECT a.com_id, a.id, a.item_name FROM md_items a, md_company b WHERE a.com_id=b.id AND a.com_id={comp_id}"
+    cursor.execute(query)
+    records = cursor.fetchall()
+    result = createResponse(records, cursor.column_names, 1)
+    conn.close()
+    cursor.close()
+    return result
+
+#Select items with rate
+@app.get('/api/item_rate/{item_id}')
+async def show_item_rate(item_id:int):
+    conn = connect()
+    cursor = conn.cursor()
+    query = f"SELECT a.id, a.item_name, c.price, c.discount, c.sale_price, c.hsn_code, c.cgst, c.sgst FROM md_items a, md_company b, md_item_rate c WHERE a.com_id=b.id AND a.id=c.item_id AND a.id={item_id}"
     cursor.execute(query)
     records = cursor.fetchall()
     result = createResponse(records, cursor.column_names, 1)
