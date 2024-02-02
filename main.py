@@ -170,6 +170,19 @@ async def show_items(comp_id:int):
     cursor.close()
     return result
 
+# Receipt settings
+@app.get('/api/receipt_settings/{comp_id}')
+async def show_items(comp_id:int):
+    conn = connect()
+    cursor = conn.cursor()
+    query = f"SELECT a.*, b.* FROM md_receipt_settings a, md_header_footer b WHERE a.comp_id=b.comp_id AND a.comp_id={comp_id}"
+    cursor.execute(query)
+    records = cursor.fetchall()
+    result = createResponse(records, cursor.column_names, 1)
+    conn.close()
+    cursor.close()
+    return result
+
 #Select items with rate
 '''@app.get('/api/item_rate/{item_id}')
 async def show_item_rate(item_id:int):
