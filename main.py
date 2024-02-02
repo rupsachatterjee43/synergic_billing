@@ -125,7 +125,7 @@ def OTP(phone_no:int):
 def login(data_login:UserLogin):
     conn = connect()
     cursor = conn.cursor()
-    query = f"SELECT a.comp_id, c.company_name, a.br_id, b.branch_name, a.user_id, a.user_name, a.phone_no, a.email_id, a.device_id, a.password, a.created_by, a.created_dt, a.active_flag FROM md_user a, md_branch b, md_company c WHERE a.user_id='{data_login.user_id}' AND b.id=a.br_id AND c.id=a.comp_id"
+    query = f"SELECT a.*, b.*, c.* FROM md_user a, md_branch b, md_company c WHERE a.user_id='{data_login.user_id}' AND b.id=a.br_id AND c.id=a.comp_id AND a.active_flag='Y'"
     cursor.execute(query)
     print(cursor.rowcount)
     records = cursor.fetchone()
