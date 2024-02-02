@@ -85,13 +85,10 @@ def verify(phone_no:int):
     # result = createResponse(records, cursor.column_names, 1)
     conn.close()
     cursor.close()
-    if records==[(0,)] :
-        data=-1
-    else:
-        data=records
+    
 
-    if data==-1 :
-        resData= {"status":0, "data":"Already registered or invalid phone"}
+    if records==[(0,)]:
+        resData= {"status":-1, "data":"Already registered or invalid phone"}
     else:
         resData= {
         "status":1,
@@ -106,7 +103,7 @@ def register(data:CreatePIN):
     haspass=get_hashed_password(password)
     conn = connect()
     cursor = conn.cursor()
-    query = f"UPDATE md_user SET password='{haspass}' where user_id='{data.phone_no}'"
+    query = f"UPDATE md_user SET password='{haspass}', active_flag='Y' where user_id='{data.phone_no}'"
     cursor.execute(query)
     conn.commit()
     conn.close()
@@ -119,7 +116,12 @@ def register(data:CreatePIN):
         "status":0,
         "data":"invalid phone"
         }
-    return resData    
+    return resData 
+
+@app.post('/api/otp/{phone_no}') 
+def OTP(phone_no:int):
+    return {"status":1, "data":"1234"}
+
     
 @app.post('/api/login')
 def login(data_login:UserLogin):
