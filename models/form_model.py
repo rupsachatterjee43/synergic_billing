@@ -16,7 +16,7 @@ class CreatePIN(BaseModel):
 
 class UserLogin(BaseModel):
     user_id:str
-    password:str
+    PIN:str
 
 class Receipt(BaseModel):
     receipt_no:int

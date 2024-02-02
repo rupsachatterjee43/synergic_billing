@@ -137,10 +137,10 @@ def login(data_login:UserLogin):
         result = createResponse(records, cursor.column_names, 0)
         # print(result)
         res_dt = ''
-        if(verify_password(data_login.password, result['password'])):
+        if(verify_password(data_login.PIN, result['password'])):
             res_dt = {"suc": 1, "msg": result}
         else:
-            res_dt = {"suc": 0, "msg": "Please check your userid or password"}
+            res_dt = {"suc": 0, "msg": "Please check your userid or PIN"}
     else:
         res_dt = {"suc": 0, "msg": "No user found"}
 
