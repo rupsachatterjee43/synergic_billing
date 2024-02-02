@@ -10,9 +10,9 @@ from datetime import date
 #     device_id:str
 #     password:str
 
-# class VerifyUser(BaseModel):
-#     phone_no:str
-#     active_flag:str
+class CreatePIN(BaseModel):
+    PIN:str
+    phone_no:str
 
 class UserLogin(BaseModel):
     user_id:str

@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 from config.database import connect
 from models.master_model import createResponse
-from models.form_model import UserLogin,Receipt
+from models.form_model import UserLogin,Receipt,CreatePIN
 from datetime import datetime
 from utils import get_hashed_password, verify_password
 
@@ -86,6 +86,11 @@ def verify(phone_no:int):
     conn.close()
     cursor.close()
     if records==[(0,)] :
+        data=-1
+    else:
+        data=records
+
+    if data==-1 :
         resData= {"status":0, "data":"Already registered or invalid phone"}
     else:
         resData= {
@@ -93,7 +98,28 @@ def verify(phone_no:int):
         "data":"registered successfully"
         }
     return resData 
-    
+
+# Create PIN
+@app.post('/api/create_pin')
+def register(data:CreatePIN):
+    password=data.PIN
+    haspass=get_hashed_password(password)
+    conn = connect()
+    cursor = conn.cursor()
+    query = f"UPDATE md_user SET password='{haspass}' where user_id='{data.phone_no}'"
+    cursor.execute(query)
+    conn.commit()
+    conn.close()
+    cursor.close()
+    print(cursor.rowcount)
+    if cursor.rowcount==1:
+        resData= {"status":1, "data":"Pin inserted"}
+    else:
+        resData= {
+        "status":0,
+        "data":"invalid phone"
+        }
+    return resData    
     
 @app.post('/api/login')
 def login(data_login:UserLogin):
