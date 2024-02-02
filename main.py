@@ -85,8 +85,6 @@ def verify(phone_no:int):
     # result = createResponse(records, cursor.column_names, 1)
     conn.close()
     cursor.close()
-    
-
     if records==[(0,)]:
         resData= {"status":-1, "data":"Already registered or invalid phone"}
     else:
@@ -164,7 +162,7 @@ async def show_location():
 async def show_items(comp_id:int):
     conn = connect()
     cursor = conn.cursor()
-    query = f"SELECT a.com_id, a.id, a.item_name FROM md_items a, md_company b WHERE a.com_id=b.id AND a.com_id={comp_id}"
+    query = f"SELECT a.*, b.* FROM md_items a, md_item_rate b WHERE a.id=b.item_id AND a.com_id={comp_id}"
     cursor.execute(query)
     records = cursor.fetchall()
     result = createResponse(records, cursor.column_names, 1)
@@ -173,7 +171,7 @@ async def show_items(comp_id:int):
     return result
 
 #Select items with rate
-@app.get('/api/item_rate/{item_id}')
+'''@app.get('/api/item_rate/{item_id}')
 async def show_item_rate(item_id:int):
     conn = connect()
     cursor = conn.cursor()
@@ -183,7 +181,7 @@ async def show_item_rate(item_id:int):
     result = createResponse(records, cursor.column_names, 1)
     conn.close()
     cursor.close()
-    return result
+    return result'''
 
 # Item Sale
 @app.post('/api/saleinsert')
