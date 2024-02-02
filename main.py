@@ -63,10 +63,16 @@ def verify(phone_no:int):
     result = createResponse(records, cursor.column_names, 1)
     conn.close()
     cursor.close()
+    # return result
     if records==[(0,)]:
-        return "invalid phone"
+       resData= {"status":0, "data":"invalid phone"}
     else:
-        return "valid phone no."
+        resData= {
+        "status":1,
+        "data":"valid phone no."
+        }
+    return resData
+     
    
 @app.post('/api/verify_active/{phone_no}')
 def verify(phone_no:int):
@@ -80,9 +86,13 @@ def verify(phone_no:int):
     conn.close()
     cursor.close()
     if records==[(0,)] :
-        return "Already registered or invalid phone" 
+        resData= {"status":0, "data":"Already registered or invalid phone"}
     else:
-        return "registered successfully"  
+        resData= {
+        "status":1,
+        "data":"registered successfully"
+        }
+    return resData 
     
     
 @app.post('/api/login')
