@@ -3,8 +3,9 @@ from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 from config.database import connect
 from models.master_model import createResponse
-from models.form_model import UserRegistration,UserLogin
+from models.form_model import UserLogin,Receipt
 from datetime import datetime
+from utils import get_hashed_password, verify_password
 
 app = FastAPI()
 
@@ -29,23 +30,60 @@ def index():
     return "Welcome to the billing app"
 
 # user registration
-@app.post('/api/register')
-def register(data:UserRegistration):
-    current_datetime = datetime.now()
-    formatted_datetime = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
-    print(formatted_datetime)
+# @app.post('/api/register')
+# def register(data:UserRegistration):
+#     current_datetime = datetime.now()
+#     formatted_datetime = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
+#     print(formatted_datetime)
+#     password=data.password
+#     haspass=get_hashed_password(password)
+#     conn = connect()
+#     cursor = conn.cursor()
+#     query = f"INSERT INTO md_user (comp_id, br_id, user_name, user_id, phone_no, email_id, device_id, password, created_by, created_dt) VALUES('{data.comp_id}','{data.br_id}','{data.user_name}','{data.phone_no}','{data.phone_no}','{data.email_id}', '{data.device_id}', '{haspass}', '{data.user_name}', '{formatted_datetime}')"
+#     cursor.execute(query)
+#     conn.commit()
+#     conn.close()
+#     cursor.close()
+#     print(cursor.rowcount)
+#     if cursor.rowcount==1:
+#         return "registered successfully"
+#     else:
+#         return "invalid date!"
+
+
+# Verify Phone no and active status
+@app.post('/api/verify_phone/{phone_no}')
+def verify(phone_no:int):
     conn = connect()
     cursor = conn.cursor()
-    query = f"INSERT INTO md_user (comp_id, br_id, user_name, user_id, phone_no, email_id, device_id, password, created_by, created_dt) VALUES('{data.comp_id}','{data.br_id}','{data.user_name}','{data.phone_no}','{data.phone_no}','{data.email_id}', '{data.device_id}', '{data.password}', '{data.user_name}', '{formatted_datetime}')"
+    query = f"SELECT COUNT(*)phone_no FROM md_user WHERE user_id=phone_no AND phone_no={phone_no}"
     cursor.execute(query)
-    conn.commit()
+    records = cursor.fetchall()
+    print(records)
+    result = createResponse(records, cursor.column_names, 1)
     conn.close()
     cursor.close()
-    print(cursor.rowcount)
-    if cursor.rowcount==1:
-        return "registered successfully"
+    if records==[(0,)]:
+        return "invalid phone"
     else:
-        return "invalid date!"
+        return "valid phone no."
+   
+@app.post('/api/verify_active/{phone_no}')
+def verify(phone_no:int):
+    conn = connect()
+    cursor = conn.cursor()
+    query = f"SELECT COUNT(*)active_flag FROM md_user WHERE active_flag='N' AND user_id={phone_no}"
+    cursor.execute(query)
+    records = cursor.fetchall()
+    print(records)
+    # result = createResponse(records, cursor.column_names, 1)
+    conn.close()
+    cursor.close()
+    if records==[(0,)] :
+        return "Already registered or invalid phone" 
+    else:
+        return "registered successfully"  
+    
     
 @app.post('/api/login')
 def login(data_login:UserLogin):
@@ -61,7 +99,7 @@ def login(data_login:UserLogin):
         result = createResponse(records, cursor.column_names, 0)
         # print(result)
         res_dt = ''
-        if(result['password'] == data_login.password):
+        if(verify_password(data_login.password, result['password'])):
             res_dt = {"suc": 1, "msg": result}
         else:
             res_dt = {"suc": 0, "msg": "Please check your userid or password"}
@@ -108,3 +146,22 @@ async def show_item_rate(item_id:int):
     conn.close()
     cursor.close()
     return result
+
+# Item Sale
+@app.post('/api/saleinsert')
+def register(rcpt:Receipt):
+    current_datetime = datetime.now()
+    formatted_datetime = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
+    print(formatted_datetime)
+    conn = connect()
+    cursor = conn.cursor()
+    query = f"INSERT INTO td_item_sale (receipt_no, comp_id, br_id, item_id, tnx_date, price, discount_amt, cgst_amt, sgst_amt, created_by, created_dt) VALUES('{rcpt.receipt_no}','{rcpt.br_id}','{rcpt.user_name}','{rcpt.phone_no}','{rcpt.phone_no}','{rcpt.email_id}', '{rcpt.device_id}', '{rcpt.user_name}', '{formatted_datetime}')"
+    cursor.execute(query)
+    conn.commit()
+    conn.close()
+    cursor.close()
+    print(cursor.rowcount)
+    if cursor.rowcount==1:
+        return "registered successfully"
+    else:
+        return "invalid date!"

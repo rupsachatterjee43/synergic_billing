@@ -2,3 +2,5 @@ fastapi[all]
 uvicorn[standard]
 pydantic
 mysql-connector-python
+passlib[bcrypt]
+python-multipart
