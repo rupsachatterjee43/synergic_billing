@@ -7,6 +7,7 @@ from models.form_model import UserLogin,Receipt,CreatePIN
 from datetime import datetime
 from utils import get_hashed_password, verify_password
 
+
 app = FastAPI()
 
 origins = [
@@ -196,21 +197,56 @@ async def show_item_rate(item_id:int):
     cursor.close()
     return result'''
 
+# Generate receipt no.
+
+
 # Item Sale
 @app.post('/api/saleinsert')
-def register(rcpt:Receipt):
+async def register(rcpt:list[Receipt]):
     current_datetime = datetime.now()
+    receipt = int(round(current_datetime.timestamp()))
     formatted_datetime = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
-    print(formatted_datetime)
-    conn = connect()
-    cursor = conn.cursor()
-    query = f"INSERT INTO td_item_sale (receipt_no, comp_id, br_id, item_id, tnx_date, price, discount_amt, cgst_amt, sgst_amt, created_by, created_dt) VALUES('{rcpt.receipt_no}','{rcpt.br_id}','{rcpt.user_name}','{rcpt.phone_no}','{rcpt.phone_no}','{rcpt.email_id}', '{rcpt.device_id}', '{rcpt.user_name}', '{formatted_datetime}')"
-    cursor.execute(query)
-    conn.commit()
-    conn.close()
-    cursor.close()
-    print(cursor.rowcount)
-    if cursor.rowcount==1:
-        return "registered successfully"
-    else:
-        return "invalid date!"
+    # print(receipt)
+    # print(rcpt)
+    # conn = connect()
+    values = []
+    for i in rcpt:
+        conn = connect()
+        cursor = conn.cursor()
+        # print(i)
+        values.append((receipt, i.comp_id, i.br_id, i.item_id, formatted_datetime, i.price, i.discount_amt, i.cgst_amt, i.sgst_amt, i.qty))
+
+        query = f"INSERT INTO td_item_sale (receipt_no, comp_id, br_id, item_id, trn_date, price, discount_amt, cgst_amt, sgst_amt, qty) VALUES ('{receipt}','{i.comp_id}','{i.br_id}','{i.item_id}','{formatted_datetime}','{i.price}','{i.discount_amt}', '{i.cgst_amt}', '{i.sgst_amt}', {i.qty})"
+        print(query)
+        cursor.execute(query)
+        conn.commit()
+        conn.close()
+        cursor.close()
+        # print(cursor.rowcount)
+        if cursor.rowcount==1:
+            resData = {"status":1, "data":receipt}
+        else:
+            resData = {"status":0, "data":'Data not inserted'}
+    print(values) 
+    return resData
+    
+
+
+
+
+
+
+
+
+    # conn = connect()
+    # cursor = conn.cursor()
+    # query = f"INSERT INTO td_item_sale (receipt_no, comp_id, br_id, item_id, trn_date, price, discount_amt, cgst_amt, sgst_amt, created_by, created_dt) VALUES('{rcpt.receipt_no}','{rcpt.br_id}','{rcpt.user_name}','{rcpt.phone_no}','{rcpt.phone_no}','{rcpt.email_id}', '{rcpt.device_id}', '{rcpt.user_name}', '{formatted_datetime}')"
+    # cursor.execute(query)
+    # conn.commit()
+    # conn.close()
+    # cursor.close()
+    # print(cursor.rowcount)
+    # if cursor.rowcount==1:
+    #     return "registered successfully"
+    # else:
+    #     return "invalid date!"
