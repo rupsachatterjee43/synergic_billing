@@ -202,21 +202,29 @@ async def show_item_rate(item_id:int):
 
 # Item Sale
 @app.post('/api/saleinsert')
-async def register(rcpt:list[Receipt]):
+def register(rcpt:list[Receipt]):
     current_datetime = datetime.now()
     receipt = int(round(current_datetime.timestamp()))
     formatted_datetime = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
     # print(receipt)
     # print(rcpt)
     # conn = connect()
+    tprice = 0
+    tdiscount_amt = 0
+    tcgst_amt = 0
+    tsgst_amt = 0
     values = []
     for i in rcpt:
+        tprice += i.price
+        tdiscount_amt += i.discount_amt
+        tcgst_amt += i.cgst_amt
+        tsgst_amt += i.sgst_amt
         conn = connect()
         cursor = conn.cursor()
         # print(i)
         values.append((receipt, i.comp_id, i.br_id, i.item_id, formatted_datetime, i.price, i.discount_amt, i.cgst_amt, i.sgst_amt, i.qty))
 
-        query = f"INSERT INTO td_item_sale (receipt_no, comp_id, br_id, item_id, trn_date, price, discount_amt, cgst_amt, sgst_amt, qty) VALUES ('{receipt}','{i.comp_id}','{i.br_id}','{i.item_id}','{formatted_datetime}','{i.price}','{i.discount_amt}', '{i.cgst_amt}', '{i.sgst_amt}', {i.qty})"
+        query = f"INSERT INTO td_item_sale (receipt_no, comp_id, br_id, item_id, trn_date, price, discount_amt, cgst_amt, sgst_amt, qty, created_by, created_dt) VALUES ('{receipt}',{i.comp_id},{i.br_id},{i.item_id},'{formatted_datetime}',{i.price},{i.discount_amt}, {i.cgst_amt}, {i.sgst_amt}, {i.qty}, '{i.created_by}', '{formatted_datetime}')"
         print(query)
         cursor.execute(query)
         conn.commit()
@@ -227,16 +235,46 @@ async def register(rcpt:list[Receipt]):
             resData = {"status":1, "data":receipt}
         else:
             resData = {"status":0, "data":'Data not inserted'}
+    round_off = round(rcpt[0].amount)
+    conn = connect()
+    cursor = conn.cursor()
+    # print(rcpt[0].pay_dtls)
+    query = f"INSERT INTO td_receipt (receipt_no, trn_date, price, discount_amt, cgst_amt, sgst_amt, round_off, amount, pay_mode, received_amt, pay_dtls, cust_name, phone_no, created_by, created_dt) VALUES ('{receipt}','{formatted_datetime}',{tprice},{tdiscount_amt},{tcgst_amt},{tsgst_amt},'{round_off}','{rcpt[0].amount}','{rcpt[0].pay_mode}','{rcpt[0].received_amt}','{rcpt[0].pay_dtls}','{rcpt[0].cust_name}','{rcpt[0].phone_no}','{rcpt[0].created_by}','{formatted_datetime}')"
+    print(query)
+    cursor.execute(query)
+    conn.commit()
+    conn.close()
+    cursor.close()
+    if cursor.rowcount==1:
+        ResData = {"status":1, "data":resData}
+    else:
+        ResData = {"status":0, "data":"Data not inserted"}
     print(values) 
-    return resData
+    return ResData
+
+
+
+
     
+# insert receipt details
+# @app.post('/api/receipt_insert/{rcp_no}')
+# def register(rcp:FinalRcp,rcp_no:int):
+#     conn = connect()
+#     cursor = conn.cursor()
+#     query = f"INSERT INTO td_receipt (receipt_no, trn_date,, price, discount_amt, cgst_amt, sgst_amt) VALUES('{rcp_no}')"
+#     cursor.execute(query)
+#     conn.commit()
+#     conn.close()
+#     cursor.close()
+#     if cursor.rowcount==1:
+#         resData = {"status":1, "data":""}
+#     else:
+#         resData = {"status":0, "data":'Data not inserted'}
+
+#     return resData
 
 
-
-
-
-
-
+# 1005874526987
 
     # conn = connect()
     # cursor = conn.cursor()
