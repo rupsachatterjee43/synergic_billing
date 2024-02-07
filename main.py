@@ -4,7 +4,7 @@ import uvicorn
 from config.database import connect
 from models.master_model import createResponse
 from models.form_model import UserLogin,Receipt,CreatePIN
-from datetime import datetime
+from datetime import datetime, date
 from utils import get_hashed_password, verify_password
 
 
@@ -209,23 +209,23 @@ def register(rcpt:list[Receipt]):
     # print(receipt)
     # print(rcpt)
     # conn = connect()
-    tprice = 0
-    tdiscount_amt = 0
-    tcgst_amt = 0
-    tsgst_amt = 0
+    # tprice = 0
+    # tdiscount_amt = 0
+    # tcgst_amt = 0
+    # tsgst_amt = 0
     values = []
     for i in rcpt:
-        tprice += i.price
-        tdiscount_amt += i.discount_amt
-        tcgst_amt += i.cgst_amt
-        tsgst_amt += i.sgst_amt
+        # tprice += i.price
+        # tdiscount_amt += i.discount_amt
+        # tcgst_amt += i.cgst_amt
+        # tsgst_amt += i.sgst_amt
         conn = connect()
         cursor = conn.cursor()
         # print(i)
         values.append((receipt, i.comp_id, i.br_id, i.item_id, formatted_datetime, i.price, i.discount_amt, i.cgst_amt, i.sgst_amt, i.qty))
 
         query = f"INSERT INTO td_item_sale (receipt_no, comp_id, br_id, item_id, trn_date, price, discount_amt, cgst_amt, sgst_amt, qty, created_by, created_dt) VALUES ('{receipt}',{i.comp_id},{i.br_id},{i.item_id},'{formatted_datetime}',{i.price},{i.discount_amt}, {i.cgst_amt}, {i.sgst_amt}, {i.qty}, '{i.created_by}', '{formatted_datetime}')"
-        print(query)
+        # print(query)
         cursor.execute(query)
         conn.commit()
         conn.close()
@@ -235,12 +235,12 @@ def register(rcpt:list[Receipt]):
             resData = {"status":1, "data":receipt}
         else:
             resData = {"status":0, "data":'Data not inserted'}
-    round_off = round(rcpt[0].amount)
+    # round_off = round(rcpt[0].amount)
     conn = connect()
     cursor = conn.cursor()
     # print(rcpt[0].pay_dtls)
-    query = f"INSERT INTO td_receipt (receipt_no, trn_date, price, discount_amt, cgst_amt, sgst_amt, round_off, amount, pay_mode, received_amt, pay_dtls, cust_name, phone_no, created_by, created_dt) VALUES ('{receipt}','{formatted_datetime}',{tprice},{tdiscount_amt},{tcgst_amt},{tsgst_amt},'{round_off}','{rcpt[0].amount}','{rcpt[0].pay_mode}','{rcpt[0].received_amt}','{rcpt[0].pay_dtls}','{rcpt[0].cust_name}','{rcpt[0].phone_no}','{rcpt[0].created_by}','{formatted_datetime}')"
-    print(query)
+    query = f"INSERT INTO td_receipt (receipt_no, trn_date, price, discount_amt, cgst_amt, sgst_amt, amount, round_off, net_amt, pay_mode, received_amt, pay_dtls, cust_name, phone_no, created_by, created_dt) VALUES ('{receipt}','{formatted_datetime}',{rcpt[0].tprice},{rcpt[0].tdiscount_amt},{rcpt[0].tcgst_amt},{rcpt[0].tsgst_amt},{rcpt[0].amount},{rcpt[0].round_off},{rcpt[0].net_amt},'{rcpt[0].pay_mode}','{rcpt[0].received_amt}','{rcpt[0].pay_dtls}','{rcpt[0].cust_name}','{rcpt[0].phone_no}','{rcpt[0].created_by}','{formatted_datetime}')"
+    # print(query)
     cursor.execute(query)
     conn.commit()
     conn.close()
@@ -252,9 +252,39 @@ def register(rcpt:list[Receipt]):
     print(values) 
     return ResData
 
+# Dashboard
+@app.get('/api/billsummary/{trn_date}')
+async def Bill_sum(trn_date:date):
+    conn = connect()
+    cursor = conn.cursor()
+    query = f"SELECT COUNT(receipt_no)Total_Bills, SUM(net_amt)Amount_collected FROM td_receipt WHERE trn_date='{trn_date}'"
+    cursor.execute(query)
+    records = cursor.fetchall()
+    # print(records)
+    result = createResponse(records, cursor.column_names, 1)
+    conn.close()
+    cursor.close()
+    if records==[(0,None)]:
+        resData= {"status":0, "data":"no data"}
+    else:
+        resData= {
+        "status":1,
+        "data":result
+        }
+    return resData
 
-
-
+# Dashboard - Last 4 bills
+@app.get('/api/recent_bills')
+async def Bill_sum():
+    conn = connect()
+    cursor = conn.cursor()
+    query = "SELECT * FROM td_receipt ORDER BY created_dt DESC LIMIT 4"
+    cursor.execute(query)
+    records = cursor.fetchall()
+    result = createResponse(records, cursor.column_names, 1)
+    conn.close()
+    cursor.close()
+    return result
     
 # insert receipt details
 # @app.post('/api/receipt_insert/{rcp_no}')

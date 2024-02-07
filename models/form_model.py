@@ -24,10 +24,16 @@ class Receipt(BaseModel):
     item_id:int
     price:float
     discount_amt:float
-    cgst_amt:int
-    sgst_amt:int
+    cgst_amt:float
+    sgst_amt:float
     qty:int
+    tprice:float
+    tdiscount_amt:float
+    tcgst_amt:float
+    tsgst_amt:float
     amount:float
+    round_off:float
+    net_amt:int
     pay_mode:str
     received_amt:str
     pay_dtls:str
