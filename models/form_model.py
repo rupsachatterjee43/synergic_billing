@@ -55,3 +55,9 @@ class Receipt(BaseModel):
 #     pay_mode:str
 #     received_amt:str
 #     pay_dtls:str
+
+class DashBoard(BaseModel):
+    trn_date:date
+    comp_id:int
+    br_id:int
+    user_id:str

@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 from config.database import connect
 from models.master_model import createResponse
-from models.form_model import UserLogin,Receipt,CreatePIN
+from models.form_model import UserLogin,Receipt,CreatePIN,DashBoard
 from datetime import datetime, date
 from utils import get_hashed_password, verify_password
 
@@ -206,39 +206,24 @@ def register(rcpt:list[Receipt]):
     current_datetime = datetime.now()
     receipt = int(round(current_datetime.timestamp()))
     formatted_datetime = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
-    # print(receipt)
-    # print(rcpt)
-    # conn = connect()
-    # tprice = 0
-    # tdiscount_amt = 0
-    # tcgst_amt = 0
-    # tsgst_amt = 0
     values = []
     for i in rcpt:
-        # tprice += i.price
-        # tdiscount_amt += i.discount_amt
-        # tcgst_amt += i.cgst_amt
-        # tsgst_amt += i.sgst_amt
         conn = connect()
         cursor = conn.cursor()
         # print(i)
         values.append((receipt, i.comp_id, i.br_id, i.item_id, formatted_datetime, i.price, i.discount_amt, i.cgst_amt, i.sgst_amt, i.qty))
 
         query = f"INSERT INTO td_item_sale (receipt_no, comp_id, br_id, item_id, trn_date, price, discount_amt, cgst_amt, sgst_amt, qty, created_by, created_dt) VALUES ('{receipt}',{i.comp_id},{i.br_id},{i.item_id},'{formatted_datetime}',{i.price},{i.discount_amt}, {i.cgst_amt}, {i.sgst_amt}, {i.qty}, '{i.created_by}', '{formatted_datetime}')"
-        # print(query)
         cursor.execute(query)
         conn.commit()
         conn.close()
         cursor.close()
-        # print(cursor.rowcount)
         if cursor.rowcount==1:
             resData = {"status":1, "data":receipt}
         else:
             resData = {"status":0, "data":'Data not inserted'}
-    # round_off = round(rcpt[0].amount)
     conn = connect()
     cursor = conn.cursor()
-    # print(rcpt[0].pay_dtls)
     query = f"INSERT INTO td_receipt (receipt_no, trn_date, price, discount_amt, cgst_amt, sgst_amt, amount, round_off, net_amt, pay_mode, received_amt, pay_dtls, cust_name, phone_no, created_by, created_dt) VALUES ('{receipt}','{formatted_datetime}',{rcpt[0].tprice},{rcpt[0].tdiscount_amt},{rcpt[0].tcgst_amt},{rcpt[0].tsgst_amt},{rcpt[0].amount},{rcpt[0].round_off},{rcpt[0].net_amt},'{rcpt[0].pay_mode}','{rcpt[0].received_amt}','{rcpt[0].pay_dtls}','{rcpt[0].cust_name}','{rcpt[0].phone_no}','{rcpt[0].created_by}','{formatted_datetime}')"
     # print(query)
     cursor.execute(query)
@@ -253,11 +238,11 @@ def register(rcpt:list[Receipt]):
     return ResData
 
 # Dashboard
-@app.get('/api/billsummary/{trn_date}')
-async def Bill_sum(trn_date:date):
+@app.post('/api/billsummary')
+async def Bill_sum(bill_sum:DashBoard):
     conn = connect()
     cursor = conn.cursor()
-    query = f"SELECT COUNT(receipt_no)Total_Bills, SUM(net_amt)Amount_collected FROM td_receipt WHERE trn_date='{trn_date}'"
+    query = f"SELECT COUNT(a.receipt_no)total_bills, SUM(a.net_amt)amount_collected FROM td_receipt a, md_user b,md_branch c,md_company d WHERE a.created_by=b.user_id and b.br_id=c.id and b.comp_id=d.id and d.id={bill_sum.comp_id} and c.id={bill_sum.br_id} and a.trn_date='{bill_sum.trn_date}' and a.created_by='{bill_sum.user_id}'"
     cursor.execute(query)
     records = cursor.fetchall()
     # print(records)
@@ -274,11 +259,11 @@ async def Bill_sum(trn_date:date):
     return resData
 
 # Dashboard - Last 4 bills
-@app.get('/api/recent_bills')
-async def Bill_sum():
+@app.post('/api/recent_bills')
+async def recent_bill(rec_bill:DashBoard):
     conn = connect()
     cursor = conn.cursor()
-    query = "SELECT * FROM td_receipt ORDER BY created_dt DESC LIMIT 4"
+    query = f"SELECT a.* FROM td_receipt a, md_user b, md_branch c, md_company d WHERE a.created_by=b.user_id and b.br_id=c.id and b.comp_id=d.id and d.id={rec_bill.comp_id} and c.id={rec_bill.br_id} and a.trn_date='{rec_bill.trn_date}' and a.created_by='{rec_bill.user_id}' ORDER BY created_dt DESC LIMIT 4"
     cursor.execute(query)
     records = cursor.fetchall()
     result = createResponse(records, cursor.column_names, 1)
