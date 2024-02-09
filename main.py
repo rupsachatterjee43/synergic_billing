@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 from config.database import connect
 from models.master_model import createResponse
-from models.form_model import UserLogin,Receipt,CreatePIN,DashBoard
+from models.form_model import UserLogin,Receipt,CreatePIN,DashBoard,DateRange
 from datetime import datetime, date
 from utils import get_hashed_password, verify_password
 
@@ -270,7 +270,49 @@ async def recent_bill(rec_bill:DashBoard):
     conn.close()
     cursor.close()
     return result
-    
+
+
+#Select Bill
+@app.get('/api/show_bill/{recp_no}')
+async def show_bill(recp_no:int):
+    conn = connect()
+    cursor = conn.cursor()
+    query = f"SELECT a.*, c.item_name FROM td_item_sale a, td_receipt b, md_items c WHERE a.receipt_no=b.receipt_no and a.trn_date=b.trn_date and a.item_id=c.id and b.receipt_no={recp_no}"
+    cursor.execute(query)
+    records = cursor.fetchall()
+    result = createResponse(records, cursor.column_names, 1)
+    conn.close()
+    cursor.close()
+    if records==[]:
+        resData= {"status":0, "data":"no such data"}
+    else:
+        resData= {
+        "status":1,
+        "data":result
+        }
+    return resData
+
+@app.post('/api/search_bills')
+async def search_bills(search:DateRange):
+    conn = connect()
+    cursor = conn.cursor()
+    query = f"SELECT a.* FROM td_receipt a, md_user b, md_branch c, md_company d WHERE a.created_by=b.user_id and b.br_id=c.id and b.comp_id=d.id and d.id={search.comp_id} and c.id={search.br_id} and a.created_by='{search.user_id}' and a.trn_date BETWEEN '{search.from_date}' AND '{search.to_date}'"
+    cursor.execute(query)
+    records = cursor.fetchall()
+    result = createResponse(records, cursor.column_names, 1)
+    conn.close()
+    cursor.close()
+    if records==[]:
+        resData= {"status":0, "data":"no transactions"}
+    else:
+        resData= {
+        "status":1,
+        "data":result
+        }
+    return resData
+
+
+
 # insert receipt details
 # @app.post('/api/receipt_insert/{rcp_no}')
 # def register(rcp:FinalRcp,rcp_no:int):

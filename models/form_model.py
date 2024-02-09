@@ -61,3 +61,10 @@ class DashBoard(BaseModel):
     comp_id:int
     br_id:int
     user_id:str
+
+class DateRange(BaseModel):
+    from_date:date
+    to_date:date
+    comp_id:int
+    br_id:int
+    user_id:str
