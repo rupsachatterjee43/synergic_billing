@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 from config.database import connect
 from models.master_model import createResponse
-from models.form_model import UserLogin,Receipt,CreatePIN,DashBoard,DateRange
+from models.form_model import UserLogin,Receipt,CreatePIN,DashBoard,SearchBill,SaleReport,ItemReport
 from datetime import datetime, date
 from utils import get_hashed_password, verify_password
 
@@ -30,29 +30,8 @@ app.add_middleware(
 def index():
     return "Welcome to the billing app"
 
-# user registration
-# @app.post('/api/register')
-# def register(data:UserRegistration):
-#     current_datetime = datetime.now()
-#     formatted_datetime = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
-#     print(formatted_datetime)
-#     password=data.password
-#     haspass=get_hashed_password(password)
-#     conn = connect()
-#     cursor = conn.cursor()
-#     query = f"INSERT INTO md_user (comp_id, br_id, user_name, user_id, phone_no, email_id, device_id, password, created_by, created_dt) VALUES('{data.comp_id}','{data.br_id}','{data.user_name}','{data.phone_no}','{data.phone_no}','{data.email_id}', '{data.device_id}', '{haspass}', '{data.user_name}', '{formatted_datetime}')"
-#     cursor.execute(query)
-#     conn.commit()
-#     conn.close()
-#     cursor.close()
-#     print(cursor.rowcount)
-#     if cursor.rowcount==1:
-#         return "registered successfully"
-#     else:
-#         return "invalid date!"
-
-
 # Verify Phone no and active status
+#------------------------------------------------------------------------------------------------------
 @app.post('/api/verify_phone/{phone_no}')
 def verify(phone_no:int):
     conn = connect()
@@ -96,6 +75,7 @@ def verify(phone_no:int):
     return resData 
 
 # Create PIN
+#-------------------------------------------------------------------------------------------------------------
 @app.post('/api/create_pin')
 def register(data:CreatePIN):
     password=data.PIN
@@ -117,11 +97,14 @@ def register(data:CreatePIN):
         }
     return resData 
 
+# Generate OTP
+#-------------------------------------------------------------------------------------------------------------
 @app.post('/api/otp/{phone_no}') 
 def OTP(phone_no:int):
     return {"status":1, "data":"1234"}
 
-    
+# USER LOGIN
+#-----------------------------------------------------------------------------------------------------------  
 @app.post('/api/login')
 def login(data_login:UserLogin):
     conn = connect()
@@ -146,6 +129,7 @@ def login(data_login:UserLogin):
     return res_dt
 
 #Select location
+#-------------------------------------------------------------------------------------------------------------
 @app.get('/api/location')
 async def show_location():
     conn = connect()
@@ -159,6 +143,7 @@ async def show_location():
     return result
 
 #Select items
+#-------------------------------------------------------------------------------------------------------------
 @app.get('/api/items/{comp_id}')
 async def show_items(comp_id:int):
     conn = connect()
@@ -172,6 +157,7 @@ async def show_items(comp_id:int):
     return result
 
 # Receipt settings
+#-------------------------------------------------------------------------------------------------------------
 @app.get('/api/receipt_settings/{comp_id}')
 async def show_items(comp_id:int):
     conn = connect()
@@ -201,6 +187,7 @@ async def show_item_rate(item_id:int):
 
 
 # Item Sale
+#-------------------------------------------------------------------------------------------------------------
 @app.post('/api/saleinsert')
 def register(rcpt:list[Receipt]):
     current_datetime = datetime.now()
@@ -213,7 +200,7 @@ def register(rcpt:list[Receipt]):
         # print(i)
         values.append((receipt, i.comp_id, i.br_id, i.item_id, formatted_datetime, i.price, i.discount_amt, i.cgst_amt, i.sgst_amt, i.qty))
 
-        query = f"INSERT INTO td_item_sale (receipt_no, comp_id, br_id, item_id, trn_date, price, discount_amt, cgst_amt, sgst_amt, qty, created_by, created_dt) VALUES ('{receipt}',{i.comp_id},{i.br_id},{i.item_id},'{formatted_datetime}',{i.price},{i.discount_amt}, {i.cgst_amt}, {i.sgst_amt}, {i.qty}, '{i.created_by}', '{formatted_datetime}')"
+        query = f"INSERT INTO td_item_sale (receipt_no, comp_id, br_id, item_id, trn_date, price, dis_pertg, discount_amt, cgst_prtg, cgst_amt, sgst_prtg, sgst_amt, qty, created_by, created_dt) VALUES ('{receipt}',{i.comp_id},{i.br_id},{i.item_id},'{formatted_datetime}',{i.price},{i.dis_pertg},{i.discount_amt}, {i.cgst_prtg}, {i.cgst_amt}, {i.sgst_prtg}, {i.sgst_amt}, {i.qty}, '{i.created_by}', '{formatted_datetime}')"
         cursor.execute(query)
         conn.commit()
         conn.close()
@@ -238,6 +225,7 @@ def register(rcpt:list[Receipt]):
     return ResData
 
 # Dashboard
+#-------------------------------------------------------------------------------------------------------------
 @app.post('/api/billsummary')
 async def Bill_sum(bill_sum:DashBoard):
     conn = connect()
@@ -259,6 +247,7 @@ async def Bill_sum(bill_sum:DashBoard):
     return resData
 
 # Dashboard - Last 4 bills
+#-------------------------------------------------------------------------------------------------------------
 @app.post('/api/recent_bills')
 async def recent_bill(rec_bill:DashBoard):
     conn = connect()
@@ -271,13 +260,13 @@ async def recent_bill(rec_bill:DashBoard):
     cursor.close()
     return result
 
-
 #Select Bill
+# ------------------------------------------------------------------------------------------------------------
 @app.get('/api/show_bill/{recp_no}')
 async def show_bill(recp_no:int):
     conn = connect()
     cursor = conn.cursor()
-    query = f"SELECT a.*, c.item_name FROM td_item_sale a, td_receipt b, md_items c WHERE a.receipt_no=b.receipt_no and a.trn_date=b.trn_date and a.item_id=c.id and b.receipt_no={recp_no}"
+    query = f"SELECT a.*, b.*, c.item_name FROM td_item_sale a, td_receipt b, md_items c WHERE a.receipt_no=b.receipt_no and a.trn_date=b.trn_date and a.item_id=c.id and b.receipt_no={recp_no} and b.receipt_no={recp_no}"
     cursor.execute(query)
     records = cursor.fetchall()
     result = createResponse(records, cursor.column_names, 1)
@@ -292,8 +281,10 @@ async def show_bill(recp_no:int):
         }
     return resData
 
+#Search bills within a date range
+#-------------------------------------------------------------------------------------------------------------
 @app.post('/api/search_bills')
-async def search_bills(search:DateRange):
+async def search_bills(search:SearchBill):
     conn = connect()
     cursor = conn.cursor()
     query = f"SELECT a.* FROM td_receipt a, md_user b, md_branch c, md_company d WHERE a.created_by=b.user_id and b.br_id=c.id and b.comp_id=d.id and d.id={search.comp_id} and c.id={search.br_id} and a.created_by='{search.user_id}' and a.trn_date BETWEEN '{search.from_date}' AND '{search.to_date}'"
@@ -311,37 +302,68 @@ async def search_bills(search:DateRange):
         }
     return resData
 
+# Sale Report
+#-------------------------------------------------------------------------------------------------------------
+@app.post('/api/sale_report')
+async def sale_report(sl_rep:SaleReport):
+    conn = connect()
+    cursor = conn.cursor()
+    query = f"select a.cust_name, a.phone_no, a.receipt_no, a.trn_date,  count(b.receipt_no)no_of_items, sum(a.price)price, sum(a.discount_amt)discount_amt, sum(a.cgst_amt)cgst_amt, sum(a.sgst_amt)sgst_amt, sum(a.round_off)rount_off, sum(a.amount)net_amt, a.created_by from  td_receipt a,td_item_sale b where a.receipt_no = b.receipt_no  and   a.trn_date between '{sl_rep.from_date}' and '{sl_rep.to_date}' and   b.comp_id = {sl_rep.comp_id} AND   b.br_id = {sl_rep.br_id} and   a.created_by = '{sl_rep.created_by}' group by a.cust_name, a.phone_no, a.receipt_no, a.trn_date, a.created_by"
+    cursor.execute(query)
+    records = cursor.fetchall()
+    result = createResponse(records, cursor.column_names, 1)
+    conn.close()
+    cursor.close()
+    if records==[]:
+        resData= {"status":0, "data":"no such data"}
+    else:
+        resData= {
+        "status":1,
+        "data":result
+        }
+    return resData
 
+# Collection Report
+#------------------------------------------------------------------------------------------------------
+@app.post('/api/collection_report')
+async def collection_report(col_rep:SaleReport):
+    conn = connect()
+    cursor = conn.cursor()
+    query = f"Select created_by, pay_mode, sum(net_amt)net_amt from ( select Distinct a.created_by created_by, a.pay_mode pay_mode, a.net_amt net_amt from   td_receipt a, td_item_sale b where a.receipt_no = b.receipt_no and a.trn_date BETWEEN '{col_rep.from_date}' and '{col_rep.to_date}' and b.comp_id= {col_rep.comp_id} AND b.br_id = {col_rep.br_id} AND a.created_by ='{col_rep.created_by}' )a group by created_by, pay_mode"
+    cursor.execute(query)
+    records = cursor.fetchall()
+    print(query)
+    result = createResponse(records, cursor.column_names, 1)
+    print(result)
+    conn.close()
+    cursor.close()
+    if records==[]:
+        resData= {"status":0, "data":"no such data"}
+    else:
+        resData= {
+        "status":1,
+        "data":result
+        }
+    return resData
 
-# insert receipt details
-# @app.post('/api/receipt_insert/{rcp_no}')
-# def register(rcp:FinalRcp,rcp_no:int):
-#     conn = connect()
-#     cursor = conn.cursor()
-#     query = f"INSERT INTO td_receipt (receipt_no, trn_date,, price, discount_amt, cgst_amt, sgst_amt) VALUES('{rcp_no}')"
-#     cursor.execute(query)
-#     conn.commit()
-#     conn.close()
-#     cursor.close()
-#     if cursor.rowcount==1:
-#         resData = {"status":1, "data":""}
-#     else:
-#         resData = {"status":0, "data":'Data not inserted'}
-
-#     return resData
-
-
-# 1005874526987
-
-    # conn = connect()
-    # cursor = conn.cursor()
-    # query = f"INSERT INTO td_item_sale (receipt_no, comp_id, br_id, item_id, trn_date, price, discount_amt, cgst_amt, sgst_amt, created_by, created_dt) VALUES('{rcpt.receipt_no}','{rcpt.br_id}','{rcpt.user_name}','{rcpt.phone_no}','{rcpt.phone_no}','{rcpt.email_id}', '{rcpt.device_id}', '{rcpt.user_name}', '{formatted_datetime}')"
-    # cursor.execute(query)
-    # conn.commit()
-    # conn.close()
-    # cursor.close()
-    # print(cursor.rowcount)
-    # if cursor.rowcount==1:
-    #     return "registered successfully"
-    # else:
-    #     return "invalid date!"
+# Item Report
+#------------------------------------------------------------------------------------------------------
+@app.post('/api/item_report')
+async def item_report(item_rep:ItemReport):
+    conn = connect()
+    cursor = conn.cursor()
+    query = f"select a.receipt_no,a.trn_date,a.qty,a.price,a.discount_amt,a.cgst_amt,a.sgst_amt,b.amount,b.pay_mode,c.item_name,d.branch_name from   td_item_sale a, td_receipt b, md_items c, md_branch d where  a.receipt_no = b.receipt_no AND a.comp_id = c.com_id AND a.comp_id = d.comp_id AND a.br_id = d.id AND a.item_id = c.id And a.trn_date BETWEEN '{item_rep.from_date}' and '{item_rep.to_date}' And a.comp_id = {item_rep.comp_id} AND a.br_id = {item_rep.br_id} AND a.item_id = {item_rep.item_id}"
+    cursor.execute(query)
+    records = cursor.fetchall()
+    result = createResponse(records, cursor.column_names, 1)
+    print(result)
+    conn.close()
+    cursor.close()
+    if records==[]:
+        resData= {"status":0, "data":"no such data"}
+    else:
+        resData= {
+        "status":1,
+        "data":result
+        }
+    return resData

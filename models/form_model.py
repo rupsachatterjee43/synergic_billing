@@ -1,15 +1,6 @@
 from pydantic import BaseModel, datetime_parse
 from datetime import date
 
-# class UserRegistration(BaseModel):
-#     comp_id:str
-#     br_id:str
-#     user_name:str
-#     phone_no:str
-#     email_id:str
-#     device_id:str
-#     password:str
-
 class CreatePIN(BaseModel):
     PIN:str
     phone_no:str
@@ -23,8 +14,11 @@ class Receipt(BaseModel):
     br_id:int
     item_id:int
     price:float
+    dis_pertg:float
     discount_amt:float
+    cgst_prtg:float
     cgst_amt:float
+    sgst_prtg:float
     sgst_amt:float
     qty:int
     tprice:float
@@ -40,21 +34,6 @@ class Receipt(BaseModel):
     cust_name:str
     phone_no:str
     created_by:str
-    
-
-# class Receipt(BaseModel):
-#     data:dict
-    
-# class FinalRcp(BaseModel):
-#     price:str
-#     discount_amt:str
-#     cgst_amt:str
-#     sgst_amt:str
-#     round_off:str
-#     amount:str
-#     pay_mode:str
-#     received_amt:str
-#     pay_dtls:str
 
 class DashBoard(BaseModel):
     trn_date:date
@@ -62,9 +41,23 @@ class DashBoard(BaseModel):
     br_id:int
     user_id:str
 
-class DateRange(BaseModel):
+class SearchBill(BaseModel):
     from_date:date
     to_date:date
     comp_id:int
     br_id:int
     user_id:str
+
+class SaleReport(BaseModel):
+    from_date:date
+    to_date:date
+    comp_id:int
+    br_id:int
+    created_by:str
+
+class ItemReport(BaseModel):
+    from_date:date
+    to_date:date
+    comp_id:int
+    br_id:int
+    item_id:int
