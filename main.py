@@ -308,7 +308,7 @@ async def search_bills(search:SearchBill):
 async def sale_report(sl_rep:SaleReport):
     conn = connect()
     cursor = conn.cursor()
-    query = f"select a.cust_name, a.phone_no, a.receipt_no, a.trn_date,  count(b.receipt_no)no_of_items, sum(a.price)price, sum(a.discount_amt)discount_amt, sum(a.cgst_amt)cgst_amt, sum(a.sgst_amt)sgst_amt, sum(a.round_off)rount_off, sum(a.amount)net_amt, a.created_by from  td_receipt a,td_item_sale b where a.receipt_no = b.receipt_no  and   a.trn_date between '{sl_rep.from_date}' and '{sl_rep.to_date}' and   b.comp_id = {sl_rep.comp_id} AND   b.br_id = {sl_rep.br_id} and   a.created_by = '{sl_rep.created_by}' group by a.cust_name, a.phone_no, a.receipt_no, a.trn_date, a.created_by"
+    query = f"select a.cust_name, a.phone_no, a.receipt_no, a.trn_date,  count(b.receipt_no)no_of_items, sum(a.price)price, sum(a.discount_amt)discount_amt, sum(a.cgst_amt)cgst_amt, sum(a.sgst_amt)sgst_amt, sum(a.round_off)rount_off, sum(a.amount)net_amt, a.created_by from  td_receipt a,td_item_sale b where a.receipt_no = b.receipt_no  and   a.trn_date between '{sl_rep.from_date}' and '{sl_rep.to_date}' and   b.comp_id = {sl_rep.comp_id} AND   b.br_id = {sl_rep.br_id} group by a.cust_name, a.phone_no, a.receipt_no, a.trn_date, a.created_by"
     cursor.execute(query)
     records = cursor.fetchall()
     result = createResponse(records, cursor.column_names, 1)
@@ -329,12 +329,10 @@ async def sale_report(sl_rep:SaleReport):
 async def collection_report(col_rep:SaleReport):
     conn = connect()
     cursor = conn.cursor()
-    query = f"Select created_by, pay_mode, sum(net_amt)net_amt from ( select Distinct a.created_by created_by, a.pay_mode pay_mode, a.net_amt net_amt from   td_receipt a, td_item_sale b where a.receipt_no = b.receipt_no and a.trn_date BETWEEN '{col_rep.from_date}' and '{col_rep.to_date}' and b.comp_id= {col_rep.comp_id} AND b.br_id = {col_rep.br_id} AND a.created_by ='{col_rep.created_by}' )a group by created_by, pay_mode"
+    query = f"Select created_by, pay_mode, sum(net_amt)net_amt from ( select Distinct a.created_by created_by, a.pay_mode pay_mode, a.net_amt net_amt from td_receipt a, td_item_sale b where a.receipt_no = b.receipt_no and a.trn_date BETWEEN '{col_rep.from_date}' and '{col_rep.to_date}' and b.comp_id= {col_rep.comp_id} AND b.br_id = {col_rep.br_id} )a group by created_by, pay_mode"
     cursor.execute(query)
     records = cursor.fetchall()
-    print(query)
     result = createResponse(records, cursor.column_names, 1)
-    print(result)
     conn.close()
     cursor.close()
     if records==[]:
@@ -356,7 +354,48 @@ async def item_report(item_rep:ItemReport):
     cursor.execute(query)
     records = cursor.fetchall()
     result = createResponse(records, cursor.column_names, 1)
-    print(result)
+    conn.close()
+    cursor.close()
+    if records==[]:
+        resData= {"status":0, "data":"no such data"}
+    else:
+        resData= {
+        "status":1,
+        "data":result
+        }
+    return resData
+
+# GST Statement
+#-------------------------------------------------------------------------------------------------------------
+@app.post('/api/gst_statement')
+def gst_statement(gst_st:SaleReport):
+    conn = connect()
+    cursor = conn.cursor()
+    query = f"select distinct a.receipt_no, a.trn_date, (a.price - a.discount_amt)taxable_amt, a.cgst_amt, a.sgst_amt, (a.cgst_amt + a.sgst_amt)total_tax, a.net_amt from td_receipt a, td_item_sale b where a.receipt_no = b.receipt_no and b.comp_id = {gst_st.comp_id} and b.br_id = {gst_st.br_id} and a.trn_date BETWEEN '{gst_st.from_date}' and '{gst_st.to_date}'"
+    cursor.execute(query)
+    records = cursor.fetchall()
+    result = createResponse(records, cursor.column_names, 1)
+    conn.close()
+    cursor.close()
+    if records==[]:
+        resData= {"status":0, "data":"no such data"}
+    else:
+        resData= {
+        "status":1,
+        "data":result
+        }
+    return resData
+
+# GST  Summary
+#-------------------------------------------------------------------------------------------------------------
+@app.post('/api/gst_summary')
+def gst_summary(gst_sm:SaleReport):
+    conn = connect()
+    cursor = conn.cursor()
+    query = f"SELECT cgst_prtg, SUM(cgst_amt)cgst_amt, SUM(sgst_amt)sgst_amt, SUM(cgst_amt) + SUM(sgst_amt)total_tax FROM td_item_sale WHERE comp_id = {gst_sm.comp_id} AND br_id = {gst_sm.br_id} AND trn_date BETWEEN '{gst_sm.from_date}' AND '{gst_sm.to_date}' GROUP BY cgst_prtg"
+    cursor.execute(query)
+    records = cursor.fetchall()
+    result = createResponse(records, cursor.column_names, 1)
     conn.close()
     cursor.close()
     if records==[]:

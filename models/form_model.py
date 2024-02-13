@@ -53,7 +53,6 @@ class SaleReport(BaseModel):
     to_date:date
     comp_id:int
     br_id:int
-    created_by:str
 
 class ItemReport(BaseModel):
     from_date:date
