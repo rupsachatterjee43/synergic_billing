@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 from config.database import connect
 from models.master_model import createResponse
-from models.form_model import UserLogin,Receipt,CreatePIN,DashBoard,SearchBill,SaleReport,ItemReport
+from models.form_model import UserLogin,Receipt,CreatePIN,DashBoard,SearchBill,SaleReport,ItemReport,EditHeaderFooter,EditItem
 from datetime import datetime, date
 from utils import get_hashed_password, verify_password
 
@@ -194,7 +194,11 @@ def register(rcpt:list[Receipt]):
     receipt = int(round(current_datetime.timestamp()))
     formatted_datetime = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
     values = []
+    tcgst_amt = 0
+    tsgst_amt = 0
     for i in rcpt:
+        tcgst_amt += i.cgst_amt
+        tsgst_amt += i.sgst_amt
         conn = connect()
         cursor = conn.cursor()
         # print(i)
@@ -209,9 +213,10 @@ def register(rcpt:list[Receipt]):
             resData = {"status":1, "data":receipt}
         else:
             resData = {"status":0, "data":'Data not inserted'}
+    
     conn = connect()
     cursor = conn.cursor()
-    query = f"INSERT INTO td_receipt (receipt_no, trn_date, price, discount_amt, cgst_amt, sgst_amt, amount, round_off, net_amt, pay_mode, received_amt, pay_dtls, cust_name, phone_no, created_by, created_dt) VALUES ('{receipt}','{formatted_datetime}',{rcpt[0].tprice},{rcpt[0].tdiscount_amt},{rcpt[0].tcgst_amt},{rcpt[0].tsgst_amt},{rcpt[0].amount},{rcpt[0].round_off},{rcpt[0].net_amt},'{rcpt[0].pay_mode}','{rcpt[0].received_amt}','{rcpt[0].pay_dtls}','{rcpt[0].cust_name}','{rcpt[0].phone_no}','{rcpt[0].created_by}','{formatted_datetime}')"
+    query = f"INSERT INTO td_receipt (receipt_no, trn_date, price, discount_amt, cgst_amt, sgst_amt, amount, round_off, net_amt, pay_mode, received_amt, pay_dtls, cust_name, phone_no, created_by, created_dt) VALUES ('{receipt}','{formatted_datetime}',{rcpt[0].tprice},{rcpt[0].tdiscount_amt},{tcgst_amt},{tsgst_amt},{rcpt[0].amount},{rcpt[0].round_off},{rcpt[0].net_amt},'{rcpt[0].pay_mode}','{rcpt[0].received_amt}','{rcpt[0].pay_dtls}','{rcpt[0].cust_name}','{rcpt[0].phone_no}','{rcpt[0].created_by}','{formatted_datetime}')"
     # print(query)
     cursor.execute(query)
     conn.commit()
@@ -345,7 +350,7 @@ async def collection_report(col_rep:SaleReport):
     return resData
 
 # Item Report
-#------------------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------------------------
 @app.post('/api/item_report')
 async def item_report(item_rep:ItemReport):
     conn = connect()
@@ -405,4 +410,54 @@ def gst_summary(gst_sm:SaleReport):
         "status":1,
         "data":result
         }
+    return resData
+
+# Edit header-footer option for 'M' user type
+#-------------------------------------------------------------------------------------------------------------
+@app.post('/api/edit_header_footer')
+def edit_header_footer(edit:EditHeaderFooter):
+    current_datetime = datetime.now()
+    formatted_datetime = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
+    conn = connect()
+    cursor = conn.cursor()
+    query = f"UPDATE md_header_footer SET header1 = '{edit.header1}', on_off_flag1 = '{edit.on_off_flag1}', header2 = '{edit.header2}', on_off_flag2 = '{edit.on_off_flag2}', footer1 = '{edit.footer1}', on_off_flag3 = '{edit.on_off_flag3}', footer2 = '{edit.footer2}', on_off_flag4 = '{edit.on_off_flag4}', created_by = '{edit.created_by}', created_at = '{formatted_datetime}' WHERE comp_id = {edit.comp_id}"
+    cursor.execute(query)
+    conn.commit()
+    conn.close()
+    cursor.close()
+    print(cursor.rowcount)
+    # print(query)
+    if cursor.rowcount>0:
+        resData= {
+        "status":1,
+        "data":"data edited successfully"
+        }
+    else:
+        resData= {"status":0, "data":"data not edited"}
+       
+    return resData
+
+# Edit item_rate
+#-------------------------------------------------------------------------------------------------------------
+@app.post('/api/edit_items')
+def edit_items(edit_item:EditItem):
+    current_datetime = datetime.now()
+    formatted_dt = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
+    conn = connect()
+    cursor = conn.cursor()
+    query = f"UPDATE md_item_rate JOIN md_items ON md_items.id=md_item_rate.item_id SET md_item_rate.price = {edit_item.price}, md_item_rate.discount = {edit_item.discount}, md_item_rate.cgst = {edit_item.cgst}, sgst = {edit_item.sgst}, md_item_rate.modified_by = '{edit_item.modified_by}', md_item_rate.modified_dt = '{formatted_dt}' WHERE md_item_rate.item_id={edit_item.item_id} AND md_items.com_id={edit_item.com_id}"
+    cursor.execute(query)
+    conn.commit()
+    conn.close()
+    cursor.close()
+    print(cursor.rowcount)
+    # print(query)
+    if cursor.rowcount>0:
+        resData= {
+        "status":1,
+        "data":"data edited successfully"
+        }
+    else:
+        resData= {"status":0, "data":"data not edited"}
+       
     return resData

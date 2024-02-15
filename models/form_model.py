@@ -23,8 +23,8 @@ class Receipt(BaseModel):
     qty:int
     tprice:float
     tdiscount_amt:float
-    tcgst_amt:float
-    tsgst_amt:float
+    # tcgst_amt:float
+    # tsgst_amt:float
     amount:float
     round_off:float
     net_amt:int
@@ -60,3 +60,25 @@ class ItemReport(BaseModel):
     comp_id:int
     br_id:int
     item_id:int
+
+class EditHeaderFooter(BaseModel):
+    comp_id:int
+    header1:str
+    on_off_flag1:str
+    header2:str
+    on_off_flag2:str
+    footer1:str
+    on_off_flag3:str
+    footer2:str
+    on_off_flag4:str
+    created_by:str
+
+class EditItem(BaseModel):
+    com_id:int
+    item_id:int
+    price:float
+    discount:float
+    cgst:float
+    sgst:float
+    modified_by:str
+    
