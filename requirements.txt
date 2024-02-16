@@ -4,4 +4,3 @@ pydantic
 mysql-connector-python
 passlib[bcrypt]
 python-multipart
-# , price, discount_amt, cgst_amt, sgst_amt, round_off, amount, pay_mode, received_amt, pay_dtls

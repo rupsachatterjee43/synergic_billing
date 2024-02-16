@@ -329,7 +329,7 @@ async def sale_report(sl_rep:SaleReport):
     return resData
 
 # Collection Report
-#------------------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------------------------
 @app.post('/api/collection_report')
 async def collection_report(col_rep:SaleReport):
     conn = connect()
