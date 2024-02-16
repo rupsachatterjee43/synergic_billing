@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 from config.database import connect
 from models.master_model import createResponse
-from models.form_model import UserLogin,Receipt,CreatePIN,DashBoard,SearchBill,SaleReport,ItemReport,EditHeaderFooter,EditItem
+from models.form_model import UserLogin,Receipt,CreatePIN,DashBoard,SearchBill,SaleReport,ItemReport,EditHeaderFooter,EditItem,EditRcpSettings
 from datetime import datetime, date
 from utils import get_hashed_password, verify_password
 
@@ -452,6 +452,30 @@ def edit_items(edit_item:EditItem):
     cursor.close()
     print(cursor.rowcount)
     # print(query)
+    if cursor.rowcount>0:
+        resData= {
+        "status":1,
+        "data":"data edited successfully"
+        }
+    else:
+        resData= {"status":0, "data":"data not edited"}
+       
+    return resData
+
+# Edit Receipt Settings
+#-------------------------------------------------------------------------------------------------------------
+@app.post('/api/edit_rcp_settings')
+def edit_rcp_settings(rcp_set:EditRcpSettings):
+    current_datetime = datetime.now()
+    formatted_dt = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
+    conn = connect()
+    cursor = conn.cursor()
+    query = f"UPDATE md_receipt_settings SET rcpt_type='{rcp_set.rcpt_type}', gst_flag='{rcp_set.gst_flag}', cust_inf='{rcp_set.cust_inf}', pay_mode='{rcp_set.pay_mode}', discount_type='{rcp_set.discount_type}', created_by='{rcp_set.created_by}', modified_by='{rcp_set.modified_by}', modified_at='{formatted_dt}' WHERE comp_id={rcp_set.comp_id}"
+    cursor.execute(query)
+    conn.commit()
+    conn.close()
+    cursor.close()
+    print(cursor.rowcount)
     if cursor.rowcount>0:
         resData= {
         "status":1,

@@ -82,3 +82,12 @@ class EditItem(BaseModel):
     sgst:float
     modified_by:str
     
+class EditRcpSettings(BaseModel):
+    comp_id:int
+    rcpt_type:str
+    gst_flag:str
+    cust_inf:str
+    pay_mode:str
+    discount_type:str
+    created_by:str
+    modified_by:str
