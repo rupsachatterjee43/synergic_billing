@@ -33,7 +33,7 @@ def index():
 # Verify Phone no and active status
 #------------------------------------------------------------------------------------------------------
 @app.post('/api/verify_phone/{phone_no}')
-def verify(phone_no:int):
+async def verify(phone_no:int):
     conn = connect()
     cursor = conn.cursor()
     query = f"SELECT COUNT(*)phone_no FROM md_user WHERE user_id=phone_no AND phone_no={phone_no}"
@@ -55,7 +55,7 @@ def verify(phone_no:int):
      
    
 @app.post('/api/verify_active/{phone_no}')
-def verify(phone_no:int):
+async def verify(phone_no:int):
     conn = connect()
     cursor = conn.cursor()
     query = f"SELECT COUNT(*)active_flag FROM md_user WHERE active_flag='N' AND user_id={phone_no}"
@@ -77,7 +77,7 @@ def verify(phone_no:int):
 # Create PIN
 #-------------------------------------------------------------------------------------------------------------
 @app.post('/api/create_pin')
-def register(data:CreatePIN):
+async def register(data:CreatePIN):
     password=data.PIN
     haspass=get_hashed_password(password)
     conn = connect()
@@ -100,13 +100,13 @@ def register(data:CreatePIN):
 # Generate OTP
 #-------------------------------------------------------------------------------------------------------------
 @app.post('/api/otp/{phone_no}') 
-def OTP(phone_no:int):
+async def OTP(phone_no:int):
     return {"status":1, "data":"1234"}
 
 # USER LOGIN
 #-----------------------------------------------------------------------------------------------------------  
 @app.post('/api/login')
-def login(data_login:UserLogin):
+async def login(data_login:UserLogin):
     conn = connect()
     cursor = conn.cursor()
     query = f"SELECT a.*, b.*, c.* FROM md_user a, md_branch b, md_company c WHERE a.user_id='{data_login.user_id}' AND b.id=a.br_id AND c.id=a.comp_id AND a.active_flag='Y'"
@@ -189,7 +189,7 @@ async def show_item_rate(item_id:int):
 # Item Sale
 #-------------------------------------------------------------------------------------------------------------
 @app.post('/api/saleinsert')
-def register(rcpt:list[Receipt]):
+async def register(rcpt:list[Receipt]):
     current_datetime = datetime.now()
     receipt = int(round(current_datetime.timestamp()))
     formatted_datetime = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
@@ -271,20 +271,22 @@ async def recent_bill(rec_bill:DashBoard):
 async def show_bill(recp_no:int):
     conn = connect()
     cursor = conn.cursor()
-    query = f"SELECT a.*, b.*, c.item_name FROM td_item_sale a, td_receipt b, md_items c WHERE a.receipt_no=b.receipt_no and a.trn_date=b.trn_date and a.item_id=c.id and b.receipt_no={recp_no} and b.receipt_no={recp_no}"
+    query = f"SELECT a.receipt_no, a.comp_id, a.br_id, a.item_id, a.trn_date, a.price, a.dis_pertg, a.discount_amt, a.cgst_prtg, a.cgst_amt, a.sgst_prtg, a.sgst_amt, a.qty, a.created_by, a.created_dt, a.modified_by, a.modified_dt, b.price AS tprice, b.discount_amt AS tdiscount_amt, b.cgst_amt AS tcgst_amt, b.sgst_amt AS tsgst_amt, b.amount, b.round_off, b.net_amt, b.pay_mode, b.received_amt, b.pay_dtls, b.cust_name, b.phone_no, b.created_by AS tcreated_by, b.created_dt AS tcreated_dt, b.modified_by AS tmodified_by, b.modified_dt AS tmodified_dt, c.item_name FROM td_item_sale a, td_receipt b, md_items c WHERE a.receipt_no=b.receipt_no and a.trn_date=b.trn_date and a.item_id=c.id and a.receipt_no={recp_no}"
     cursor.execute(query)
     records = cursor.fetchall()
     result = createResponse(records, cursor.column_names, 1)
     conn.close()
     cursor.close()
-    if records==[]:
-        resData= {"status":0, "data":"no such data"}
+    if cursor.rowcount>0:
+        resData= {"status":1, 
+                  "data":result}
     else:
         resData= {
-        "status":1,
-        "data":result
+        "status":0,
+        "data":"no data found"
         }
     return resData
+
 
 #Search bills within a date range
 #-------------------------------------------------------------------------------------------------------------
@@ -373,7 +375,7 @@ async def item_report(item_rep:ItemReport):
 # GST Statement
 #-------------------------------------------------------------------------------------------------------------
 @app.post('/api/gst_statement')
-def gst_statement(gst_st:SaleReport):
+async def gst_statement(gst_st:SaleReport):
     conn = connect()
     cursor = conn.cursor()
     query = f"select distinct a.receipt_no, a.trn_date, (a.price - a.discount_amt)taxable_amt, a.cgst_amt, a.sgst_amt, (a.cgst_amt + a.sgst_amt)total_tax, a.net_amt from td_receipt a, td_item_sale b where a.receipt_no = b.receipt_no and b.comp_id = {gst_st.comp_id} and b.br_id = {gst_st.br_id} and a.trn_date BETWEEN '{gst_st.from_date}' and '{gst_st.to_date}'"
@@ -394,7 +396,7 @@ def gst_statement(gst_st:SaleReport):
 # GST  Summary
 #-------------------------------------------------------------------------------------------------------------
 @app.post('/api/gst_summary')
-def gst_summary(gst_sm:SaleReport):
+async def gst_summary(gst_sm:SaleReport):
     conn = connect()
     cursor = conn.cursor()
     query = f"SELECT cgst_prtg, SUM(cgst_amt)cgst_amt, SUM(sgst_amt)sgst_amt, SUM(cgst_amt) + SUM(sgst_amt)total_tax FROM td_item_sale WHERE comp_id = {gst_sm.comp_id} AND br_id = {gst_sm.br_id} AND trn_date BETWEEN '{gst_sm.from_date}' AND '{gst_sm.to_date}' GROUP BY cgst_prtg"
@@ -415,7 +417,7 @@ def gst_summary(gst_sm:SaleReport):
 # Edit header-footer option for 'M' user type
 #-------------------------------------------------------------------------------------------------------------
 @app.post('/api/edit_header_footer')
-def edit_header_footer(edit:EditHeaderFooter):
+async def edit_header_footer(edit:EditHeaderFooter):
     current_datetime = datetime.now()
     formatted_datetime = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
     conn = connect()
@@ -440,7 +442,7 @@ def edit_header_footer(edit:EditHeaderFooter):
 # Edit item_rate
 #-------------------------------------------------------------------------------------------------------------
 @app.post('/api/edit_items')
-def edit_items(edit_item:EditItem):
+async def edit_items(edit_item:EditItem):
     current_datetime = datetime.now()
     formatted_dt = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
     conn = connect()
@@ -465,7 +467,7 @@ def edit_items(edit_item:EditItem):
 # Edit Receipt Settings
 #-------------------------------------------------------------------------------------------------------------
 @app.post('/api/edit_rcp_settings')
-def edit_rcp_settings(rcp_set:EditRcpSettings):
+async def edit_rcp_settings(rcp_set:EditRcpSettings):
     current_datetime = datetime.now()
     formatted_dt = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
     conn = connect()
@@ -477,11 +479,32 @@ def edit_rcp_settings(rcp_set:EditRcpSettings):
     cursor.close()
     print(cursor.rowcount)
     if cursor.rowcount>0:
-        resData= {
+        resData= {  
         "status":1,
         "data":"data edited successfully"
         }
     else:
         resData= {"status":0, "data":"data not edited"}
        
+    return resData
+
+# App version checking
+#-------------------------------------------------------------------------------------------------------------
+@app.get('/api/app_version')
+async def app_version():
+    conn = connect()
+    cursor = conn.cursor()
+    query = "SELECT * FROM md_version"
+    cursor.execute(query)
+    records = cursor.fetchall()
+    result = createResponse(records, cursor.column_names, 1)
+    conn.close()
+    cursor.close()
+    if cursor.rowcount>0:
+        resData= {  
+        "status":1,
+        "data":result
+        }
+    else:
+        resData= {"status":0, "data":"no data"}
     return resData

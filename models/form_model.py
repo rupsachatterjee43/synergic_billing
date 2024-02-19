@@ -1,4 +1,4 @@
-from pydantic import BaseModel, datetime_parse
+from pydantic import BaseModel
 from datetime import date
 
 class CreatePIN(BaseModel):
