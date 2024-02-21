@@ -53,6 +53,7 @@ class SaleReport(BaseModel):
     to_date:date
     comp_id:int
     br_id:int
+    user_id:str
 
 class ItemReport(BaseModel):
     from_date:date
@@ -60,6 +61,7 @@ class ItemReport(BaseModel):
     comp_id:int
     br_id:int
     item_id:int
+    user_id:str
 
 class EditHeaderFooter(BaseModel):
     comp_id:int
