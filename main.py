@@ -301,7 +301,7 @@ async def search_bills(search:SearchBill):
     conn.close()
     cursor.close()
     if records==[]:
-        resData= {"status":0, "data":"no transactions"}
+        resData= {"status":0, "data":[]}
     else:
         resData= {
         "status":1,
