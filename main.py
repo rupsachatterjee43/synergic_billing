@@ -36,7 +36,7 @@ def index():
 async def verify(phone_no:int):
     conn = connect()
     cursor = conn.cursor()
-    query = f"SELECT COUNT(*)phone_no FROM md_user WHERE user_id=phone_no AND phone_no={phone_no}"
+    query = f"SELECT COUNT(*)phone_no FROM md_user WHERE user_id=phone_no AND user_type in ('U','M') AND phone_no={phone_no}"
     cursor.execute(query)
     records = cursor.fetchall()
     print(records)
@@ -109,7 +109,7 @@ async def OTP(phone_no:int):
 async def login(data_login:UserLogin):
     conn = connect()
     cursor = conn.cursor()
-    query = f"SELECT a.*, b.*, c.* FROM md_user a, md_branch b, md_company c WHERE a.user_id='{data_login.user_id}' AND b.id=a.br_id AND c.id=a.comp_id AND a.active_flag='Y'"
+    query = f"SELECT a.*, b.*, c.* FROM md_user a, md_branch b, md_company c WHERE a.user_id='{data_login.user_id}' AND b.id=a.br_id AND c.id=a.comp_id AND a.active_flag='Y' AND a.user_type in ('U','M')"
     cursor.execute(query)
     print(cursor.rowcount)
     records = cursor.fetchone()
@@ -379,7 +379,7 @@ async def item_report(item_rep:ItemReport):
 async def gst_statement(gst_st:SaleReport):
     conn = connect()
     cursor = conn.cursor()
-    query = f"select distinct a.receipt_no, a.trn_date, (a.price - a.discount_amt)taxable_amt, a.cgst_amt, a.sgst_amt, (a.cgst_amt + a.sgst_amt)total_tax, a.net_amt from td_receipt a, td_item_sale b where a.receipt_no = b.receipt_no and b.comp_id = {gst_st.comp_id} and b.br_id = {gst_st.br_id} and a.trn_date BETWEEN '{gst_st.from_date}' and '{gst_st.to_date}'"
+    query = f"select distinct a.receipt_no, a.trn_date, (a.price - a.discount_amt)taxable_amt, a.cgst_amt, a.sgst_amt, (a.cgst_amt + a.sgst_amt)total_tax, a.net_amt from td_receipt a, td_item_sale b where a.receipt_no = b.receipt_no and b.comp_id = {gst_st.comp_id} and b.br_id = {gst_st.br_id} and a.created_by = {gst_st.user_id} and a.trn_date BETWEEN '{gst_st.from_date}' and '{gst_st.to_date}'"
     cursor.execute(query)
     records = cursor.fetchall()
     result = createResponse(records, cursor.column_names, 1)
@@ -400,7 +400,7 @@ async def gst_statement(gst_st:SaleReport):
 async def gst_summary(gst_sm:SaleReport):
     conn = connect()
     cursor = conn.cursor()
-    query = f"SELECT cgst_prtg, SUM(cgst_amt)cgst_amt, SUM(sgst_amt)sgst_amt, SUM(cgst_amt) + SUM(sgst_amt)total_tax FROM td_item_sale WHERE comp_id = {gst_sm.comp_id} AND br_id = {gst_sm.br_id} AND trn_date BETWEEN '{gst_sm.from_date}' AND '{gst_sm.to_date}' GROUP BY cgst_prtg"
+    query = f"SELECT cgst_prtg, SUM(cgst_amt)cgst_amt, SUM(sgst_amt)sgst_amt, SUM(cgst_amt) + SUM(sgst_amt)total_tax FROM td_item_sale WHERE comp_id = {gst_sm.comp_id} AND br_id = {gst_sm.br_id} AND created_by = {gst_sm.user_id} AND trn_date BETWEEN '{gst_sm.from_date}' AND '{gst_sm.to_date}' GROUP BY cgst_prtg"
     cursor.execute(query)
     records = cursor.fetchall()
     result = createResponse(records, cursor.column_names, 1)
