@@ -93,3 +93,14 @@ class EditRcpSettings(BaseModel):
     discount_type:str
     created_by:str
     modified_by:str
+
+class AddItem(BaseModel):
+    com_id:int
+    hsn_code:str
+    item_name:str
+    created_by:str
+    price:float
+    discount:float
+    cgst:float
+    sgst:float
+

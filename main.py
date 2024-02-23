@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 from config.database import connect
 from models.master_model import createResponse
-from models.form_model import UserLogin,Receipt,CreatePIN,DashBoard,SearchBill,SaleReport,ItemReport,EditHeaderFooter,EditItem,EditRcpSettings
+from models.form_model import UserLogin,Receipt,CreatePIN,DashBoard,SearchBill,SaleReport,ItemReport,EditHeaderFooter,EditItem,EditRcpSettings,AddItem
 from datetime import datetime, date
 from utils import get_hashed_password, verify_password
 
@@ -462,6 +462,41 @@ async def edit_items(edit_item:EditItem):
         }
     else:
         resData= {"status":0, "data":"data not edited"}
+       
+    return resData
+
+# Add items
+#---------------------------------------------------------------------------------------------------------------------------
+@app.post('/api/add_items')
+async def add_items(add_item:AddItem):
+    current_datetime = datetime.now()
+    formatted_dt = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
+    conn = connect()
+    cursor = conn.cursor()
+    query = f"INSERT INTO md_items(com_id, hsn_code, item_name, created_by, created_dt) VALUES ({add_item.com_id}, '{add_item.hsn_code}', '{add_item.item_name}', '{add_item.created_by}', '{formatted_dt}')"
+    cursor.execute(query)
+    conn.commit()
+    conn.close()
+    cursor.close()
+    print(cursor.rowcount)
+    # print(query)
+    if cursor.rowcount>0:
+        conn1 = connect()
+        cursor1 = conn1.cursor()
+        query1 = f"INSERT INTO md_item_rate (item_id, price, discount, cgst, sgst, created_by, created_dt) VALUES ({cursor.lastrowid}, {add_item.price}, {add_item.discount}, {add_item.cgst}, {add_item.sgst}, '{add_item.created_by}', '{formatted_dt}')"
+        cursor1.execute(query1)
+        conn1.commit()
+        conn1.close()
+        cursor1.close()
+        if cursor1.rowcount>0:
+            resData= {
+            "status":1,
+            "data":"data added successfully"
+            } 
+        else:
+            resData= {"status":0, "data":"item rate not added"}
+    else:
+        resData={"status":-1, "data":"data not added" }
        
     return resData
 
