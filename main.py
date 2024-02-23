@@ -36,7 +36,7 @@ def index():
 async def verify(phone_no:int):
     conn = connect()
     cursor = conn.cursor()
-    query = f"SELECT COUNT(*)phone_no FROM md_user WHERE user_id=phone_no AND phone_no={phone_no}"
+    query = f"SELECT COUNT(*)phone_no FROM md_user WHERE user_id=phone_no AND user_type in ('U','M') AND phone_no={phone_no}"
     cursor.execute(query)
     records = cursor.fetchall()
     print(records)
@@ -109,7 +109,7 @@ async def OTP(phone_no:int):
 async def login(data_login:UserLogin):
     conn = connect()
     cursor = conn.cursor()
-    query = f"SELECT a.*, b.*, c.* FROM md_user a, md_branch b, md_company c WHERE a.user_id='{data_login.user_id}' AND b.id=a.br_id AND c.id=a.comp_id AND a.active_flag='Y'"
+    query = f"SELECT a.*, b.*, c.* FROM md_user a, md_branch b, md_company c WHERE a.user_id='{data_login.user_id}' AND b.id=a.br_id AND c.id=a.comp_id AND a.active_flag='Y' AND a.user_type in ('U','M')"
     cursor.execute(query)
     print(cursor.rowcount)
     records = cursor.fetchone()
@@ -301,7 +301,7 @@ async def search_bills(search:SearchBill):
     conn.close()
     cursor.close()
     if records==[]:
-        resData= {"status":0, "data":"no transactions"}
+        resData= {"status":0, "data":[]}
     else:
         resData= {
         "status":1,
@@ -315,14 +315,15 @@ async def search_bills(search:SearchBill):
 async def sale_report(sl_rep:SaleReport):
     conn = connect()
     cursor = conn.cursor()
-    query = f"select a.cust_name, a.phone_no, a.receipt_no, a.trn_date,  count(b.receipt_no)no_of_items, sum(a.price)price, sum(a.discount_amt)discount_amt, sum(a.cgst_amt)cgst_amt, sum(a.sgst_amt)sgst_amt, sum(a.round_off)rount_off, sum(a.amount)net_amt, a.created_by from  td_receipt a,td_item_sale b where a.receipt_no = b.receipt_no  and   a.trn_date between '{sl_rep.from_date}' and '{sl_rep.to_date}' and   b.comp_id = {sl_rep.comp_id} AND   b.br_id = {sl_rep.br_id} group by a.cust_name, a.phone_no, a.receipt_no, a.trn_date, a.created_by"
+    # query = f"select a.cust_name, a.phone_no, a.receipt_no, a.trn_date,  count(b.receipt_no)no_of_items, sum(a.price)price, sum(a.discount_amt)discount_amt, sum(a.cgst_amt)cgst_amt, sum(a.sgst_amt)sgst_amt, sum(a.round_off)rount_off, sum(a.amount)net_amt, a.created_by from  td_receipt a,td_item_sale b where a.receipt_no = b.receipt_no  and   a.trn_date between '{sl_rep.from_date}' and '{sl_rep.to_date}' and   b.comp_id = {sl_rep.comp_id} AND   b.br_id = {sl_rep.br_id} group by a.cust_name, a.phone_no, a.receipt_no, a.trn_date, a.created_by"
+    query=f"select a.cust_name, a.phone_no, a.receipt_no, a.trn_date,  count(b.receipt_no)no_of_items, a.price, a.discount_amt, a.cgst_amt, a.sgst_amt,a.round_off, a.net_amt, a.created_by from  td_receipt a,td_item_sale b where a.receipt_no = b.receipt_no  and   a.trn_date between '{sl_rep.from_date}' and '{sl_rep.to_date}' and   b.comp_id = {sl_rep.comp_id} AND   b.br_id = {sl_rep.br_id} and a.created_by='{sl_rep.user_id}' group by a.cust_name, a.phone_no, a.receipt_no, a.trn_date, a.created_by"
     cursor.execute(query)
     records = cursor.fetchall()
     result = createResponse(records, cursor.column_names, 1)
     conn.close()
     cursor.close()
     if records==[]:
-        resData= {"status":0, "data":"no such data"}
+        resData= {"status":0, "data":[]}
     else:
         resData= {
         "status":1,
@@ -336,14 +337,14 @@ async def sale_report(sl_rep:SaleReport):
 async def collection_report(col_rep:SaleReport):
     conn = connect()
     cursor = conn.cursor()
-    query = f"Select created_by, pay_mode, sum(net_amt)net_amt from ( select Distinct a.created_by created_by, a.pay_mode pay_mode, a.net_amt net_amt from td_receipt a, td_item_sale b where a.receipt_no = b.receipt_no and a.trn_date BETWEEN '{col_rep.from_date}' and '{col_rep.to_date}' and b.comp_id= {col_rep.comp_id} AND b.br_id = {col_rep.br_id} )a group by created_by, pay_mode"
+    query = f"Select created_by, pay_mode, sum(net_amt)net_amt, user_name, count(receipt_no)no_of_bills from ( select Distinct a.created_by created_by, a.pay_mode pay_mode, a.net_amt net_amt, c.user_name user_name, a.receipt_no receipt_no from td_receipt a, td_item_sale b, md_user c where a.created_by=c.user_id and a.receipt_no = b.receipt_no and a.trn_date BETWEEN '{col_rep.from_date}' and '{col_rep.to_date}' and b.comp_id= {col_rep.comp_id} AND b.br_id = {col_rep.br_id} AND a.created_by='{col_rep.user_id}')a group by created_by, pay_mode"
     cursor.execute(query)
     records = cursor.fetchall()
     result = createResponse(records, cursor.column_names, 1)
     conn.close()
     cursor.close()
     if records==[]:
-        resData= {"status":0, "data":"no such data"}
+        resData= {"status":0, "data":[]}
     else:
         resData= {
         "status":1,
@@ -357,14 +358,14 @@ async def collection_report(col_rep:SaleReport):
 async def item_report(item_rep:ItemReport):
     conn = connect()
     cursor = conn.cursor()
-    query = f"select a.receipt_no,a.trn_date,a.qty,a.price,a.discount_amt,a.cgst_amt,a.sgst_amt,b.amount,b.pay_mode,c.item_name,d.branch_name from   td_item_sale a, td_receipt b, md_items c, md_branch d where  a.receipt_no = b.receipt_no AND a.comp_id = c.com_id AND a.comp_id = d.comp_id AND a.br_id = d.id AND a.item_id = c.id And a.trn_date BETWEEN '{item_rep.from_date}' and '{item_rep.to_date}' And a.comp_id = {item_rep.comp_id} AND a.br_id = {item_rep.br_id} AND a.item_id = {item_rep.item_id}"
+    query = f"select a.receipt_no,a.trn_date,a.qty,a.price,a.discount_amt,a.cgst_amt,a.sgst_amt,b.amount,b.pay_mode,c.item_name,d.branch_name from   td_item_sale a, td_receipt b, md_items c, md_branch d where  a.receipt_no = b.receipt_no AND a.comp_id = c.com_id AND a.comp_id = d.comp_id AND a.br_id = d.id AND a.item_id = c.id And a.trn_date BETWEEN '{item_rep.from_date}' and '{item_rep.to_date}' And a.comp_id = {item_rep.comp_id} AND a.br_id = {item_rep.br_id} AND a.item_id = {item_rep.item_id} and b.created_by='{item_rep.user_id}'"
     cursor.execute(query)
     records = cursor.fetchall()
     result = createResponse(records, cursor.column_names, 1)
     conn.close()
     cursor.close()
     if records==[]:
-        resData= {"status":0, "data":"no such data"}
+        resData= {"status":0, "data":[]}
     else:
         resData= {
         "status":1,
@@ -378,14 +379,14 @@ async def item_report(item_rep:ItemReport):
 async def gst_statement(gst_st:SaleReport):
     conn = connect()
     cursor = conn.cursor()
-    query = f"select distinct a.receipt_no, a.trn_date, (a.price - a.discount_amt)taxable_amt, a.cgst_amt, a.sgst_amt, (a.cgst_amt + a.sgst_amt)total_tax, a.net_amt from td_receipt a, td_item_sale b where a.receipt_no = b.receipt_no and b.comp_id = {gst_st.comp_id} and b.br_id = {gst_st.br_id} and a.trn_date BETWEEN '{gst_st.from_date}' and '{gst_st.to_date}'"
+    query = f"select distinct a.receipt_no, a.trn_date, (a.price - a.discount_amt)taxable_amt, a.cgst_amt, a.sgst_amt, (a.cgst_amt + a.sgst_amt)total_tax, a.net_amt from td_receipt a, td_item_sale b where a.receipt_no = b.receipt_no and b.comp_id = {gst_st.comp_id} and b.br_id = {gst_st.br_id} and a.created_by = {gst_st.user_id} and a.trn_date BETWEEN '{gst_st.from_date}' and '{gst_st.to_date}'"
     cursor.execute(query)
     records = cursor.fetchall()
     result = createResponse(records, cursor.column_names, 1)
     conn.close()
     cursor.close()
     if records==[]:
-        resData= {"status":0, "data":"no such data"}
+        resData= {"status":0, "data":[]}
     else:
         resData= {
         "status":1,
@@ -399,14 +400,14 @@ async def gst_statement(gst_st:SaleReport):
 async def gst_summary(gst_sm:SaleReport):
     conn = connect()
     cursor = conn.cursor()
-    query = f"SELECT cgst_prtg, SUM(cgst_amt)cgst_amt, SUM(sgst_amt)sgst_amt, SUM(cgst_amt) + SUM(sgst_amt)total_tax FROM td_item_sale WHERE comp_id = {gst_sm.comp_id} AND br_id = {gst_sm.br_id} AND trn_date BETWEEN '{gst_sm.from_date}' AND '{gst_sm.to_date}' GROUP BY cgst_prtg"
+    query = f"SELECT cgst_prtg, SUM(cgst_amt)cgst_amt, SUM(sgst_amt)sgst_amt, SUM(cgst_amt) + SUM(sgst_amt)total_tax FROM td_item_sale WHERE comp_id = {gst_sm.comp_id} AND br_id = {gst_sm.br_id} AND created_by = {gst_sm.user_id} AND trn_date BETWEEN '{gst_sm.from_date}' AND '{gst_sm.to_date}' GROUP BY cgst_prtg"
     cursor.execute(query)
     records = cursor.fetchall()
     result = createResponse(records, cursor.column_names, 1)
     conn.close()
     cursor.close()
     if records==[]:
-        resData= {"status":0, "data":"no such data"}
+        resData= {"status":0, "data":[]}
     else:
         resData= {
         "status":1,
