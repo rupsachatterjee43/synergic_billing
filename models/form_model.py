@@ -90,7 +90,9 @@ class EditRcpSettings(BaseModel):
     gst_flag:str
     cust_inf:str
     pay_mode:str
+    discount_flag:str
     discount_type:str
+    price_type:str
     created_by:str
     modified_by:str
 
