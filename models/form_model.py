@@ -106,3 +106,6 @@ class AddItem(BaseModel):
     cgst:float
     sgst:float
 
+class CancelBill(BaseModel):
+    receipt_no:str
+    user_id:str

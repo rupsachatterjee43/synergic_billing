@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 from config.database import connect
 from models.master_model import createResponse
-from models.form_model import UserLogin,Receipt,CreatePIN,DashBoard,SearchBill,SaleReport,ItemReport,EditHeaderFooter,EditItem,EditRcpSettings,AddItem
+from models.form_model import UserLogin,Receipt,CreatePIN,DashBoard,SearchBill,SaleReport,ItemReport,EditHeaderFooter,EditItem,EditRcpSettings,AddItem,CancelBill
 from datetime import datetime, date
 from utils import get_hashed_password, verify_password
 
@@ -543,4 +543,39 @@ async def app_version():
         }
     else:
         resData= {"status":0, "data":"no data"}
+    return resData
+
+# Cancel Bill
+#--------------------------------------------------------------------------------------------------------
+@app.post('/api/cancel_bill')
+async def cancel_bill(del_bill:CancelBill):
+    # current_datetime = datetime.now()
+    # formatted_dt = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
+    conn = connect()
+    cursor = conn.cursor()
+    query = f"INSERT INTO td_receipt_cancel (receipt_no, trn_date, price, discount_amt, cgst_amt, sgst_amt, amount, round_off, net_amt, pay_mode, received_amt, pay_dtls, cust_name, phone_no, created_by, created_dt, modified_by, modified_dt) SELECT receipt_no, trn_date, price, discount_amt, cgst_amt, sgst_amt, amount, round_off, net_amt, pay_mode, received_amt, pay_dtls, cust_name, phone_no, created_by, created_dt, modified_by, modified_dt FROM td_receipt WHERE receipt_no='{del_bill.receipt_no}' AND created_by='{del_bill.user_id}'"
+    cursor.execute(query)
+    conn.commit()
+    conn.close()
+    cursor.close()
+    print(cursor.rowcount)
+    # print(query)
+    if cursor.rowcount>0:
+        conn1 = connect()
+        cursor1 = conn1.cursor()
+        query1 = f"DELETE FROM td_receipt WHERE receipt_no='{del_bill.receipt_no}' AND created_by='{del_bill.user_id}'"
+        cursor1.execute(query1)
+        conn1.commit()
+        conn1.close()
+        cursor1.close()
+        if cursor1.rowcount>0:
+            resData= {
+            "status":1,
+            "data":"bill deleted successfully"
+            } 
+        else:
+            resData= {"status":0, "data":"bill not deleted"}
+    else:
+        resData={"status":-1, "data":"bill not added" }
+       
     return resData
