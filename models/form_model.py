@@ -33,6 +33,8 @@ class Receipt(BaseModel):
     pay_dtls:str
     cust_name:str
     phone_no:str
+    gst_flag:str
+    discount_type:str
     created_by:str
 
 class DashBoard(BaseModel):
@@ -107,5 +109,5 @@ class AddItem(BaseModel):
     sgst:float
 
 class CancelBill(BaseModel):
-    receipt_no:str
+    receipt_no:int
     user_id:str
