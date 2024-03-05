@@ -92,6 +92,7 @@ class EditRcpSettings(BaseModel):
     comp_id:int
     rcpt_type:str
     gst_flag:str
+    unit_flag:str
     cust_inf:str
     pay_mode:str
     discount_flag:str
