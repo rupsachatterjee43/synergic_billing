@@ -84,6 +84,8 @@ class EditItem(BaseModel):
     discount:float
     cgst:float
     sgst:float
+    unit_name:str
+    unit_id:int
     modified_by:str
     
 class EditRcpSettings(BaseModel):
@@ -102,6 +104,8 @@ class AddItem(BaseModel):
     com_id:int
     hsn_code:str
     item_name:str
+    unit_id:int
+    unit_name:str
     created_by:str
     price:float
     discount:float
@@ -111,3 +115,12 @@ class AddItem(BaseModel):
 class CancelBill(BaseModel):
     receipt_no:int
     user_id:str
+
+class AddUnit(BaseModel):
+    unit_name:str
+    created_by:str
+
+class EditUnit(BaseModel):
+    sl_no:int
+    unit_name:str
+    modified_by:str

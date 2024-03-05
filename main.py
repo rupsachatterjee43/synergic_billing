@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 from config.database import connect
 from models.master_model import createResponse
-from models.form_model import UserLogin,Receipt,CreatePIN,DashBoard,SearchBill,SaleReport,ItemReport,EditHeaderFooter,EditItem,EditRcpSettings,AddItem,CancelBill
+from models.form_model import UserLogin,Receipt,CreatePIN,DashBoard,SearchBill,SaleReport,ItemReport,EditHeaderFooter,EditItem,EditRcpSettings,AddItem,CancelBill,AddUnit,EditUnit
 from datetime import datetime, date
 from utils import get_hashed_password, verify_password
 
@@ -442,13 +442,13 @@ async def edit_header_footer(edit:EditHeaderFooter):
 
 # Edit item_rate
 #-------------------------------------------------------------------------------------------------------------
-@app.post('/api/edit_items')
+@app.post('/api/edit_item')
 async def edit_items(edit_item:EditItem):
     current_datetime = datetime.now()
     formatted_dt = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
     conn = connect()
     cursor = conn.cursor()
-    query = f"UPDATE md_item_rate JOIN md_items ON md_items.id=md_item_rate.item_id SET md_item_rate.price = {edit_item.price}, md_item_rate.discount = {edit_item.discount}, md_item_rate.cgst = {edit_item.cgst}, sgst = {edit_item.sgst}, md_item_rate.modified_by = '{edit_item.modified_by}', md_item_rate.modified_dt = '{formatted_dt}' WHERE md_item_rate.item_id={edit_item.item_id} AND md_items.com_id={edit_item.com_id}"
+    query = f"UPDATE md_item_rate JOIN md_items ON md_items.id=md_item_rate.item_id SET md_item_rate.price = {edit_item.price}, md_item_rate.discount = {edit_item.discount}, md_item_rate.cgst = {edit_item.cgst}, md_item_rate.sgst = {edit_item.sgst}, md_items.unit_id = {edit_item.unit_id}, md_items.unit_name = '{edit_item.unit_name}', md_item_rate.modified_by = '{edit_item.modified_by}', md_item_rate.modified_dt = '{formatted_dt}', md_items.modified_by = '{edit_item.modified_by}', md_items.modified_dt = '{formatted_dt}' WHERE md_item_rate.item_id={edit_item.item_id} AND md_items.com_id={edit_item.com_id}"
     cursor.execute(query)
     conn.commit()
     conn.close()
@@ -467,13 +467,13 @@ async def edit_items(edit_item:EditItem):
 
 # Add items
 #---------------------------------------------------------------------------------------------------------------------------
-@app.post('/api/add_items')
+@app.post('/api/add_item')
 async def add_items(add_item:AddItem):
     current_datetime = datetime.now()
     formatted_dt = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
     conn = connect()
     cursor = conn.cursor()
-    query = f"INSERT INTO md_items(com_id, hsn_code, item_name, created_by, created_dt) VALUES ({add_item.com_id}, '{add_item.hsn_code}', '{add_item.item_name}', '{add_item.created_by}', '{formatted_dt}')"
+    query = f"INSERT INTO md_items(com_id, hsn_code, item_name, unit_id, unit_name, created_by, created_dt) VALUES ({add_item.com_id}, '{add_item.hsn_code}', '{add_item.item_name}','{add_item.unit_id}', '{add_item.unit_name}', '{add_item.created_by}', '{formatted_dt}')"
     cursor.execute(query)
     conn.commit()
     conn.close()
@@ -546,88 +546,157 @@ async def app_version():
     return resData
 
 # Cancel Bill
-#--------------------------------------------------------------------------------------------------------
-@app.post('/api/cancel_bill')
-async def cancel_bill(del_bill:CancelBill):
-    current_datetime = datetime.now()
-    formatted_dt = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
-    conn = connect()
-    cursor = conn.cursor()
-    query = f"INSERT INTO td_receipt_cancel (receipt_no, trn_date, price, discount_amt, cgst_amt, sgst_amt, amount, round_off, net_amt, pay_mode, received_amt, pay_dtls, cust_name, phone_no, created_by, created_dt, modified_by, modified_dt, cancelled_by, cancellation_dt) SELECT receipt_no, trn_date, price, discount_amt, cgst_amt, sgst_amt, amount, round_off, net_amt, pay_mode, received_amt, pay_dtls, cust_name, phone_no, created_by, created_dt, modified_by, modified_dt,{del_bill.user_id}',{formatted_dt} FROM td_receipt WHERE receipt_no='{del_bill.receipt_no}' AND created_by='{del_bill.user_id}'"
-    cursor.execute(query)
-    conn.commit()
-    conn.close()
-    cursor.close()
-    # print(query)
-    print(cursor.rowcount)
-    if cursor.rowcount>0:
-        conn1 = connect()
-        cursor1 = conn1.cursor()
-        query1 = f"DELETE FROM td_receipt WHERE receipt_no='{del_bill.receipt_no}' AND created_by='{del_bill.user_id}'"
-        cursor1.execute(query1)
-        conn1.commit()
-        conn1.close()
-        cursor1.close()
-        if cursor1.rowcount>0:
-            resData= {
-            "status":1,
-            "data":"Bill Cancelled Successfully"
-            } 
-        else:
-            resData= {"status":0, "data":"bill not deleted"}
-    else:
-        resData={"status":-1, "data":"bill not added" }
-       
-    return resData
-
-
+# --------------------------------------------------------------------------------------------------------
 # @app.post('/api/cancel_bill')
 # async def cancel_bill(del_bill:CancelBill):
 #     current_datetime = datetime.now()
 #     formatted_dt = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
 #     conn = connect()
 #     cursor = conn.cursor()
-#     query = f"SELECT * FROM td_receipt WHERE receipt_no={del_bill.receipt_no} AND created_by='{del_bill.user_id}'"
+#     query = f"INSERT INTO td_receipt_cancel (receipt_no, trn_date, price, discount_amt, cgst_amt, sgst_amt, amount, round_off, net_amt, pay_mode, received_amt, pay_dtls, cust_name, phone_no, created_by, created_dt, modified_by, modified_dt, cancelled_by, cancellation_dt) SELECT receipt_no, trn_date, price, discount_amt, cgst_amt, sgst_amt, amount, round_off, net_amt, pay_mode, received_amt, pay_dtls, cust_name, phone_no, created_by, created_dt, modified_by, modified_dt FROM td_receipt WHERE receipt_no='{del_bill.receipt_no}' AND created_by='{del_bill.user_id}'"
 #     cursor.execute(query)
-#     records = cursor.fetchall()
-#     result = createResponse(records, cursor.column_names, 1)
+#     conn.commit()
 #     conn.close()
 #     cursor.close()
-   
-#     # res=result[0]
-
-#     # res[""]=
-
+#     # print(query)
+#     print(cursor.rowcount)
 #     if cursor.rowcount>0:
-#         for i in result:
-#             print(i)
-       
-#             # print(i)
-#             # print(i.price)
-#             conn1 = connect()
-#             cursor1 = conn1.cursor()
-#             query1 = f"INSERT INTO td_receipt_cancel (receipt_no, trn_date, price, discount_amt, cgst_amt, sgst_amt, amount, round_off, net_amt, pay_mode, received_amt, pay_dtls, cust_name, phone_no, created_by, created_dt, modified_by, modified_dt, cancelled_by, cancelled_dt) Values ({i.receipt_no}, {i.trn_date}, {i.price}, {i.discount_amt}, {i.cgst_amt}, {i.sgst_amt}, {i.amount}, {i.round_off}, {i.net_amt}, {i.pay_mode}, {i.received_amt}, {i.pay_dtls}, {i.cust_name}, {i.phone_no}, {i.created_by}, {i.created_dt}, {i.modified_by}, {i.modified_dt}, '{del_bill.user_id}', '{formatted_dt}')"
-#             cursor1.execute(query1)
-#             conn1.commit()
-#             conn1.close()
-#             cursor1.close()
-#             if cursor1.rowcount>0:
-#                 conn2 = connect()
-#                 cursor2 = conn1.cursor()
-#                 query2 = f"DELETE FROM td_receipt WHERE receipt_no={del_bill.receipt_no} AND created_by='{del_bill.user_id}'"
-#                 cursor2.execute(query2)
-#                 conn2.commit()
-#                 conn2.close()
-#                 cursor2.close()
-#                 if cursor2.rowcount>0:
-#                     resData= {
-#                     "status":1,
-#                     "data":"Bill Cancelled Successfully"
-#                     } 
-#                 else:
-#                     resData= {"status":0, "data":"Bill Not Cancelled"}
-#             else:
-#                 resData={"status":-1, "data":"bill not added" }
+#         conn1 = connect()
+#         cursor1 = conn1.cursor()
+#         query1 = f"DELETE FROM td_receipt WHERE receipt_no='{del_bill.receipt_no}' AND created_by='{del_bill.user_id}'"
+#         cursor1.execute(query1)
+#         conn1.commit()
+#         conn1.close()
+#         cursor1.close()
+#         if cursor1.rowcount>0:
+#             resData= {
+#             "status":1,
+#             "data":"Bill Cancelled Successfully"
+#             } 
+#         else:
+#             resData= {"status":0, "data":"bill not deleted"}
 #     else:
-#         resData={"status":-2, "data":"bill not selected properly" }
+#         resData={"status":-1, "data":"bill not added" }
+       
 #     return resData
+
+
+@app.post('/api/cancel_bill')
+async def cancel_bill(del_bill:CancelBill):
+    current_datetime = datetime.now()
+    formatted_dt = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
+    conn = connect()
+    cursor = conn.cursor()
+    query = f"SELECT * FROM td_receipt WHERE receipt_no={del_bill.receipt_no} AND created_by='{del_bill.user_id}'"
+    cursor.execute(query)
+    records = cursor.fetchone()
+    conn.close()
+    cursor.close()
+    # print (type(records))
+    rec = list(records)
+    rec.append(del_bill.user_id)
+    rec.append(formatted_dt)
+    # return len(rec)
+    # result = createResponse(records, cursor.column_names, 1)
+    # i = result[0]
+    # print(i["created_dt"])
+
+    if cursor.rowcount>0:
+       
+        conn1 = connect()
+        cursor1 = conn1.cursor()
+        # query1 = f"INSERT INTO td_receipt_cancel (receipt_no, trn_date, price, discount_amt, cgst_amt, sgst_amt, amount, round_off, net_amt, pay_mode, received_amt, pay_dtls, cust_name, phone_no, created_by, created_dt, modified_by, modified_dt, cancelled_by, cancelled_dt) Values ({i["receipt_no"]}, {i["trn_date"]}, {i["price"]}, {i["discount_amt"]}, {i["cgst_amt"]}, {i["sgst_amt"]}, {i["amount"]}, {i["round_off"]}, {i["net_amt"]}, {i["pay_mode"]}, {i["received_amt"]}, {i["pay_dtls"]}, {i["cust_name"]}, {i["phone_no"]}, {i["created_by"]}, {i["created_dt"]}, {i["modified_by"]}, {i["modified_dt"]}, '{del_bill.user_id}', '{formatted_dt}')"
+        query1 = f"INSERT INTO td_receipt_cancel_new (receipt_no, trn_date, price, discount_amt, cgst_amt, sgst_amt, amount, round_off, net_amt, pay_mode, received_amt, pay_dtls, cust_name, phone_no, gst_flag, discount_type, created_by, created_dt, modified_by, modified_dt, cancelled_by, cancelled_dt) values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+        cursor1.execute(query1, tuple(rec))
+        conn1.commit()
+        conn1.close()
+        cursor1.close()
+        # return cursor1.rowcount
+        if cursor1.rowcount>0:
+            conn2 = connect()
+            cursor2 = conn2.cursor()
+            query2 = f"DELETE FROM td_receipt WHERE receipt_no={del_bill.receipt_no} AND created_by='{del_bill.user_id}'"
+            cursor2.execute(query2)
+            conn2.commit()
+            conn2.close()
+            cursor2.close()
+            if cursor2.rowcount>0:
+                resData= {
+                "status":1,
+                "data":"Bill Cancelled Successfully"
+                } 
+            else:
+                resData= {"status":0, "data":"Bill Not Cancelled"}
+        else:
+            resData={"status":-1, "data":"bill not added" }
+    else:
+        resData={"status":-2, "data":"bill not selected properly" }
+    return resData
+
+# Add unit
+#---------------------------------------------------------------------------------------------------------------------------
+@app.post('/api/add_unit')
+async def add_unit(add_unit:AddUnit):
+    current_datetime = datetime.now()
+    formatted_dt = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
+    conn = connect()
+    cursor = conn.cursor()
+    query = f"INSERT INTO md_unit(unit_name, created_by, created_at) VALUES ('{add_unit.unit_name}', '{add_unit.created_by}', '{formatted_dt}')"
+    cursor.execute(query)
+    conn.commit()
+    conn.close()
+    cursor.close()
+    if cursor.rowcount>0:
+        resData={
+            "status":1,
+            "data":"Unit Added Successfully"
+        }
+    else:
+        resData={
+            "status":0,
+            "data":"Unit Not Added"
+        }
+    return resData
+
+# All Units
+#---------------------------------------------------------------------------------------------------------------------------
+@app.get('/api/units')
+async def unit_list():
+    conn = connect()
+    cursor = conn.cursor()
+    query = "SELECT * FROM md_unit"
+    cursor.execute(query)
+    records = cursor.fetchall()
+    result = createResponse(records, cursor.column_names, 1)
+    conn.close()
+    cursor.close()
+    return result
+
+# Edit Units
+#---------------------------------------------------------------------------------------------------------------------------
+@app.post('/api/edit_unit')
+async def edit_unit(edit:EditUnit):
+    try:
+        current_datetime = datetime.now()
+        formatted_dt = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
+        conn = connect()
+        cursor = conn.cursor()
+        query = f"UPDATE md_unit SET unit_name='{edit.unit_name}', modified_by='{edit.modified_by}', modified_at='      {formatted_dt}' WHERE sl_no={edit.sl_no}"
+        cursor.execute(query)
+        conn.commit()
+        conn.close()
+        cursor.close()
+        if cursor.rowcount>0:
+            resData= {  
+            "status":1,
+            "data":"Unit Edited Successfully"
+            }
+        else:
+            resData= {
+            "status":0, 
+            "data":"Error while updating Unit."
+            }
+    except:
+        print("An exception occurred")
+    finally:
+        return resData
