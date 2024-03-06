@@ -187,7 +187,7 @@ async def show_item_rate(item_id:int):
 
 
 # Item Sale
-#-------------------------------------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------------------------------------------------
 @app.post('/api/saleinsert')
 async def register(rcpt:list[Receipt]):
     current_datetime = datetime.now()
@@ -230,7 +230,7 @@ async def register(rcpt:list[Receipt]):
     return ResData
 
 # Dashboard
-#-------------------------------------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------------------------------------------------
 @app.post('/api/billsummary')
 async def Bill_sum(bill_sum:DashBoard):
     conn = connect()
@@ -641,7 +641,7 @@ async def add_unit(add_unit:AddUnit):
     formatted_dt = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
     conn = connect()
     cursor = conn.cursor()
-    query = f"INSERT INTO md_unit(unit_name, created_by, created_at) VALUES ('{add_unit.unit_name}', '{add_unit.created_by}', '{formatted_dt}')"
+    query = f"INSERT INTO md_unit(comp_id, unit_name, created_by, created_at) VALUES ({add_unit.comp_id}, '{add_unit.unit_name}', '{add_unit.created_by}', '{formatted_dt}')"
     cursor.execute(query)
     conn.commit()
     conn.close()
@@ -660,11 +660,11 @@ async def add_unit(add_unit:AddUnit):
 
 # All Units
 #---------------------------------------------------------------------------------------------------------------------------
-@app.get('/api/units')
-async def unit_list():
+@app.get('/api/units/{comp_id}')
+async def unit_list(comp_id:int):
     conn = connect()
     cursor = conn.cursor()
-    query = "SELECT * FROM md_unit"
+    query = f"SELECT * FROM md_unit WHERE comp_id = {comp_id}"
     cursor.execute(query)
     records = cursor.fetchall()
     result = createResponse(records, cursor.column_names, 1)
@@ -681,7 +681,7 @@ async def edit_unit(edit:EditUnit):
         formatted_dt = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
         conn = connect()
         cursor = conn.cursor()
-        query = f"UPDATE md_unit SET unit_name='{edit.unit_name}', modified_by='{edit.modified_by}', modified_at='      {formatted_dt}' WHERE sl_no={edit.sl_no}"
+        query = f"UPDATE md_unit SET unit_name='{edit.unit_name}', modified_by='{edit.modified_by}', modified_at='      {formatted_dt}' WHERE sl_no={edit.sl_no} and comp_id={edit.comp_id}"
         cursor.execute(query)
         conn.commit()
         conn.close()

@@ -118,10 +118,12 @@ class CancelBill(BaseModel):
     user_id:str
 
 class AddUnit(BaseModel):
+    comp_id:int
     unit_name:str
     created_by:str
 
 class EditUnit(BaseModel):
+    comp_id:int
     sl_no:int
     unit_name:str
     modified_by:str
