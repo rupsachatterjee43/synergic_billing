@@ -78,7 +78,7 @@ class EditHeaderFooter(BaseModel):
     created_by:str
 
 class EditItem(BaseModel):
-    com_id:int
+    comp_id:int
     item_id:int
     price:float
     discount:float
@@ -102,7 +102,7 @@ class EditRcpSettings(BaseModel):
     modified_by:str
 
 class AddItem(BaseModel):
-    com_id:int
+    comp_id:int
     hsn_code:str
     item_name:str
     unit_id:int

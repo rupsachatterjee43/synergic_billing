@@ -148,7 +148,7 @@ async def show_location():
 async def show_items(comp_id:int):
     conn = connect()
     cursor = conn.cursor()
-    query = f"SELECT a.*, b.* FROM md_items a, md_item_rate b WHERE a.id=b.item_id AND a.com_id={comp_id}"
+    query = f"SELECT a.*, b.* FROM md_items a, md_item_rate b WHERE a.id=b.item_id AND a.comp_id={comp_id}"
     cursor.execute(query)
     records = cursor.fetchall()
     result = createResponse(records, cursor.column_names, 1)
@@ -175,7 +175,7 @@ async def show_items(comp_id:int):
 async def show_item_rate(item_id:int):
     conn = connect()
     cursor = conn.cursor()
-    query = f"SELECT a.id, a.item_name, c.price, c.discount, c.sale_price, c.hsn_code, c.cgst, c.sgst FROM md_items a, md_company b, md_item_rate c WHERE a.com_id=b.id AND a.id=c.item_id AND a.id={item_id}"
+    query = f"SELECT a.id, a.item_name, c.price, c.discount, c.sale_price, c.hsn_code, c.cgst, c.sgst FROM md_items a, md_company b, md_item_rate c WHERE a.comp_id=b.id AND a.id=c.item_id AND a.id={item_id}"
     cursor.execute(query)
     records = cursor.fetchall()
     result = createResponse(records, cursor.column_names, 1)
@@ -358,7 +358,7 @@ async def collection_report(col_rep:SaleReport):
 async def item_report(item_rep:ItemReport):
     conn = connect()
     cursor = conn.cursor()
-    query = f"select a.receipt_no,a.trn_date,a.qty,a.price,a.discount_amt,a.cgst_amt,a.sgst_amt,b.amount,b.pay_mode,c.item_name,d.branch_name from   td_item_sale a, td_receipt b, md_items c, md_branch d where  a.receipt_no = b.receipt_no AND a.comp_id = c.com_id AND a.comp_id = d.comp_id AND a.br_id = d.id AND a.item_id = c.id And a.trn_date BETWEEN '{item_rep.from_date}' and '{item_rep.to_date}' And a.comp_id = {item_rep.comp_id} AND a.br_id = {item_rep.br_id} AND a.item_id = {item_rep.item_id} and b.created_by='{item_rep.user_id}'"
+    query = f"select a.receipt_no,a.trn_date,a.qty,a.price,a.discount_amt,a.cgst_amt,a.sgst_amt,b.amount,b.pay_mode,c.item_name,d.branch_name from   td_item_sale a, td_receipt b, md_items c, md_branch d where  a.receipt_no = b.receipt_no AND a.comp_id = c.comp_id AND a.comp_id = d.comp_id AND a.br_id = d.id AND a.item_id = c.id And a.trn_date BETWEEN '{item_rep.from_date}' and '{item_rep.to_date}' And a.comp_id = {item_rep.comp_id} AND a.br_id = {item_rep.br_id} AND a.item_id = {item_rep.item_id} and b.created_by='{item_rep.user_id}'"
     cursor.execute(query)
     records = cursor.fetchall()
     result = createResponse(records, cursor.column_names, 1)
@@ -448,7 +448,7 @@ async def edit_items(edit_item:EditItem):
     formatted_dt = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
     conn = connect()
     cursor = conn.cursor()
-    query = f"UPDATE md_item_rate JOIN md_items ON md_items.id=md_item_rate.item_id SET md_item_rate.price = {edit_item.price}, md_item_rate.discount = {edit_item.discount}, md_item_rate.cgst = {edit_item.cgst}, md_item_rate.sgst = {edit_item.sgst}, md_items.unit_id = {edit_item.unit_id}, md_items.unit_name = '{edit_item.unit_name}', md_item_rate.modified_by = '{edit_item.modified_by}', md_item_rate.modified_dt = '{formatted_dt}', md_items.modified_by = '{edit_item.modified_by}', md_items.modified_dt = '{formatted_dt}' WHERE md_item_rate.item_id={edit_item.item_id} AND md_items.com_id={edit_item.com_id}"
+    query = f"UPDATE md_item_rate JOIN md_items ON md_items.id=md_item_rate.item_id SET md_item_rate.price = {edit_item.price}, md_item_rate.discount = {edit_item.discount}, md_item_rate.cgst = {edit_item.cgst}, md_item_rate.sgst = {edit_item.sgst}, md_items.unit_id = {edit_item.unit_id}, md_items.unit_name = '{edit_item.unit_name}', md_item_rate.modified_by = '{edit_item.modified_by}', md_item_rate.modified_dt = '{formatted_dt}', md_items.modified_by = '{edit_item.modified_by}', md_items.modified_dt = '{formatted_dt}' WHERE md_item_rate.item_id={edit_item.item_id} AND md_items.comp_id={edit_item.comp_id}"
     cursor.execute(query)
     conn.commit()
     conn.close()
@@ -473,7 +473,7 @@ async def add_items(add_item:AddItem):
     formatted_dt = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
     conn = connect()
     cursor = conn.cursor()
-    query = f"INSERT INTO md_items(com_id, hsn_code, item_name, unit_id, unit_name, created_by, created_dt) VALUES ({add_item.com_id}, '{add_item.hsn_code}', '{add_item.item_name}','{add_item.unit_id}', '{add_item.unit_name}', '{add_item.created_by}', '{formatted_dt}')"
+    query = f"INSERT INTO md_items(comp_id, hsn_code, item_name, unit_id, unit_name, created_by, created_dt) VALUES ({add_item.comp_id}, '{add_item.hsn_code}', '{add_item.item_name}','{add_item.unit_id}', '{add_item.unit_name}', '{add_item.created_by}', '{formatted_dt}')"
     cursor.execute(query)
     conn.commit()
     conn.close()
