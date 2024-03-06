@@ -84,7 +84,7 @@ class EditItem(BaseModel):
     discount:float
     cgst:float
     sgst:float
-    unit_name:str
+    # unit_name:str
     unit_id:int
     modified_by:str
     
@@ -106,7 +106,7 @@ class AddItem(BaseModel):
     hsn_code:str
     item_name:str
     unit_id:int
-    unit_name:str
+    # unit_name:str
     created_by:str
     price:float
     discount:float
@@ -127,3 +127,9 @@ class EditUnit(BaseModel):
     sl_no:int
     unit_name:str
     modified_by:str
+
+class InventorySearch(BaseModel):
+    comp_id:int
+    br_id:int
+    item_id:int
+    # user_id:str

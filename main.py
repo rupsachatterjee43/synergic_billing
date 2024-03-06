@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 from config.database import connect
 from models.master_model import createResponse
-from models.form_model import UserLogin,Receipt,CreatePIN,DashBoard,SearchBill,SaleReport,ItemReport,EditHeaderFooter,EditItem,EditRcpSettings,AddItem,CancelBill,AddUnit,EditUnit
+from models.form_model import UserLogin,Receipt,CreatePIN,DashBoard,SearchBill,SaleReport,ItemReport,EditHeaderFooter,EditItem,EditRcpSettings,AddItem,CancelBill,AddUnit,EditUnit,InventorySearch
 from datetime import datetime, date
 from utils import get_hashed_password, verify_password
 
@@ -148,7 +148,7 @@ async def show_location():
 async def show_items(comp_id:int):
     conn = connect()
     cursor = conn.cursor()
-    query = f"SELECT a.*, b.* FROM md_items a, md_item_rate b WHERE a.id=b.item_id AND a.comp_id={comp_id}"
+    query = f"SELECT a.*, b.*, c.unit_name FROM md_items a JOIN md_item_rate b on a.id=b.item_id LEFT JOIN md_unit c on c.sl_no=a.unit_id WHERE a.comp_id={comp_id}"
     cursor.execute(query)
     records = cursor.fetchall()
     result = createResponse(records, cursor.column_names, 1)
@@ -310,7 +310,7 @@ async def search_bills(search:SearchBill):
     return resData
 
 # Sale Report
-#-------------------------------------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------------------------------------------------
 @app.post('/api/sale_report')
 async def sale_report(sl_rep:SaleReport):
     conn = connect()
@@ -332,7 +332,7 @@ async def sale_report(sl_rep:SaleReport):
     return resData
 
 # Collection Report
-#-------------------------------------------------------------------------------------------------------------
+#---------------------------------------------------------------------------------------------------------------------------
 @app.post('/api/collection_report')
 async def collection_report(col_rep:SaleReport):
     conn = connect()
@@ -448,7 +448,7 @@ async def edit_items(edit_item:EditItem):
     formatted_dt = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
     conn = connect()
     cursor = conn.cursor()
-    query = f"UPDATE md_item_rate JOIN md_items ON md_items.id=md_item_rate.item_id SET md_item_rate.price = {edit_item.price}, md_item_rate.discount = {edit_item.discount}, md_item_rate.cgst = {edit_item.cgst}, md_item_rate.sgst = {edit_item.sgst}, md_items.unit_id = {edit_item.unit_id}, md_items.unit_name = '{edit_item.unit_name}', md_item_rate.modified_by = '{edit_item.modified_by}', md_item_rate.modified_dt = '{formatted_dt}', md_items.modified_by = '{edit_item.modified_by}', md_items.modified_dt = '{formatted_dt}' WHERE md_item_rate.item_id={edit_item.item_id} AND md_items.comp_id={edit_item.comp_id}"
+    query = f"UPDATE md_item_rate JOIN md_items ON md_items.id=md_item_rate.item_id SET md_item_rate.price = {edit_item.price}, md_item_rate.discount = {edit_item.discount}, md_item_rate.cgst = {edit_item.cgst}, md_item_rate.sgst = {edit_item.sgst}, md_item_rate.modified_by = '{edit_item.modified_by}', md_item_rate.modified_dt = '{formatted_dt}', md_items.modified_by = '{edit_item.modified_by}', md_items.modified_dt = '{formatted_dt}' WHERE md_item_rate.item_id={edit_item.item_id} AND md_items.comp_id={edit_item.comp_id} AND md_items.unit_id={edit_item.unit_id}"
     cursor.execute(query)
     conn.commit()
     conn.close()
@@ -473,7 +473,7 @@ async def add_items(add_item:AddItem):
     formatted_dt = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
     conn = connect()
     cursor = conn.cursor()
-    query = f"INSERT INTO md_items(comp_id, hsn_code, item_name, unit_id, unit_name, created_by, created_dt) VALUES ({add_item.comp_id}, '{add_item.hsn_code}', '{add_item.item_name}','{add_item.unit_id}', '{add_item.unit_name}', '{add_item.created_by}', '{formatted_dt}')"
+    query = f"INSERT INTO md_items(comp_id, hsn_code, item_name, unit_id, created_by, created_dt) VALUES ({add_item.comp_id}, '{add_item.hsn_code}', '{add_item.item_name}', {add_item.unit_id}, '{add_item.created_by}', '{formatted_dt}')"
     cursor.execute(query)
     conn.commit()
     conn.close()
@@ -700,3 +700,19 @@ async def edit_unit(edit:EditUnit):
         print("An exception occurred")
     finally:
         return resData
+    
+# Inventory Searching
+#---------------------------------------------------------------------------------------------------------------------------
+@app.post('/api/stock')
+async def stock(st_list:InventorySearch):
+    current_datetime = datetime.now()
+    formatted_dt = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
+    conn = connect()
+    cursor = conn.cursor()
+    query = f"SELECT stock FROM td_stock WHERE comp_id = {st_list.comp_id} AND br_id = {st_list.br_id} AND item_id = {st_list.item_id}"
+    cursor.execute(query)
+    records = cursor.fetchall()
+    result = createResponse(records, cursor.column_names, 1)
+    conn.close()
+    cursor.close()
+    return result[0]
