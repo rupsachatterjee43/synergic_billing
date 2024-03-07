@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 from config.database import connect
 from models.master_model import createResponse
-from models.form_model import UserLogin,Receipt,CreatePIN,DashBoard,SearchBill,SaleReport,ItemReport,EditHeaderFooter,EditItem,EditRcpSettings,AddItem,CancelBill,AddUnit,EditUnit,InventorySearch,UpdateStock
+from models.form_model import UserLogin,Receipt,CreatePIN,DashBoard,SearchBill,SaleReport,ItemReport,EditHeaderFooter,EditItem,EditRcpSettings,AddItem,CancelBill,AddUnit,EditUnit,InventorySearch,UpdateStock,StockReport
 from datetime import datetime, date
 from utils import get_hashed_password, verify_password
 
@@ -205,14 +205,28 @@ async def register(rcpt:list[Receipt]):
         values.append((receipt, i.comp_id, i.br_id, i.item_id, formatted_datetime, i.price, i.discount_amt, i.cgst_amt, i.sgst_amt, i.qty))
 
         query = f"INSERT INTO td_item_sale (receipt_no, comp_id, br_id, item_id, trn_date, price, dis_pertg, discount_amt, cgst_prtg, cgst_amt, sgst_prtg, sgst_amt, qty, created_by, created_dt) VALUES ('{receipt}',{i.comp_id},{i.br_id},{i.item_id},'{formatted_datetime}',{i.price},{i.dis_pertg},{i.discount_amt}, {i.cgst_prtg}, {i.cgst_amt}, {i.sgst_prtg}, {i.sgst_amt}, {i.qty}, '{i.created_by}', '{formatted_datetime}')"
+
         cursor.execute(query)
         conn.commit()
         conn.close()
         cursor.close()
-        if cursor.rowcount==1:
-            resData = {"status":1, "data":receipt}
+        if cursor.rowcount>0:
+            conn = connect()
+            cursor = conn.cursor()
+
+            query = f"UPDATE td_stock SET stock=stock-{i.qty}, modified_by='{i.created_by}', modified_dt='{formatted_datetime}' WHERE comp_id={i.comp_id} AND br_id={i.br_id} AND item_id={i.item_id}"
+
+            cursor.execute(query)
+            conn.commit()
+            conn.close()
+            cursor.close()
+            if cursor.rowcount==1:
+                resData = {"status":1, "data":receipt}
+            else:
+                resData = {"status":0, "data":'error while updating stock'}
+        
         else:
-            resData = {"status":0, "data":'Data not inserted'}
+            resData = {"status":-1, "data":"Data not inserted in item_sale"}
     
     conn = connect()
     cursor = conn.cursor()
@@ -489,14 +503,21 @@ async def add_items(add_item:AddItem):
         conn1.close()
         cursor1.close()
         if cursor1.rowcount>0:
-            resData= {
-            "status":1,
-            "data":"data added successfully"
-            } 
+            conn2 = connect()
+            cursor2 = conn2.cursor()
+            query2 = f"INSERT INTO td_stock (comp_id, br_id, item_id, stock, created_by, created_dt) VALUES ({add_item.comp_id}, {add_item.br_id}, {cursor.lastrowid}, '0', '{add_item.created_by}', '{formatted_dt}')"
+            cursor2.execute(query2)
+            conn2.commit()
+            conn2.close()
+            cursor2.close()
+            if cursor2.rowcount>0:
+                resData={"status":1, "data": "Item and Stock Added Successfully"}
+            else:
+                resData={"status":0, "data": "No Stock Added"}
         else:
-            resData= {"status":0, "data":"item rate not added"}
+            resData= {"status":0, "data":"Item Rate not Added"}
     else:
-        resData={"status":-1, "data":"data not added" }
+        resData={"status":-1, "data":"No Data Added"}
        
     return resData
 
@@ -745,3 +766,17 @@ async def update_stock(update:UpdateStock):
         print("An exception occurred")
     finally:
         return resData
+
+# Stock Report
+#---------------------------------------------------------------------------------------------------------------------------
+@app.post('/api/stock_report')
+async def stock_report(stk_rep:StockReport):
+    conn = connect()
+    cursor = conn.cursor()
+    query = f"SELECT a.item_id, b.item_name, c.unit_name, a.stock, a.created_by, a.created_dt, a.modified_by, a.modified_dt FROM td_stock a JOIN md_items b ON  a.item_id=b.id AND a.comp_id=b.comp_id LEFT JOIN md_unit c on c.sl_no=b.unit_id WHERE a.comp_id={stk_rep.comp_id} AND a.br_id={stk_rep.br_id}"
+    cursor.execute(query)
+    records = cursor.fetchall()
+    result = createResponse(records,cursor.column_names,1)
+    conn.close()
+    cursor.close()
+    return result

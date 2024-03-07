@@ -103,6 +103,7 @@ class EditRcpSettings(BaseModel):
 
 class AddItem(BaseModel):
     comp_id:int
+    br_id:int
     hsn_code:str
     item_name:str
     unit_id:int
@@ -141,3 +142,7 @@ class UpdateStock(BaseModel):
     user_id:str
     added_stock:int
     # flag:int  # 0 = out , 1 = in
+
+class StockReport(BaseModel):
+    comp_id:int
+    br_id:int
