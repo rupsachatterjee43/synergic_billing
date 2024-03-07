@@ -132,4 +132,12 @@ class InventorySearch(BaseModel):
     comp_id:int
     br_id:int
     item_id:int
-    # user_id:str
+    user_id:str
+
+class UpdateStock(BaseModel):
+    comp_id:int
+    br_id:int
+    item_id:int
+    user_id:str
+    added_stock:int
+    # flag:int  # 0 = out , 1 = in
