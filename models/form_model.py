@@ -96,6 +96,7 @@ class EditRcpSettings(BaseModel):
     cust_inf:str
     pay_mode:str
     discount_flag:str
+    stock_flag:str
     discount_type:str
     price_type:str
     created_by:str
@@ -146,3 +147,7 @@ class UpdateStock(BaseModel):
 class StockReport(BaseModel):
     comp_id:int
     br_id:int
+
+class CancelBillReport(BaseModel):
+    from_date:date
+    to_date:date
