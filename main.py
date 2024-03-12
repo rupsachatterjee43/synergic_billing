@@ -1005,3 +1005,45 @@ async def cancel_bill_report(can_rep:CancelBillReport):
     conn.close()
     cursor.close()
     return result
+
+
+###########################################################################################################################
+
+# @app.get('/api/refund_bill_data/{recp_no}')
+# async def refund_bill_data(recp_no:int):
+#     conn = connect()
+#     cursor = conn.cursor()
+#     query = f"SELECT a.receipt_no, a.comp_id, a.br_id, a.item_id, a.trn_date, a.price, a.dis_pertg, a.discount_amt, a.cgst_prtg, a.cgst_amt, a.sgst_prtg, a.sgst_amt, a.qty, a.created_by, a.created_dt, a.modified_by, a.modified_dt, c.item_name FROM td_item_sale a, md_items c WHERE a.item_id=c.id and a.receipt_no={recp_no}"
+#     cursor.execute(query)
+#     records = cursor.fetchall()
+#     result = createResponse(records, cursor.column_names, 1)
+#     conn.close()
+#     cursor.close()
+#     if cursor.rowcount>0:
+#         conn1 = connect()
+#         cursor1 = conn1.cursor()
+#         query1 = f"SELECT b.price AS tprice, b.discount_amt AS tdiscount_amt, b.cgst_amt AS tcgst_amt, b.sgst_amt AS tsgst_amt, b.amount, b.round_off, b.net_amt, b.pay_mode, b.received_amt, b.pay_dtls, b.cust_name, b.phone_no, b.gst_flag, b.discount_type, b.created_by AS tcreated_by, b.created_dt AS tcreated_dt, b.modified_by AS tmodified_by, b.modified_dt AS tmodified_dt FROM td_receipt b WHERE b.receipt_no={recp_no}"
+#         cursor1.execute(query1)
+#         records1 = cursor1.fetchall()
+#         result1 = createResponse(records1, cursor1.column_names, 1)
+#         conn1.close()
+#         cursor1.close()
+#         if cursor1.rowcount>0:
+
+#             resData= {"status":1, 
+#                   "data":result,
+#                   "data1":result1
+#                   }
+#         else:
+#             resData= {
+#             "status":0,
+#             "data":"no data found"
+#             }
+
+#     else:
+#         resData = {
+#             "status":-1,
+#             "data":"no data found in item table"
+#             }
+
+#     return resData
