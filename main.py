@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 from config.database import connect
 from models.master_model import createResponse
-from models.form_model import UserLogin,Receipt,CreatePIN,DashBoard,SearchBill,SaleReport,ItemReport,EditHeaderFooter,EditItem,EditRcpSettings,AddItem,CancelBill,AddUnit,EditUnit,InventorySearch,UpdateStock,StockReport,CancelBillReport
+from models.form_model import UserLogin,Receipt,CreatePIN,DashBoard,SearchBill,SaleReport,ItemReport,EditHeaderFooter,EditItem,EditRcpSettings,AddItem,CancelBill,AddUnit,EditUnit,InventorySearch,UpdateStock,StockReport,CancelBillReport,CancelItem,RefundItem
 from datetime import datetime, date
 from utils import get_hashed_password, verify_password
 
@@ -936,8 +936,6 @@ async def edit_unit(edit:EditUnit):
 #---------------------------------------------------------------------------------------------------------------------------
 @app.post('/api/stock')
 async def stock(st_list:InventorySearch):
-    current_datetime = datetime.now()
-    formatted_dt = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
     conn = connect()
     cursor = conn.cursor()
     query = f"SELECT stock FROM td_stock WHERE comp_id = {st_list.comp_id} AND br_id = {st_list.br_id} AND item_id = {st_list.item_id} AND created_by = '{st_list.user_id}'"
@@ -1047,3 +1045,121 @@ async def cancel_bill_report(can_rep:CancelBillReport):
 #             }
 
 #     return resData
+
+# Cancel Item
+#--------------------------------------------------------------------------------------------------------------------------
+@app.post('/api/cancel_item')
+async def cancel_item(cn_item:CancelItem):
+    current_datetime = datetime.now()
+    formatted_dt = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
+    conn = connect()
+    cursor = conn.cursor()
+    query = f"SELECT receipt_no,comp_id,br_id,item_id,trn_date,price,dis_pertg,discount_amt,cgst_prtg,cgst_amt,sgst_prtg,sgst_amt,qty,created_by,created_dt,modified_by,modified_dt FROM td_item_sale WHERE receipt_no = {cn_item.receipt_no} AND item_id = {cn_item.item_id}"
+    cursor.execute(query)
+    records = cursor.fetchone()
+    conn.close()
+    cursor.close()
+    rec = list(records)
+    
+    rec.append(cn_item.user_id)
+    rec.append(formatted_dt)
+    rec[12]=cn_item.qty
+
+    print(rec)
+    
+    if cursor.rowcount>0:
+        conn1 = connect()
+        cursor1 = conn1.cursor()
+       
+        query1 = f"INSERT INTO td_item_sale_cancel (receipt_no,comp_id,br_id,item_id,trn_date,price,dis_pertg,discount_amt,cgst_prtg,cgst_amt,sgst_prtg,sgst_amt,qty,created_by,created_dt,modified_by,modified_dt, cancelled_by, cancelled_dt) values (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+
+        cursor1.execute(query1, tuple(rec))
+        conn1.commit()
+        conn1.close()
+        cursor1.close()
+
+        if cursor1.rowcount>0:
+            conn2 = connect()
+            cursor2 = conn2.cursor()
+
+            query2 = f"UPDATE td_item_sale JOIN td_stock ON td_item_sale.comp_id=td_stock.comp_id AND td_item_sale.br_id=td_stock.br_id SET td_item_sale.qty=td_item_sale.qty-{cn_item.qty}, td_stock.stock=td_stock.stock+{cn_item.qty}, td_item_sale.modified_by='{cn_item.user_id}', td_item_sale.modified_dt='{formatted_dt}', td_stock.modified_by='{cn_item.user_id}', td_stock.modified_dt='{formatted_dt}' WHERE td_item_sale.item_id={cn_item.item_id} AND td_stock.item_id={cn_item.item_id} AND td_item_sale.receipt_no={cn_item.receipt_no}"
+
+            cursor2.execute(query2)
+            conn2.commit()
+            conn2.close()
+            cursor2.close()
+
+            if cursor2.rowcount>0:
+                conn3 = connect()
+                cursor3 = conn3.cursor()
+
+                query3 = f"DELETE FROM td_item_sale WHERE qty='0' AND item_id={cn_item.item_id} AND receipt_no={cn_item.receipt_no}"
+
+                cursor3.execute(query3)
+                conn3.commit()
+                conn3.close()
+                cursor3.close()
+
+                resData = {
+                    "status":1,
+                    "data":"Item cancelled and stock updated successfully"
+                }
+
+            else:
+                resData ={
+                    "status":0,
+                    "data":"Error while updating td_item_sale, td_stock"
+                }
+        else:
+            resData={
+                "status":-1,
+                "data":"Error while inserting into td_item_sale_cancel"
+            }
+    else:
+        resData={
+            "status":-2,
+            "data":"Error while selecting data"
+        }
+    return resData
+                
+#refund item
+#--------------------------------------------------------------------------------------------------------------------------
+# @app.post('/api/refund_item')
+# async def refund_item(refund:RefundItem):
+#     try:
+#         current_datetime = datetime.now()
+#         receipt = int(round(current_datetime.timestamp()))
+#         formatted_dt = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
+#         conn = connect()
+#         cursor = conn.cursor()
+#         query = f"SELECT receipt_no,comp_id,br_id,item_id,price,dis_pertg,discount_amt,cgst_prtg,cgst_amt,sgst_prtg,sgst_amt,qty,created_by,created_dt WHERE receipt_no={refund.receipt_no} AND item_id={refund.item_id}"
+#         cursor.execute(query)
+#         records = cursor.fetchone()
+#         conn.close()
+#         cursor.close()
+#         rec = list(records)
+#         if cursor.rowcount>0:
+#             conn1 = connect()
+#             cursor1 = conn1.cursor()
+       
+#             query1 = f"INSERT INTO td_item_sale_cancel (receipt_no,refund_dt,refund_rcpt_no,comp_id,br_id,item_id,price,dis_pertg,discount_amt,cgst_prtg,cgst_amt,sgst_prtg,sgst_amt,qty,created_by,created_dt,refund_by,refund_at) values ({rec[0]}, date({formatted_dt}), {receipt}, {rec[1]}, {rec[2]}, {rec[3]}, {rec[4]}, {rec[5]}, {rec[6]}, {rec[7]}, {rec[8]}, {rec[9]}, {rec[10]}, {refund.qty}, {rec[12]}, {rec[13]}, '{refund.user_id}', '{formatted_dt}')"
+
+#             cursor1.execute(query1)
+#             conn1.commit()
+#             conn1.close()
+#             cursor1.close()
+        
+#             resData= {  
+#                 "status":1,
+#                 "data":"refund added"
+#                 }
+            
+#         else:
+#             resData= {
+#             "status":0, 
+#             "data":"Error while selecting data"
+#             }
+#     except:
+#         print("An exception occurred")
+#     finally:
+#         return resData

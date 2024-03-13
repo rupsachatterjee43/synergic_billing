@@ -151,3 +151,15 @@ class StockReport(BaseModel):
 class CancelBillReport(BaseModel):
     from_date:date
     to_date:date
+
+class CancelItem(BaseModel):
+    user_id:str
+    receipt_no:int
+    item_id:int
+    qty:int
+
+class RefundItem(BaseModel):
+    user_id:str
+    receipt_no:int
+    item_id:int
+    qty:int
