@@ -1124,42 +1124,70 @@ async def cancel_item(cn_item:CancelItem):
                 
 #refund item
 #--------------------------------------------------------------------------------------------------------------------------
-# @app.post('/api/refund_item')
-# async def refund_item(refund:RefundItem):
-#     try:
-#         current_datetime = datetime.now()
-#         receipt = int(round(current_datetime.timestamp()))
-#         formatted_dt = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
-#         conn = connect()
-#         cursor = conn.cursor()
-#         query = f"SELECT receipt_no,comp_id,br_id,item_id,price,dis_pertg,discount_amt,cgst_prtg,cgst_amt,sgst_prtg,sgst_amt,qty,created_by,created_dt WHERE receipt_no={refund.receipt_no} AND item_id={refund.item_id}"
-#         cursor.execute(query)
-#         records = cursor.fetchone()
-#         conn.close()
-#         cursor.close()
-#         rec = list(records)
-#         if cursor.rowcount>0:
-#             conn1 = connect()
-#             cursor1 = conn1.cursor()
-       
-#             query1 = f"INSERT INTO td_item_sale_cancel (receipt_no,refund_dt,refund_rcpt_no,comp_id,br_id,item_id,price,dis_pertg,discount_amt,cgst_prtg,cgst_amt,sgst_prtg,sgst_amt,qty,created_by,created_dt,refund_by,refund_at) values ({rec[0]}, date({formatted_dt}), {receipt}, {rec[1]}, {rec[2]}, {rec[3]}, {rec[4]}, {rec[5]}, {rec[6]}, {rec[7]}, {rec[8]}, {rec[9]}, {rec[10]}, {refund.qty}, {rec[12]}, {rec[13]}, '{refund.user_id}', '{formatted_dt}')"
+@app.post('/api/refund_item')
+async def refund_item(refund:list[RefundItem]):
+    current_datetime = datetime.now()
+    receipt = int(round(current_datetime.timestamp()))
+    formatted_datetime = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
+    tcgst_amt = 0
+    tsgst_amt = 0
+    # return refund
+    for i in refund:
+        tcgst_amt += i.cgst_amt
+        tsgst_amt += i.sgst_amt
 
-#             cursor1.execute(query1)
-#             conn1.commit()
-#             conn1.close()
-#             cursor1.close()
+        conn = connect()
+        cursor = conn.cursor()
+    
+        query = f"INSERT INTO td_refund_item (receipt_no,refund_dt,refund_rcpt_no,comp_id,br_id,item_id,price,dis_pertg,discount_amt,cgst_prtg,cgst_amt,sgst_prtg,sgst_amt,qty,refund_by,refund_at) VALUES ({i.receipt_no},'{formatted_datetime}','{receipt}',{i.comp_id},{i.br_id},{i.item_id},{i.price},{i.dis_pertg},{i.discount_amt},{i.cgst_prtg},{i.cgst_amt},{i.sgst_prtg},{i.sgst_amt},{i.qty},'{i.user_id}','{formatted_datetime}')"
+
+        cursor.execute(query)
+        conn.commit()
+        conn.close()
+        cursor.close()
+
+        if cursor.rowcount>0:
+
+            conn1 = connect()
+            cursor1 = conn1.cursor()
+
+            query1 = f"UPDATE td_stock SET stock=stock+{i.qty}, modified_by='{i.user_id}', modified_dt='{formatted_datetime}' WHERE comp_id={i.comp_id} AND br_id={i.br_id} AND item_id={i.item_id}"
+
+            cursor1.execute(query1)
+            conn1.commit()
+            conn1.close()
+            cursor1.close()
+            if cursor1.rowcount==1:
+                resData = {"status":1, "data":receipt}
+            else:
+                resData = {"status":0, "data":'error while updating stock'}
         
-#             resData= {  
-#                 "status":1,
-#                 "data":"refund added"
-#                 }
-            
-#         else:
-#             resData= {
-#             "status":0, 
-#             "data":"Error while selecting data"
-#             }
-#     except:
-#         print("An exception occurred")
-#     finally:
-#         return resData
+        else:
+            resData = {"status":-1, "data":"Data not inserted in refund_item"}
+
+    
+    conn = connect()
+    cursor = conn.cursor()
+    
+    query = f"INSERT INTO td_refund_bill (receipt_no, refund_dt, refund_rcpt_no, price, discount_amt, cgst_amt, sgst_amt, amount, round_off, net_amt, pay_mode, cust_name, phone_no, gst_flag, discount_type, refund_by, refund_at) VALUES ({refund[0].receipt_no},'{formatted_datetime}','{receipt}',{refund[0].tprice},{refund[0].tdiscount_amt},{tcgst_amt},{tsgst_amt},{refund[0].tot_refund_amt},{refund[0].round_off},{refund[0].net_amt},'{refund[0].pay_mode}','{refund[0].cust_name}','{refund[0].phone_no}','{refund[0].gst_flag}','{refund[0].discount_type}','{refund[0].user_id}','{formatted_datetime}')"
+    # print(query)
+    cursor.execute(query)
+    conn.commit()
+    conn.close()
+    cursor.close()
+    if cursor.rowcount==1:
+        ResData = {"status":1, "data":resData}
+    else:
+        ResData = {"status":0, "data":"Data not inserted"}
+   
+    return ResData
+
+# Refund Report
+#--------------------------------------------------------------------------------------------------------------------------
+
+# SELECT * 
+# FROM td_refund_item a, md_items b, md_company c
+# where a.item_id=b.id
+# and a.comp_id=c.id
+# and a.comp_id=1
+# and a.refund_dt = '2024-03-14'

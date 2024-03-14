@@ -161,5 +161,24 @@ class CancelItem(BaseModel):
 class RefundItem(BaseModel):
     user_id:str
     receipt_no:int
+    comp_id:int
+    br_id:int
     item_id:int
+    price:float
+    dis_pertg:float
+    discount_amt:float
+    cgst_prtg:float
+    cgst_amt:float
+    sgst_prtg:float
+    sgst_amt:float
     qty:int
+    tprice:float
+    tdiscount_amt:float
+    tot_refund_amt:float
+    round_off:float
+    net_amt:int
+    pay_mode:str
+    cust_name:str
+    phone_no:str
+    gst_flag:str
+    discount_type:str
