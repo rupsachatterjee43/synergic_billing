@@ -79,6 +79,7 @@ class EditHeaderFooter(BaseModel):
 
 class EditItem(BaseModel):
     comp_id:int
+    item_name:str
     item_id:int
     price:float
     discount:float
