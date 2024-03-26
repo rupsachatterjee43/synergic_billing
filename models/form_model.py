@@ -93,6 +93,7 @@ class EditRcpSettings(BaseModel):
     comp_id:int
     rcpt_type:str
     gst_flag:str
+    gst_type:str
     unit_flag:str
     cust_inf:str
     pay_mode:str
@@ -100,6 +101,7 @@ class EditRcpSettings(BaseModel):
     stock_flag:str
     discount_type:str
     price_type:str
+    refund_days:int
     created_by:str
     modified_by:str
 
@@ -143,6 +145,7 @@ class UpdateStock(BaseModel):
     item_id:int
     user_id:str
     added_stock:int
+    removed_stock:int
     # flag:int  # 0 = out , 1 = in
 
 class StockReport(BaseModel):

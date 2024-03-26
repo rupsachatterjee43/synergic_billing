@@ -148,7 +148,7 @@ async def show_location():
 async def show_items(comp_id:int):
     conn = connect()
     cursor = conn.cursor()
-    query = f"SELECT a.*, b.*, c.unit_name FROM md_items a JOIN md_item_rate b on a.id=b.item_id LEFT JOIN md_unit c on c.sl_no=a.unit_id WHERE a.comp_id={comp_id}"
+    query = f"SELECT a.*, b.*, c.unit_name, d.stock FROM md_items a JOIN md_item_rate b on a.id=b.item_id JOIN td_stock d on a.id = d.item_id LEFT JOIN md_unit c on c.sl_no=a.unit_id WHERE a.comp_id={comp_id}"
     cursor.execute(query)
     records = cursor.fetchall()
     result = createResponse(records, cursor.column_names, 1)
@@ -393,7 +393,7 @@ async def item_report(item_rep:ItemReport):
 async def gst_statement(gst_st:SaleReport):
     conn = connect()
     cursor = conn.cursor()
-    query = f"select distinct a.receipt_no, a.trn_date, (a.price - a.discount_amt)taxable_amt, a.cgst_amt, a.sgst_amt, (a.cgst_amt + a.sgst_amt)total_tax, a.net_amt from td_receipt a, td_item_sale b where a.receipt_no = b.receipt_no and b.comp_id = {gst_st.comp_id} and b.br_id = {gst_st.br_id} and a.created_by = {gst_st.user_id} and a.trn_date BETWEEN '{gst_st.from_date}' and '{gst_st.to_date}'"
+    query = f"select distinct a.receipt_no, a.trn_date, (a.price - a.discount_amt)taxable_amt, a.cgst_amt, a.sgst_amt, (a.cgst_amt + a.sgst_amt)total_tax, a.net_amt from td_receipt a, td_item_sale b where a.receipt_no = b.receipt_no and b.comp_id = {gst_st.comp_id} and b.br_id = {gst_st.br_id} and a.created_by = {gst_st.user_id} and (a.cgst_amt + a.sgst_amt) > '0' and a.trn_date BETWEEN '{gst_st.from_date}' and '{gst_st.to_date}'"
     cursor.execute(query)
     records = cursor.fetchall()
     result = createResponse(records, cursor.column_names, 1)
@@ -529,7 +529,7 @@ async def edit_rcp_settings(rcp_set:EditRcpSettings):
     formatted_dt = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
     conn = connect()
     cursor = conn.cursor()
-    query = f"UPDATE md_receipt_settings SET rcpt_type='{rcp_set.rcpt_type}', gst_flag='{rcp_set.gst_flag}', unit_flag='{rcp_set.unit_flag}', cust_inf='{rcp_set.cust_inf}', pay_mode='{rcp_set.pay_mode}', discount_flag='{rcp_set.discount_flag}',stock_flag='{rcp_set.stock_flag}', discount_type='{rcp_set.discount_type}', price_type='{rcp_set.price_type}', created_by='{rcp_set.created_by}', modified_by='{rcp_set.modified_by}', modified_at='{formatted_dt}' WHERE comp_id={rcp_set.comp_id}"
+    query = f"UPDATE md_receipt_settings SET rcpt_type='{rcp_set.rcpt_type}', gst_flag='{rcp_set.gst_flag}', gst_type='{rcp_set.gst_type}', unit_flag='{rcp_set.unit_flag}', cust_inf='{rcp_set.cust_inf}', pay_mode='{rcp_set.pay_mode}', discount_flag='{rcp_set.discount_flag}',stock_flag='{rcp_set.stock_flag}', discount_type='{rcp_set.discount_type}', price_type='{rcp_set.price_type}', refund_days={rcp_set.refund_days}, created_by='{rcp_set.created_by}', modified_by='{rcp_set.modified_by}', modified_at='{formatted_dt}' WHERE comp_id={rcp_set.comp_id}"
     cursor.execute(query)
     conn.commit()
     conn.close()
@@ -912,7 +912,7 @@ async def edit_unit(edit:EditUnit):
         formatted_dt = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
         conn = connect()
         cursor = conn.cursor()
-        query = f"UPDATE md_unit SET unit_name='{edit.unit_name}', modified_by='{edit.modified_by}', modified_at='      {formatted_dt}' WHERE sl_no={edit.sl_no} and comp_id={edit.comp_id}"
+        query = f"UPDATE md_unit SET unit_name='{edit.unit_name}', modified_by='{edit.modified_by}', modified_at='{formatted_dt}' WHERE sl_no={edit.sl_no} and comp_id={edit.comp_id}"
         cursor.execute(query)
         conn.commit()
         conn.close()
@@ -955,7 +955,7 @@ async def update_stock(update:UpdateStock):
         formatted_dt = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
         conn = connect()
         cursor = conn.cursor()
-        query = f"UPDATE td_stock SET stock=stock+{update.added_stock}, modified_by='{update.user_id}', modified_dt='{formatted_dt}' WHERE comp_id={update.comp_id} AND br_id={update.br_id} AND item_id={update.item_id}"
+        query = f"UPDATE td_stock SET stock=(stock+{update.added_stock})-{update.removed_stock}, modified_by='{update.user_id}', modified_dt='{formatted_dt}' WHERE comp_id={update.comp_id} AND br_id={update.br_id} AND item_id={update.item_id}"
         cursor.execute(query)
         conn.commit()
         conn.close()
