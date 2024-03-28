@@ -297,7 +297,7 @@ async def show_bill(recp_no:int):
     else:
         resData= {
         "status":0,
-        "data":"no data found"
+        "data":[]
         }
     return resData
 
@@ -1192,7 +1192,7 @@ async def refund_item(refund:list[RefundItem]):
 # and a.comp_id=1
 # and a.refund_dt = '2024-03-21'
 
-#================================================================================================
+#======================================================================================================
 
 @app.post('/api/refund_list')
 async def refund_list(ref:RefundList):
@@ -1205,6 +1205,6 @@ async def refund_list(ref:RefundList):
     conn.close()
     cursor.close()
     return result
+#======================================================================================================
 
-#================================================================================================
 
