@@ -35,6 +35,7 @@ class Receipt(BaseModel):
     phone_no:str
     gst_flag:str
     gst_type:str
+    discount_flag:str
     discount_type:str
     created_by:str
 
