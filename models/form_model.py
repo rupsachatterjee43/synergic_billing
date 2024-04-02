@@ -7,7 +7,7 @@ class CreatePIN(BaseModel):
 
 class UserLogin(BaseModel):
     user_id:str
-    PIN:str
+    # PIN:str
 
 class Receipt(BaseModel):
     comp_id:int
@@ -38,6 +38,7 @@ class Receipt(BaseModel):
     discount_flag:str
     discount_type:str
     created_by:str
+    rcpt_type:str
 
 class DashBoard(BaseModel):
     trn_date:date

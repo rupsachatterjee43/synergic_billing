@@ -4,3 +4,4 @@ pydantic
 mysql-connector-python
 passlib[bcrypt]
 python-multipart
+requests

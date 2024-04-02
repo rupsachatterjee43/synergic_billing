@@ -1,11 +1,16 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, requests, Request
 from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 from config.database import connect
 from models.master_model import createResponse
 from models.form_model import UserLogin,Receipt,CreatePIN,DashBoard,SearchBill,SaleReport,ItemReport,EditHeaderFooter,EditItem,EditRcpSettings,AddItem,AddUnit,EditUnit,InventorySearch,UpdateStock,StockReport,RefundItem,RefundList
+# from models.otp_model import generateOTP
 from datetime import datetime, date
 from utils import get_hashed_password, verify_password
+
+import requests, random
+from urllib.parse import quote
+import json
 
 # testing git
 app = FastAPI()
@@ -29,6 +34,11 @@ app.add_middleware(
 @app.get('/')
 def index():
     return "Welcome to the billing app"
+
+# @app.get('/api/otp')
+# async def otp():
+#     result = generateOTP
+#     return result
 
 # Verify Phone no and active status
 #------------------------------------------------------------------------------------------------------
@@ -119,12 +129,14 @@ async def login(data_login:UserLogin):
         result = createResponse(records, cursor.column_names, 0)
         # print(result)
         res_dt = ''
-        if(verify_password(data_login.PIN, result['password'])):
-            res_dt = {"suc": 1, "msg": result}
-        else:
-            res_dt = {"suc": 0, "msg": "Please check your userid or PIN"}
+        # if(verify_password(data_login.PIN, result['password'])):
+        # otp = sms(data_login.user_id)
+        # res_dt = {"suc": 1, "msg": result, "otp": otp}
+        res_dt = {"suc": 1, "msg": result, "otp": {"msg": "OK [d2863a61-f0bd-11ee-b125-14187734a8d9]", "otp": 1234}}
+        # else:
+        #     res_dt = {"suc": 0, "msg": "Please check your userid or PIN", "otp": {}}
     else:
-        res_dt = {"suc": 0, "msg": "No user found"}
+        res_dt = {"suc": 0, "msg": "No user found", "otp": -1}
 
     return res_dt
 
@@ -237,14 +249,20 @@ async def register(rcpt:list[Receipt]):
     conn.close()
     cursor.close()
     if cursor.rowcount==1:
+        # if rcpt[0].rcpt_type != 'P':
+        #     print_url = f'https://billing.opentech4u.co.in/bill/receipt?receipt_no={receipt}'
+        #     shortUrl = short_url(print_url)
+        #     if(shortUrl['msg'] != ''):
+        #         send_bill_sms(shortUrl["msg"], rcpt[0].phone_no)
         ResData = {"status":1, "data":resData}
     else:
         ResData = {"status":0, "data":"Data not inserted"}
     print(values) 
     return ResData
+    print(rcpt[0][-1])
 
 # Dashboard
-#---------------------------------------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------------------------------------
 @app.post('/api/billsummary')
 async def Bill_sum(bill_sum:DashBoard):
     conn = connect()
@@ -280,7 +298,7 @@ async def recent_bill(rec_bill:DashBoard):
     return result
 
 #Select Bill
-# ------------------------------------------------------------------------------------------------------------
+#------------------------------------------------------------------------------------------------------------
 @app.get('/api/show_bill/{recp_no}')
 async def show_bill(recp_no:int):
     conn = connect()
@@ -1206,5 +1224,44 @@ async def refund_list(ref:RefundList):
     cursor.close()
     return result
 #======================================================================================================
+# SMS 
 
+def sms(phone_no:int):
+    otp = random.randint(1000,9999)
 
+    url = f"https://bulksms.sssplsales.in/api/api_http.php?username=SYNERGIC&password=SYN@526RGC&senderid=SYNGIC&to={phone_no}&text=OTP for mobile verification is {otp}. This code is valid for 5 minutes. Please do not share this OTP with anyone.-SYNGIC&route=Informative&type=text"
+
+    payload = {}
+    headers = {}
+
+    response = requests.request("GET", url, headers=headers, data=payload)
+
+    print(response.text)
+    return {"msg": response.text, "otp": otp}
+
+#======================================================================================================
+
+def short_url(url:str):
+    short_url = quote(url, safe="!~*'()")
+
+    api_url = f"https://is.gd/create.php?format=json&url={short_url}"
+
+    payload = {}
+    headers = {}
+
+    response = requests.request("GET", api_url, headers=headers, data=payload)
+    response = json.loads(response.text)
+    final_url = response['shorturl'] if response['shorturl'] else ''
+    return {"msg": final_url}
+
+def send_bill_sms(url:str, phone_no:str):
+    url = f"https://bulksms.sssplsales.in/api/api_http.php?username=SYNERGIC&password=SYN@526RGC&senderid=SYNGIC&to={phone_no}&text=Dear customer, thank you for shopping with us. For eBill please click {url} -Synergic softek solutions pvt ltd.&route=Informative&type=text"
+
+    payload = {}
+    headers = {}
+
+    response = requests.request("GET", url, headers=headers, data=payload)
+
+    print(response.text)
+    return {"msg": response.text}
+    # return response.text
