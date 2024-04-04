@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 from config.database import connect
 from models.master_model import createResponse
-from models.form_model import UserLogin,Receipt,CreatePIN,DashBoard,SearchBill,SaleReport,ItemReport,EditHeaderFooter,EditItem,EditRcpSettings,AddItem,AddUnit,EditUnit,InventorySearch,UpdateStock,StockReport,RefundItem,RefundList
+from models.form_model import UserLogin,Receipt,CreatePIN,DashBoard,SearchBill,SaleReport,ItemReport,EditHeaderFooter,EditItem,DiscountSettings,GSTSettings,GeneralSettings,AddItem,AddUnit,EditUnit,InventorySearch,UpdateStock,StockReport,RefundItem,RefundList,RefundBillReport
 # from models.otp_model import generateOTP
 from datetime import datetime, date
 from utils import get_hashed_password, verify_password
@@ -127,12 +127,22 @@ async def login(data_login:UserLogin):
     cursor.close()
     if(records is not None):
         result = createResponse(records, cursor.column_names, 0)
-        # print(result)
+
+        conn = connect()
+        cursor = conn.cursor()
+        query = f"SELECT otp_template FROM md_sms WHERE comp_id = {result['comp_id']}"
+        cursor.execute(query)
+        # print(cursor.rowcount)
+        records = cursor.fetchone()
+        conn.close()
+        cursor.close()
+        sms_res = createResponse(records, cursor.column_names, 0)
+        
         res_dt = ''
         # if(verify_password(data_login.PIN, result['password'])):
-        # otp = sms(data_login.user_id)
-        # res_dt = {"suc": 1, "msg": result, "otp": otp}
-        res_dt = {"suc": 1, "msg": result, "otp": {"msg": "OK [d2863a61-f0bd-11ee-b125-14187734a8d9]", "otp": 1234}}
+        otp = sms(data_login.user_id, sms_res['otp_template'])
+        res_dt = {"suc": 1, "msg": result, "otp": otp}
+        # res_dt = {"suc": 1, "msg": result, "otp": {"msg": "OK [d2863a61-f0bd-11ee-b125-14187734a8d9]", "otp": 1234}, "SMS": sms_res}
         # else:
         #     res_dt = {"suc": 0, "msg": "Please check your userid or PIN", "otp": {}}
     else:
@@ -242,24 +252,35 @@ async def register(rcpt:list[Receipt]):
     
     conn = connect()
     cursor = conn.cursor()
-    query = f"INSERT INTO td_receipt (receipt_no, trn_date, price, discount_amt, cgst_amt, sgst_amt, amount, round_off, net_amt, pay_mode, received_amt, pay_dtls, cust_name, phone_no, gst_flag, gst_type, discount_flag, discount_type, created_by, created_dt) VALUES ('{receipt}','{formatted_datetime}',{rcpt[0].tprice},{rcpt[0].tdiscount_amt},{tcgst_amt},{tsgst_amt},{rcpt[0].amount},{rcpt[0].round_off},{rcpt[0].net_amt},'{rcpt[0].pay_mode}','{rcpt[0].received_amt}','{rcpt[0].pay_dtls}','{rcpt[0].cust_name}','{rcpt[0].phone_no}','{rcpt[0].gst_flag}', '{rcpt[0].gst_type}','{rcpt[0].discount_flag}','{rcpt[0].discount_type}','{rcpt[0].created_by}','{formatted_datetime}')"
+    query = f"INSERT INTO td_receipt (receipt_no, comp_id, br_id, trn_date, price, discount_amt, cgst_amt, sgst_amt, amount, round_off, net_amt, pay_mode, received_amt, pay_dtls, cust_name, phone_no, gst_flag, gst_type, discount_flag, discount_type, created_by, created_dt) VALUES ('{receipt}', {rcpt[0].comp_id}, {rcpt[0].br_id},'{formatted_datetime}',{rcpt[0].tprice},{rcpt[0].tdiscount_amt},{tcgst_amt},{tsgst_amt},{rcpt[0].amount},{rcpt[0].round_off},{rcpt[0].net_amt},'{rcpt[0].pay_mode}','{rcpt[0].received_amt}','{rcpt[0].pay_dtls}','{rcpt[0].cust_name}','{rcpt[0].phone_no}','{rcpt[0].gst_flag}', '{rcpt[0].gst_type}','{rcpt[0].discount_flag}','{rcpt[0].discount_type}','{rcpt[0].created_by}','{formatted_datetime}')"
     # print(query)
     cursor.execute(query)
     conn.commit()
     conn.close()
     cursor.close()
     if cursor.rowcount==1:
-        # if rcpt[0].rcpt_type != 'P':
-        #     print_url = f'https://billing.opentech4u.co.in/bill/receipt?receipt_no={receipt}'
-        #     shortUrl = short_url(print_url)
-        #     if(shortUrl['msg'] != ''):
-        #         send_bill_sms(shortUrl["msg"], rcpt[0].phone_no)
+        if rcpt[0].rcpt_type != 'P':
+
+            conn = connect()
+            cursor = conn.cursor()
+            query = f"SELECT bill_template FROM md_sms WHERE comp_id = {rcpt[0].comp_id}"
+            cursor.execute(query)
+            # print(cursor.rowcount)
+            records = cursor.fetchone()
+            conn.close()
+            cursor.close()
+            sms_res = createResponse(records, cursor.column_names, 0)
+
+            print_url = f'https://billing.opentech4u.co.in/bill/receipt?receipt_no={receipt}'
+            shortUrl = short_url(print_url)
+            if(shortUrl['msg'] != ''):
+                send_bill_sms(shortUrl["msg"], rcpt[0].phone_no, sms_res['bill_template'])
         ResData = {"status":1, "data":resData}
     else:
         ResData = {"status":0, "data":"Data not inserted"}
     print(values) 
     return ResData
-    print(rcpt[0][-1])
+    # print(rcpt[0][-1])
 
 # Dashboard
 #-------------------------------------------------------------------------------------------------------------------------
@@ -267,7 +288,9 @@ async def register(rcpt:list[Receipt]):
 async def Bill_sum(bill_sum:DashBoard):
     conn = connect()
     cursor = conn.cursor()
+
     query = f"SELECT COUNT(a.receipt_no)total_bills, SUM(a.net_amt)amount_collected FROM td_receipt a, md_user b,md_branch c,md_company d WHERE a.created_by=b.user_id and b.br_id=c.id and b.comp_id=d.id and d.id={bill_sum.comp_id} and c.id={bill_sum.br_id} and a.trn_date='{bill_sum.trn_date}' and a.created_by='{bill_sum.user_id}'"
+
     cursor.execute(query)
     records = cursor.fetchall()
     # print(records)
@@ -539,15 +562,65 @@ async def add_items(add_item:AddItem):
        
     return resData
 
-# Edit Receipt Settings
+# Edit Settings
 #-------------------------------------------------------------------------------------------------------------
-@app.post('/api/edit_rcp_settings')
-async def edit_rcp_settings(rcp_set:EditRcpSettings):
+@app.post('/api/edit_discount_settings')
+async def edit_discount_settings(rcp_set:DiscountSettings):
     current_datetime = datetime.now()
     formatted_dt = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
     conn = connect()
     cursor = conn.cursor()
-    query = f"UPDATE md_receipt_settings SET rcpt_type='{rcp_set.rcpt_type}', gst_flag='{rcp_set.gst_flag}', gst_type='{rcp_set.gst_type}', unit_flag='{rcp_set.unit_flag}', cust_inf='{rcp_set.cust_inf}', pay_mode='{rcp_set.pay_mode}', discount_flag='{rcp_set.discount_flag}',stock_flag='{rcp_set.stock_flag}', discount_type='{rcp_set.discount_type}', price_type='{rcp_set.price_type}', refund_days={rcp_set.refund_days}, created_by='{rcp_set.created_by}', modified_by='{rcp_set.modified_by}', modified_at='{formatted_dt}' WHERE comp_id={rcp_set.comp_id}"
+    query = f"UPDATE md_receipt_settings SET discount_flag='{rcp_set.discount_flag}', discount_type='{rcp_set.discount_type}', discount_position='{rcp_set.discount_position}', modified_by='{rcp_set.modified_by}', modified_at='{formatted_dt}' WHERE comp_id={rcp_set.comp_id}"
+    cursor.execute(query)
+    conn.commit()
+    conn.close()
+    cursor.close()
+    print(cursor.rowcount)
+    if cursor.rowcount>0:
+        resData= {  
+        "status":1,
+        "data":"data edited successfully"
+        }
+    else:
+        resData= {"status":0, "data":"data not edited"}
+       
+    return resData
+
+# GST Settings
+#-----------------------------
+
+@app.post('/api/edit_gst_settings')
+async def edit_gst_settings(rcp_set:GSTSettings):
+    current_datetime = datetime.now()
+    formatted_dt = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
+    conn = connect()
+    cursor = conn.cursor()
+    query = f"UPDATE md_receipt_settings SET gst_flag='{rcp_set.gst_flag}', gst_type='{rcp_set.gst_type}', modified_by='{rcp_set.modified_by}', modified_at='{formatted_dt}' WHERE comp_id={rcp_set.comp_id}"
+    cursor.execute(query)
+    conn.commit()
+    conn.close()
+    cursor.close()
+    print(cursor.rowcount)
+    if cursor.rowcount>0:
+        resData= {  
+        "status":1,
+        "data":"data edited successfully"
+        }
+    else:
+        resData= {"status":0, "data":"data not edited"}
+       
+    return resData
+
+# General Settings
+#-----------------------------
+
+@app.post('/api/edit_general_settings')
+async def edit_general_settings(rcp_set:GeneralSettings):
+    current_datetime = datetime.now()
+    formatted_dt = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
+    conn = connect()
+    cursor = conn.cursor()
+    query = f"UPDATE md_receipt_settings SET rcpt_type='{rcp_set.rcpt_type}', unit_flag='{rcp_set.unit_flag}', cust_inf='{rcp_set.cust_inf}', pay_mode='{rcp_set.pay_mode}', stock_flag='{rcp_set.stock_flag}', price_type='{rcp_set.price_type}', refund_days={rcp_set.refund_days}, modified_by='{rcp_set.modified_by}', modified_at='{formatted_dt}' WHERE comp_id={rcp_set.comp_id}"
     cursor.execute(query)
     conn.commit()
     conn.close()
@@ -1226,17 +1299,20 @@ async def refund_list(ref:RefundList):
 #======================================================================================================
 # SMS 
 
-def sms(phone_no:int):
+def sms(phone_no:int, template):
     otp = random.randint(1000,9999)
 
-    url = f"https://bulksms.sssplsales.in/api/api_http.php?username=SYNERGIC&password=SYN@526RGC&senderid=SYNGIC&to={phone_no}&text=OTP for mobile verification is {otp}. This code is valid for 5 minutes. Please do not share this OTP with anyone.-SYNGIC&route=Informative&type=text"
+    url = template.replace("#{SENDER}#", str(phone_no)).replace("#{OTP}#", str(otp))
+    # f"https://bulksms.sssplsales.in/api/api_http.php?username=SYNERGIC&password=SYN@526RGC&senderid=SYNGIC&to={phone_no}&text=OTP for mobile verification is {otp}. This code is valid for 5 minutes. Please do not share this OTP with anyone.-SYNGIC&route=Informative&type=text"
+
+    # print(url)
 
     payload = {}
     headers = {}
 
     response = requests.request("GET", url, headers=headers, data=payload)
 
-    print(response.text)
+    # print(response.text)
     return {"msg": response.text, "otp": otp}
 
 #======================================================================================================
@@ -1254,8 +1330,10 @@ def short_url(url:str):
     final_url = response['shorturl'] if response['shorturl'] else ''
     return {"msg": final_url}
 
-def send_bill_sms(url:str, phone_no:str):
-    url = f"https://bulksms.sssplsales.in/api/api_http.php?username=SYNERGIC&password=SYN@526RGC&senderid=SYNGIC&to={phone_no}&text=Dear customer, thank you for shopping with us. For eBill please click {url} -Synergic softek solutions pvt ltd.&route=Informative&type=text"
+def send_bill_sms(url:str, phone_no:str, template):
+    url = template.replace("#{SENDER}#", str(phone_no)).replace("#{URL}#", str(url))
+
+    # f"https://bulksms.sssplsales.in/api/api_http.php?username=SYNERGIC&password=SYN@526RGC&senderid=SYNGIC&to={phone_no}&text=Dear customer, thank you for shopping with us. For eBill please click {url} -Synergic softek solutions pvt ltd.&route=Informative&type=text"
 
     payload = {}
     headers = {}
@@ -1265,3 +1343,30 @@ def send_bill_sms(url:str, phone_no:str):
     print(response.text)
     return {"msg": response.text}
     # return response.text
+#======================================================================================================
+
+# Refund Report [Bill]
+
+@app.post('/api/refund_bill_report')
+async def sale_report(sl_rep:RefundBillReport):
+    conn = connect()
+    cursor = conn.cursor()
+
+    query=f"select a.cust_name, a.phone_no, a.refund_rcpt_no, a.refund_dt,  count(b.refund_rcpt_no)no_of_items, a.price, a.discount_amt, a.cgst_amt, a.sgst_amt,a.round_off, a.net_amt, a.refund_by from  td_refund_bill a, td_refund_item b where a.refund_rcpt_no = b.refund_rcpt_no  and   a.refund_dt between '{sl_rep.from_date}' and '{sl_rep.to_date}' and   b.comp_id = {sl_rep.comp_id} AND   b.br_id = {sl_rep.br_id} and a.refund_by='{sl_rep.user_id}' group by a.cust_name, a.phone_no, a.refund_rcpt_no, a.refund_dt, a.refund_by"
+
+    cursor.execute(query)
+    records = cursor.fetchall()
+    result = createResponse(records, cursor.column_names, 1)
+    conn.close()
+    cursor.close()
+    if records==[]:
+        resData= {"status":0, "data":[]}
+    else:
+        resData= {
+        "status":1,
+        "data":result
+        }
+    return resData
+#======================================================================================================
+
+# Refund

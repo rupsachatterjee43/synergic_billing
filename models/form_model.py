@@ -92,20 +92,28 @@ class EditItem(BaseModel):
     unit_id:int
     modified_by:str
     
-class EditRcpSettings(BaseModel):
+class DiscountSettings(BaseModel):
     comp_id:int
-    rcpt_type:str
+    discount_flag:str
+    discount_type:str
+    discount_position:str
+    modified_by:str
+
+class GSTSettings(BaseModel):
+    comp_id:int
     gst_flag:str
     gst_type:str
+    modified_by:str
+
+class GeneralSettings(BaseModel):
+    comp_id:int
+    rcpt_type:str
     unit_flag:str
     cust_inf:str
     pay_mode:str
-    discount_flag:str
     stock_flag:str
-    discount_type:str
     price_type:str
     refund_days:int
-    created_by:str
     modified_by:str
 
 class AddItem(BaseModel):
@@ -195,3 +203,10 @@ class RefundList(BaseModel):
     br_id:int
     phone_no:str
     ref_days:int
+
+class RefundBillReport(BaseModel):
+    from_date:date
+    to_date:date
+    comp_id:int
+    br_id:int
+    user_id:str
