@@ -37,6 +37,7 @@ class Receipt(BaseModel):
     gst_type:str
     discount_flag:str
     discount_type:str
+    discount_position:str
     created_by:str
     rcpt_type:str
 
