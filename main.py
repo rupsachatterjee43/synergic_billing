@@ -278,6 +278,27 @@ async def register(rcpt:list[Receipt]):
         ResData = {"status":1, "data":resData}
     else:
         ResData = {"status":0, "data":"Data not inserted"}
+
+    if rcpt[0].cust_info_flag > 0:
+        conn = connect()
+        cursor = conn.cursor()
+        query= f"update md_customer set cust_name = '{rcpt[0].cust_name}', pay_mode = '{rcpt[0].pay_mode}', modified_by = '{rcpt[0].created_by}', modified_dt = '{formatted_datetime}' where phone_no = '{rcpt[0].phone_no}'"
+        cursor.execute(query)
+        conn.commit()
+        conn.close()
+        cursor.close()
+        # cust = {"msg":"existing customer"}
+
+    else:
+        conn = connect()
+        cursor = conn.cursor()
+        query= f"insert into md_customer (cust_name,phone_no,pay_mode,created_by,created_dt) values ('{rcpt[0].cust_name}','{rcpt[0].phone_no}','{rcpt[0].pay_mode}','{rcpt[0].created_by}','{formatted_datetime}')"
+        cursor.execute(query)
+        conn.commit()
+        conn.close()
+        cursor.close()
+        # cust = {"msg":"new customer"}
+
     print(values) 
     return ResData
     # print(rcpt[0][-1])
@@ -1366,6 +1387,51 @@ async def sale_report(sl_rep:RefundBillReport):
         "data":result
         }
     return resData
-#========================================================================================================
-
+#======================================================================================================
 # Customer Information 
+
+@app.post('/api/cust_info/{phone_no}')
+async def cust_info(phone_no:str):
+
+    conn = connect()
+    cursor = conn.cursor()
+
+    query=f"select cust_name from md_customer where phone_no='{phone_no}'"
+
+    cursor.execute(query)
+    records = cursor.fetchall()
+    result = createResponse(records, cursor.column_names, 1)
+    conn.close()
+    cursor.close()
+    if records==[]:
+        resData= {"status":0, "data":[]}
+    else:
+        resData= {
+        "status":1,
+        # "data":result[0]
+        "data":result
+        }
+    return resData
+
+#======================================================================================================
+# Insert New Customer Information
+
+# def new_cust_info(query, cust_name:str, phone_no:str):
+  
+    # conn = connect()
+    # cursor = conn.cursor()
+    # query_1= f"update md_customer set cust_name = '{cust_name}' where phone_no = '{phone_no}'"
+    # cursor.execute(query)
+    # conn.commit()
+    # conn.close()
+    # cursor.close()
+
+
+    # conn = connect()
+    # cursor = conn.cursor()
+    # query_2= f"insert into md_customer (cust_name,phone_no) values ('{cust_name}','{phone_no}')"
+    # cursor.execute(query)
+    # conn.commit()
+    # conn.close()
+    # cursor.close()
+

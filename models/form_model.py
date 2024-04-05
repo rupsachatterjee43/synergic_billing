@@ -40,6 +40,7 @@ class Receipt(BaseModel):
     discount_position:str
     created_by:str
     rcpt_type:str
+    cust_info_flag:int
 
 class DashBoard(BaseModel):
     trn_date:date
@@ -211,3 +212,6 @@ class RefundBillReport(BaseModel):
     comp_id:int
     br_id:int
     user_id:str
+
+# class CustomerDetails(BaseModel):
+#     phone_no:str
