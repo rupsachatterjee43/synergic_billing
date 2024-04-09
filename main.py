@@ -123,30 +123,34 @@ async def login(data_login:UserLogin):
     cursor.execute(query)
     print(cursor.rowcount)
     records = cursor.fetchone()
+    result = createResponse(records, cursor.column_names, 0)
     conn.close()
     cursor.close()
-    if(records is not None):
-        result = createResponse(records, cursor.column_names, 0)
 
-        conn = connect()
-        cursor = conn.cursor()
-        query = f"SELECT otp_template FROM md_sms WHERE comp_id = {result['comp_id']}"
-        cursor.execute(query)
-        # print(cursor.rowcount)
-        records = cursor.fetchone()
-        conn.close()
-        cursor.close()
-        sms_res = createResponse(records, cursor.column_names, 0)
+    if(records is not None):
+        # result = createResponse(records, cursor.column_names, 0)
+
+        # conn = connect()
+        # cursor = conn.cursor()
+        # query = f"SELECT otp_template FROM md_sms WHERE comp_id = {result['comp_id']}"
+        # cursor.execute(query)
+        # # print(cursor.rowcount)
+        # records = cursor.fetchone()
+        # conn.close()
+        # cursor.close()
+        # sms_res = createResponse(records, cursor.column_names, 0)
         
-        res_dt = ''
-        # if(verify_password(data_login.PIN, result['password'])):
-        otp = sms(data_login.user_id, sms_res['otp_template'])
-        res_dt = {"suc": 1, "msg": result, "otp": otp}
-        # res_dt = {"suc": 1, "msg": result, "otp": {"msg": "OK [d2863a61-f0bd-11ee-b125-14187734a8d9]", "otp": 1234}, "SMS": sms_res}
-        # else:
-        #     res_dt = {"suc": 0, "msg": "Please check your userid or PIN", "otp": {}}
+        # res_dt = ''
+        # # if(verify_password(data_login.PIN, result['password'])):
+        # otp = sms(data_login.user_id, sms_res['otp_template'])
+        # res_dt = {"suc": 1, "msg": result, "otp": otp}
+        # # res_dt = {"suc": 1, "msg": result, "otp": {"msg": "OK [d2863a61-f0bd-11ee-b125-14187734a8d9]", "otp": 1234}, "SMS": sms_res}
+        # # else:
+        # #     res_dt = {"suc": 0, "msg": "Please check your userid or PIN", "otp": {}}
+
+        res_dt = {"suc": 1, "msg": result}
     else:
-        res_dt = {"suc": 0, "msg": "No user found", "otp": -1}
+        res_dt = {"suc": 0, "msg": "No user found"}
 
     return res_dt
 
@@ -170,7 +174,7 @@ async def show_location():
 async def show_items(comp_id:int):
     conn = connect()
     cursor = conn.cursor()
-    query = f"SELECT a.*, b.*, c.unit_name, d.stock FROM md_items a JOIN md_item_rate b on a.id=b.item_id JOIN td_stock d on a.id = d.item_id LEFT JOIN md_unit c on c.sl_no=a.unit_id WHERE a.comp_id={comp_id}"
+    query = f"SELECT a.*, b.*, c.unit_name, d.stock FROM md_items a JOIN md_item_rate b on a.id=b.item_id LEFT JOIN td_stock d on a.id = d.item_id LEFT JOIN md_unit c on c.sl_no=a.unit_id WHERE a.comp_id={comp_id}"
     cursor.execute(query)
     records = cursor.fetchall()
     result = createResponse(records, cursor.column_names, 1)
@@ -233,20 +237,22 @@ async def register(rcpt:list[Receipt]):
         conn.close()
         cursor.close()
         if cursor.rowcount>0:
-            conn = connect()
-            cursor = conn.cursor()
+            if i.stock_flag=='Y':
+                conn = connect()
+                cursor = conn.cursor()
 
-            query = f"UPDATE td_stock SET stock=stock-{i.qty}, modified_by='{i.created_by}', modified_dt='{formatted_datetime}' WHERE comp_id={i.comp_id} AND br_id={i.br_id} AND item_id={i.item_id}"
+                query = f"UPDATE td_stock SET stock=stock-{i.qty}, modified_by='{i.created_by}', modified_dt='{formatted_datetime}' WHERE comp_id={i.comp_id} AND br_id={i.br_id} AND item_id={i.item_id}"
 
-            cursor.execute(query)
-            conn.commit()
-            conn.close()
-            cursor.close()
-            if cursor.rowcount==1:
-                resData = {"status":1, "data":receipt}
+                cursor.execute(query)
+                conn.commit()
+                conn.close()
+                cursor.close()
+                if cursor.rowcount==1:
+                    resData = {"status":1, "data":receipt}
+                else:
+                    resData = {"status":0, "data":'error while updating stock'}
             else:
-                resData = {"status":0, "data":'error while updating stock'}
-        
+                resData = {"status":1, "data":receipt}
         else:
             resData = {"status":-1, "data":"Data not inserted in item_sale"}
     
@@ -259,22 +265,23 @@ async def register(rcpt:list[Receipt]):
     conn.close()
     cursor.close()
     if cursor.rowcount==1:
-        if rcpt[0].rcpt_type != 'P':
+        # if rcpt[0].rcpt_type != 'P':
 
-            conn = connect()
-            cursor = conn.cursor()
-            query = f"SELECT bill_template FROM md_sms WHERE comp_id = {rcpt[0].comp_id}"
-            cursor.execute(query)
-            # print(cursor.rowcount)
-            records = cursor.fetchone()
-            conn.close()
-            cursor.close()
-            sms_res = createResponse(records, cursor.column_names, 0)
+        #     conn = connect()
+        #     cursor = conn.cursor()
+        #     query = f"SELECT bill_template FROM md_sms WHERE comp_id = {rcpt[0].comp_id}"
+        #     cursor.execute(query)
+        #     # print(cursor.rowcount)
+        #     records = cursor.fetchone()
+        #     conn.close()
+        #     cursor.close()
+        #     sms_res = createResponse(records, cursor.column_names, 0)
 
-            print_url = f'https://billing.opentech4u.co.in/bill/receipt?receipt_no={receipt}'
-            shortUrl = short_url(print_url)
-            if(shortUrl['msg'] != ''):
-                send_bill_sms(shortUrl["msg"], rcpt[0].phone_no, sms_res['bill_template'])
+        #     print_url = f'https://billing.opentech4u.co.in/bill/receipt?receipt_no={receipt}'
+        #     shortUrl = short_url(print_url)
+        #     if(shortUrl['msg'] != ''):
+        #         send_bill_sms(shortUrl["msg"], rcpt[0].phone_no, sms_res['bill_template'])
+        
         ResData = {"status":1, "data":resData}
     else:
         ResData = {"status":0, "data":"Data not inserted"}

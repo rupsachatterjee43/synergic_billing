@@ -41,6 +41,7 @@ class Receipt(BaseModel):
     created_by:str
     rcpt_type:str
     cust_info_flag:int
+    stock_flag:str
 
 class DashBoard(BaseModel):
     trn_date:date
