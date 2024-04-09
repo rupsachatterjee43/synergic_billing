@@ -151,7 +151,7 @@ class InventorySearch(BaseModel):
     comp_id:int
     br_id:int
     item_id:int
-    user_id:str
+    # user_id:str
 
 class UpdateStock(BaseModel):
     comp_id:int
@@ -216,3 +216,7 @@ class RefundBillReport(BaseModel):
 
 # class CustomerDetails(BaseModel):
 #     phone_no:str
+
+class CustInfo(BaseModel):
+    comp_id:int
+    phone_no:str

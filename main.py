@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 from config.database import connect
 from models.master_model import createResponse
-from models.form_model import UserLogin,Receipt,CreatePIN,DashBoard,SearchBill,SaleReport,ItemReport,EditHeaderFooter,EditItem,DiscountSettings,GSTSettings,GeneralSettings,AddItem,AddUnit,EditUnit,InventorySearch,UpdateStock,StockReport,RefundItem,RefundList,RefundBillReport
+from models.form_model import UserLogin,Receipt,CreatePIN,DashBoard,SearchBill,SaleReport,ItemReport,EditHeaderFooter,EditItem,DiscountSettings,GSTSettings,GeneralSettings,AddItem,AddUnit,EditUnit,InventorySearch,UpdateStock,StockReport,RefundItem,RefundList,RefundBillReport,CustInfo
 # from models.otp_model import generateOTP
 from datetime import datetime, date
 from utils import get_hashed_password, verify_password
@@ -174,7 +174,7 @@ async def show_location():
 async def show_items(comp_id:int):
     conn = connect()
     cursor = conn.cursor()
-    query = f"SELECT a.*, b.*, c.unit_name, d.stock FROM md_items a JOIN md_item_rate b on a.id=b.item_id LEFT JOIN td_stock d on a.id = d.item_id LEFT JOIN md_unit c on c.sl_no=a.unit_id WHERE a.comp_id={comp_id}"
+    query = f"SELECT a.*, b.*, c.unit_name, d.stock FROM md_items a JOIN md_item_rate b on a.id=b.item_id LEFT JOIN md_unit c on c.sl_no=a.unit_id WHERE a.comp_id={comp_id}"
     cursor.execute(query)
     records = cursor.fetchall()
     result = createResponse(records, cursor.column_names, 1)
@@ -281,7 +281,7 @@ async def register(rcpt:list[Receipt]):
         #     shortUrl = short_url(print_url)
         #     if(shortUrl['msg'] != ''):
         #         send_bill_sms(shortUrl["msg"], rcpt[0].phone_no, sms_res['bill_template'])
-        
+
         ResData = {"status":1, "data":resData}
     else:
         ResData = {"status":0, "data":"Data not inserted"}
@@ -1057,7 +1057,7 @@ async def edit_unit(edit:EditUnit):
 async def stock(st_list:InventorySearch):
     conn = connect()
     cursor = conn.cursor()
-    query = f"SELECT stock FROM td_stock WHERE comp_id = {st_list.comp_id} AND br_id = {st_list.br_id} AND item_id = {st_list.item_id} AND created_by = '{st_list.user_id}'"
+    query = f"SELECT stock FROM td_stock WHERE comp_id = {st_list.comp_id} AND br_id = {st_list.br_id} AND item_id = {st_list.item_id}"
     cursor.execute(query)
     records = cursor.fetchall()
     result = createResponse(records, cursor.column_names, 1)
@@ -1326,50 +1326,50 @@ async def refund_list(ref:RefundList):
 #======================================================================================================
 # SMS 
 
-def sms(phone_no:int, template):
-    otp = random.randint(1000,9999)
+# def sms(phone_no:int, template):
+#     otp = random.randint(1000,9999)
 
-    url = template.replace("#{SENDER}#", str(phone_no)).replace("#{OTP}#", str(otp))
-    # f"https://bulksms.sssplsales.in/api/api_http.php?username=SYNERGIC&password=SYN@526RGC&senderid=SYNGIC&to={phone_no}&text=OTP for mobile verification is {otp}. This code is valid for 5 minutes. Please do not share this OTP with anyone.-SYNGIC&route=Informative&type=text"
+#     url = template.replace("#{SENDER}#", str(phone_no)).replace("#{OTP}#", str(otp))
+#     # f"https://bulksms.sssplsales.in/api/api_http.php?username=SYNERGIC&password=SYN@526RGC&senderid=SYNGIC&to={phone_no}&text=OTP for mobile verification is {otp}. This code is valid for 5 minutes. Please do not share this OTP with anyone.-SYNGIC&route=Informative&type=text"
 
-    # print(url)
+#     # print(url)
 
-    payload = {}
-    headers = {}
+#     payload = {}
+#     headers = {}
 
-    response = requests.request("GET", url, headers=headers, data=payload)
+#     response = requests.request("GET", url, headers=headers, data=payload)
 
-    # print(response.text)
-    return {"msg": response.text, "otp": otp}
+#     # print(response.text)
+#     return {"msg": response.text, "otp": otp}
 
 #======================================================================================================
 
-def short_url(url:str):
-    short_url = quote(url, safe="!~*'()")
+# def short_url(url:str):
+#     short_url = quote(url, safe="!~*'()")
 
-    api_url = f"https://is.gd/create.php?format=json&url={short_url}"
+#     api_url = f"https://is.gd/create.php?format=json&url={short_url}"
 
-    payload = {}
-    headers = {}
+#     payload = {}
+#     headers = {}
 
-    response = requests.request("GET", api_url, headers=headers, data=payload)
-    response = json.loads(response.text)
-    final_url = response['shorturl'] if response['shorturl'] else ''
-    return {"msg": final_url}
+#     response = requests.request("GET", api_url, headers=headers, data=payload)
+#     response = json.loads(response.text)
+#     final_url = response['shorturl'] if response['shorturl'] else ''
+#     return {"msg": final_url}
 
-def send_bill_sms(url:str, phone_no:str, template):
-    url = template.replace("#{SENDER}#", str(phone_no)).replace("#{URL}#", str(url))
+# def send_bill_sms(url:str, phone_no:str, template):
+#     url = template.replace("#{SENDER}#", str(phone_no)).replace("#{URL}#", str(url))
 
-    # f"https://bulksms.sssplsales.in/api/api_http.php?username=SYNERGIC&password=SYN@526RGC&senderid=SYNGIC&to={phone_no}&text=Dear customer, thank you for shopping with us. For eBill please click {url} -Synergic softek solutions pvt ltd.&route=Informative&type=text"
+#     # f"https://bulksms.sssplsales.in/api/api_http.php?username=SYNERGIC&password=SYN@526RGC&senderid=SYNGIC&to={phone_no}&text=Dear customer, thank you for shopping with us. For eBill please click {url} -Synergic softek solutions pvt ltd.&route=Informative&type=text"
 
-    payload = {}
-    headers = {}
+#     payload = {}
+#     headers = {}
 
-    response = requests.request("GET", url, headers=headers, data=payload)
+#     response = requests.request("GET", url, headers=headers, data=payload)
 
-    print(response.text)
-    return {"msg": response.text}
-    # return response.text
+#     print(response.text)
+#     return {"msg": response.text}
+#     # return response.text
 #====================================================================================================================
 
 # Refund Report [Bill]
@@ -1397,26 +1397,27 @@ async def sale_report(sl_rep:RefundBillReport):
 #======================================================================================================
 # Customer Information 
 
-@app.post('/api/cust_info/{phone_no}')
-async def cust_info(phone_no:str):
+@app.post('/api/cust_info')
+async def cust_info(info:CustInfo):
 
     conn = connect()
     cursor = conn.cursor()
 
-    query=f"select cust_name from md_customer where phone_no='{phone_no}'"
+    query=f"select cust_name from md_customer where comp_id={info.comp_id} and phone_no='{info.phone_no}'"
+    # print(query)
 
     cursor.execute(query)
     records = cursor.fetchall()
     result = createResponse(records, cursor.column_names, 1)
     conn.close()
     cursor.close()
-    if records==[]:
-        resData= {"status":0, "data":[]}
+    if cursor.rowcount>0:
+        resData= {"status":1, "data":result}
     else:
         resData= {
-        "status":1,
+        "status":0,
         # "data":result[0]
-        "data":result
+        "data":[]
         }
     return resData
 
