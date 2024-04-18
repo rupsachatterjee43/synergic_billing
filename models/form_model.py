@@ -220,3 +220,15 @@ class RefundBillReport(BaseModel):
 class CustInfo(BaseModel):
     comp_id:int
     phone_no:str
+
+class BillList(BaseModel):
+    comp_id:int
+    br_id:int
+    phone_no:str
+
+class SearchByItem(BaseModel):
+    comp_id:int
+    br_id:int
+    item_id:int
+    from_date:str
+    to_date:str

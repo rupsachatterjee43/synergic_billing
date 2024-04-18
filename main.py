@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 from config.database import connect
 from models.master_model import createResponse
-from models.form_model import UserLogin,Receipt,CreatePIN,DashBoard,SearchBill,SaleReport,ItemReport,EditHeaderFooter,EditItem,DiscountSettings,GSTSettings,GeneralSettings,AddItem,AddUnit,EditUnit,InventorySearch,UpdateStock,StockReport,RefundItem,RefundList,RefundBillReport,CustInfo
+from models.form_model import UserLogin,Receipt,CreatePIN,DashBoard,SearchBill,SaleReport,ItemReport,EditHeaderFooter,EditItem,DiscountSettings,GSTSettings,GeneralSettings,AddItem,AddUnit,EditUnit,InventorySearch,UpdateStock,StockReport,RefundItem,RefundList,RefundBillReport,CustInfo,BillList,SearchByItem
 # from models.otp_model import generateOTP
 from datetime import datetime, date
 from utils import get_hashed_password, verify_password
@@ -21,7 +21,7 @@ origins = [
 ]
 
 if __name__ == "__main__":
-   uvicorn.run("main:app", host="0.0.0.0", port=3004, reload=True)
+   uvicorn.run("main:app", host="0.0.0.0", port=3005, reload=True)
 
 app.add_middleware(
     CORSMiddleware,
@@ -144,7 +144,7 @@ async def login(data_login:UserLogin):
         # # if(verify_password(data_login.PIN, result['password'])):
         # otp = sms(data_login.user_id, sms_res['otp_template'])
         # res_dt = {"suc": 1, "msg": result, "otp": otp}
-        # # res_dt = {"suc": 1, "msg": result, "otp": {"msg": "OK [d2863a61-f0bd-11ee-b125-14187734a8d9]", "otp": 1234}, "SMS": sms_res}
+        # res_dt = {"suc": 1, "msg": result, "otp": {"msg": "OK [d2863a61-f0bd-11ee-b125-14187734a8d9]", "otp": 1234}, "SMS": sms_res}
         # # else:
         # #     res_dt = {"suc": 0, "msg": "Please check your userid or PIN", "otp": {}}
 
@@ -174,7 +174,7 @@ async def show_location():
 async def show_items(comp_id:int):
     conn = connect()
     cursor = conn.cursor()
-    query = f"SELECT a.*, b.*, c.unit_name, d.stock FROM md_items a JOIN md_item_rate b on a.id=b.item_id LEFT JOIN md_unit c on c.sl_no=a.unit_id WHERE a.comp_id={comp_id}"
+    query = f"SELECT a.*, b.*, c.unit_name FROM md_items a JOIN md_item_rate b on a.id=b.item_id LEFT JOIN md_unit c on c.sl_no=a.unit_id WHERE a.comp_id={comp_id}"
     cursor.execute(query)
     records = cursor.fetchall()
     result = createResponse(records, cursor.column_names, 1)
@@ -299,7 +299,7 @@ async def register(rcpt:list[Receipt]):
     else:
         conn = connect()
         cursor = conn.cursor()
-        query= f"insert into md_customer (cust_name,phone_no,pay_mode,created_by,created_dt) values ('{rcpt[0].cust_name}','{rcpt[0].phone_no}','{rcpt[0].pay_mode}','{rcpt[0].created_by}','{formatted_datetime}')"
+        query= f"insert into md_customer (comp_id,cust_name,phone_no,pay_mode,created_by,created_dt) values ({rcpt[0].comp_id},'{rcpt[0].cust_name}','{rcpt[0].phone_no}','{rcpt[0].pay_mode}','{rcpt[0].created_by}','{formatted_datetime}')"
         cursor.execute(query)
         conn.commit()
         conn.close()
@@ -340,7 +340,7 @@ async def Bill_sum(bill_sum:DashBoard):
 async def recent_bill(rec_bill:DashBoard):
     conn = connect()
     cursor = conn.cursor()
-    query = f"SELECT a.* FROM td_receipt a, md_user b, md_branch c, md_company d WHERE a.created_by=b.user_id and b.br_id=c.id and b.comp_id=d.id and d.id={rec_bill.comp_id} and c.id={rec_bill.br_id} and a.trn_date='{rec_bill.trn_date}' and a.created_by='{rec_bill.user_id}' ORDER BY created_dt DESC LIMIT 4"
+    query = f"SELECT a.* FROM td_receipt a, md_user b, md_branch c, md_company d WHERE a.created_by=b.user_id and b.br_id=c.id and b.comp_id=d.id and d.id={rec_bill.comp_id} and c.id={rec_bill.br_id} and a.trn_date='{rec_bill.trn_date}' and a.created_by='{rec_bill.user_id}' ORDER BY created_dt DESC LIMIT 10"
     cursor.execute(query)
     records = cursor.fetchall()
     result = createResponse(records, cursor.column_names, 1)
@@ -1443,3 +1443,53 @@ async def cust_info(info:CustInfo):
     # conn.close()
     # cursor.close()
 
+#======================================================================================================
+
+# Search Bill by Phone no.
+
+@app.post('/api/search_bill_by_phone')
+async def search_bill_by_phone(bill:BillList):
+    conn = connect()
+    cursor = conn.cursor()
+    query = f"SELECT DISTINCT a.receipt_no, a.trn_date, a.net_amt, a.phone_no FROM td_receipt a, td_item_sale b WHERE a.receipt_no=b.receipt_no AND b.comp_id = {bill.comp_id} AND b.br_id = {bill.br_id} AND a.phone_no = '{bill.phone_no}'"
+    cursor.execute(query)
+    records = cursor.fetchall()
+    result = createResponse(records, cursor.column_names, 1)
+    conn.close()
+    cursor.close()
+    if cursor.rowcount>0:
+        resData = {
+            "status":1,
+            "data":result
+        }
+    else:
+        resData = {
+            "status":0,
+            "data":"No Bill Found"
+        }
+
+    return resData
+
+# Search Bills by item name
+#======================================================================================================
+
+@app.post('/api/billsearch_by_item')
+async def billsearch_by_item(item:SearchByItem):
+    conn = connect()
+    cursor = conn.cursor()
+    query = f"SELECT a.receipt_no,a.item_id,a.qty,a.price,b.item_name FROM td_item_sale a, md_items b WHERE a.item_id=b.id AND a.comp_id=b.comp_id AND a.comp_id={item.comp_id} AND a.br_id={item.br_id} AND b.id={item.item_id} AND a.trn_date BETWEEN '{item.from_date}' AND '{item.to_date}'"
+    cursor.execute(query)
+    records = cursor.fetchall()
+    result = createResponse(records, cursor.column_names, 1)
+    conn.close()
+    cursor.close()
+    if cursor.rowcount>0:
+        resData= {
+        "status":1, 
+        "data":result}
+    else:
+        resData= {
+        "status":0,
+        "data":[]
+        }
+    return resData
