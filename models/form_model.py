@@ -196,10 +196,14 @@ class RefundItem(BaseModel):
     round_off:float
     net_amt:int
     pay_mode:str
+    received_amt:str
     cust_name:str
     phone_no:str
     gst_flag:str
+    gst_type:str
+    discount_flag:str
     discount_type:str
+    discount_position:str
 
 class RefundList(BaseModel):
     comp_id:int

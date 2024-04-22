@@ -1288,13 +1288,13 @@ async def refund_item(refund:list[RefundItem]):
     conn = connect()
     cursor = conn.cursor()
     
-    query = f"INSERT INTO td_refund_bill (receipt_no, refund_dt, refund_rcpt_no, price, discount_amt, cgst_amt, sgst_amt, amount, round_off, net_amt, pay_mode, cust_name, phone_no, gst_flag, discount_type, refund_by, refund_at) VALUES ({refund[0].receipt_no},'{formatted_datetime}','{receipt}',{refund[0].tprice},{refund[0].tdiscount_amt},{tcgst_amt},{tsgst_amt},{refund[0].tot_refund_amt},{refund[0].round_off},{refund[0].net_amt},'{refund[0].pay_mode}','{refund[0].cust_name}','{refund[0].phone_no}','{refund[0].gst_flag}','{refund[0].discount_type}','{refund[0].user_id}','{formatted_datetime}')"
+    query = f"INSERT INTO td_refund_bill (receipt_no, refund_dt, refund_rcpt_no, price, discount_amt, cgst_amt, sgst_amt, amount, round_off, net_amt, pay_mode, received_amt, cust_name, phone_no, gst_flag, gst_type, discount_flag, discount_type, discount_position, refund_by, refund_at) VALUES ({refund[0].receipt_no},'{formatted_datetime}','{receipt}',{refund[0].tprice},{refund[0].tdiscount_amt},{tcgst_amt},{tsgst_amt},{refund[0].tot_refund_amt},{refund[0].round_off},{refund[0].net_amt},'{refund[0].pay_mode}','{refund[0].received_amt}','{refund[0].cust_name}','{refund[0].phone_no}','{refund[0].gst_flag}','{refund[0].gst_type}','{refund[0].discount_flag}','{refund[0].discount_type}','{refund[0].discount_position}','{refund[0].user_id}','{formatted_datetime}')"
     # print(query)
     cursor.execute(query)
     conn.commit()
     conn.close()
     cursor.close()
-    if cursor.rowcount==1:
+    if cursor.rowcount>0:
         ResData = {"status":1, "data":resData}
     else:
         ResData = {"status":0, "data":"Data not inserted"}
@@ -1443,8 +1443,7 @@ async def cust_info(info:CustInfo):
     # conn.close()
     # cursor.close()
 
-#======================================================================================================
-
+#==================================================================================================
 # Search Bill by Phone no.
 
 @app.post('/api/search_bill_by_phone')
@@ -1487,6 +1486,28 @@ async def billsearch_by_item(item:SearchByItem):
         resData= {
         "status":1, 
         "data":result}
+    else:
+        resData= {
+        "status":0,
+        "data":[]
+        }
+    return resData
+
+#==================================================================================================
+
+@app.get('/api/show_refund_bill/{recp_no}')
+async def show_refund_bill(recp_no:int):
+    conn = connect()
+    cursor = conn.cursor()
+    query = f"SELECT a.receipt_no, a.refund_dt, a.refund_rcpt_no, a.comp_id, a.br_id, a.item_id, a.price, a.dis_pertg, a.discount_amt, a.cgst_prtg, a.cgst_amt, a.sgst_prtg, a.sgst_amt, a.qty, a.refund_by, a.refund_at, a.modified_by, a.modified_dt, b.price AS tprice, b.discount_amt AS tdiscount_amt, b.cgst_amt AS tcgst_amt, b.sgst_amt AS tsgst_amt, b.amount, b.round_off, b.net_amt, b.pay_mode, b.received_amt, b.cust_name, b.phone_no, b.gst_flag,b.gst_type,b.discount_flag, b.discount_type,b.discount_position, b.refund_by AS trefund_by, b.refund_at AS trefund_at, b.modified_by AS tmodified_by, b.modified_dt AS tmodified_dt, c.item_name FROM td_refund_item a, td_refund_bill b, md_items c WHERE a.refund_rcpt_no=b.refund_rcpt_no and a.refund_dt=b.refund_dt and a.item_id=c.id and a.refund_rcpt_no={recp_no}"
+    cursor.execute(query)
+    records = cursor.fetchall()
+    result = createResponse(records, cursor.column_names, 1)
+    conn.close()
+    cursor.close()
+    if cursor.rowcount>0:
+        resData= {"status":1, 
+                  "data":result}
     else:
         resData= {
         "status":0,
