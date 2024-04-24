@@ -42,6 +42,8 @@ class Receipt(BaseModel):
     rcpt_type:str
     cust_info_flag:int
     stock_flag:str
+    kot_flag:str
+    table_no:int
 
 class DashBoard(BaseModel):
     trn_date:date
@@ -117,6 +119,7 @@ class GeneralSettings(BaseModel):
     stock_flag:str
     price_type:str
     refund_days:int
+    kot_flag:str
     modified_by:str
 
 class AddItem(BaseModel):

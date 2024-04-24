@@ -219,6 +219,8 @@ async def register(rcpt:list[Receipt]):
     current_datetime = datetime.now()
     receipt = int(round(current_datetime.timestamp()))
     formatted_datetime = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
+    curr_date = current_datetime.strftime("%Y-%m-%d")
+    # ResData = {"status":0, "data":""}
     values = []
     tcgst_amt = 0
     tsgst_amt = 0
@@ -265,6 +267,41 @@ async def register(rcpt:list[Receipt]):
     conn.close()
     cursor.close()
     if cursor.rowcount==1:
+        try:
+            if rcpt[0].kot_flag == 'Y':
+                conn = connect()
+                cursor = conn.cursor()
+                query = f"SELECT ifnull(max(kot_no),0)+1 kot_no FROM td_kot where date(kot_date) = '{curr_date}'"
+                cursor.execute(query)
+                records = cursor.fetchall()
+                result = createResponse(records, cursor.column_names, 1)
+                conn.close()
+                cursor.close()
+                if cursor.rowcount>0:
+                    conn = connect()
+                    cursor = conn.cursor()
+                    query = f"INSERT INTO td_kot (kot_no,kot_date,receipt_no,table_no) VALUES ({result[0]['kot_no']},'{formatted_datetime}','{receipt}',{rcpt[0].table_no})"
+                    cursor.execute(query)
+                    conn.commit()
+                    conn.close()
+                    cursor.close()
+                    if cursor.rowcount>0:
+                        ResData = {"status":1, "data":resData, "kot_no":result[0]}
+                    else:
+                        ResData = {"status":1, "data":"Data not inserted in kot table"}
+
+                else:
+                    ResData = {"status":1, "data":"Error While generating kot no."}
+
+            else:
+                ResData = {"status":1, "data":resData}
+        except:
+            print("----------Error in kot---------")
+            # print(result[0]['kot_no'])
+        # ResData = {"status":1, "data":resData}
+    else:
+        ResData = {"status":0, "data":"Data not inserted"}
+
         # if rcpt[0].rcpt_type != 'P':
 
         #     conn = connect()
@@ -282,14 +319,13 @@ async def register(rcpt:list[Receipt]):
         #     if(shortUrl['msg'] != ''):
         #         send_bill_sms(shortUrl["msg"], rcpt[0].phone_no, sms_res['bill_template'])
 
-        ResData = {"status":1, "data":resData}
-    else:
-        ResData = {"status":0, "data":"Data not inserted"}
+        # ResData = {"status":1, "data":resData}
+    
 
     if rcpt[0].cust_info_flag > 0:
         conn = connect()
         cursor = conn.cursor()
-        query= f"update md_customer set cust_name = '{rcpt[0].cust_name}', pay_mode = '{rcpt[0].pay_mode}', modified_by = '{rcpt[0].created_by}', modified_dt = '{formatted_datetime}' where phone_no = '{rcpt[0].phone_no}'"
+        query= f"update md_customer set cust_name = '{rcpt[0].cust_name}', pay_mode = '{rcpt[0].pay_mode}', modified_by = '{rcpt[0].created_by}', modified_dt = '{formatted_datetime}' where phone_no = '{rcpt[0].phone_no}' and comp_id = {rcpt[0].comp_id}"
         cursor.execute(query)
         conn.commit()
         conn.close()
@@ -648,7 +684,7 @@ async def edit_general_settings(rcp_set:GeneralSettings):
     formatted_dt = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
     conn = connect()
     cursor = conn.cursor()
-    query = f"UPDATE md_receipt_settings SET rcpt_type='{rcp_set.rcpt_type}', unit_flag='{rcp_set.unit_flag}', cust_inf='{rcp_set.cust_inf}', pay_mode='{rcp_set.pay_mode}', stock_flag='{rcp_set.stock_flag}', price_type='{rcp_set.price_type}', refund_days={rcp_set.refund_days}, modified_by='{rcp_set.modified_by}', modified_at='{formatted_dt}' WHERE comp_id={rcp_set.comp_id}"
+    query = f"UPDATE md_receipt_settings SET rcpt_type='{rcp_set.rcpt_type}', unit_flag='{rcp_set.unit_flag}', cust_inf='{rcp_set.cust_inf}', pay_mode='{rcp_set.pay_mode}', stock_flag='{rcp_set.stock_flag}', price_type='{rcp_set.price_type}', refund_days={rcp_set.refund_days}, kot_flag='{rcp_set.kot_flag}', modified_by='{rcp_set.modified_by}', modified_at='{formatted_dt}' WHERE comp_id={rcp_set.comp_id}"
     cursor.execute(query)
     conn.commit()
     conn.close()
