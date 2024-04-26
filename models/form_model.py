@@ -239,3 +239,10 @@ class SearchByItem(BaseModel):
     item_id:int
     from_date:str
     to_date:str
+
+class CreditReport(BaseModel):
+    from_date:date
+    to_date:date
+    comp_id:int
+    br_id:int
+    user_id:str

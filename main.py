@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 from config.database import connect
 from models.master_model import createResponse
-from models.form_model import UserLogin,Receipt,CreatePIN,DashBoard,SearchBill,SaleReport,ItemReport,EditHeaderFooter,EditItem,DiscountSettings,GSTSettings,GeneralSettings,AddItem,AddUnit,EditUnit,InventorySearch,UpdateStock,StockReport,RefundItem,RefundList,RefundBillReport,CustInfo,BillList,SearchByItem
+from models.form_model import UserLogin,Receipt,CreatePIN,DashBoard,SearchBill,SaleReport,ItemReport,EditHeaderFooter,EditItem,DiscountSettings,GSTSettings,GeneralSettings,AddItem,AddUnit,EditUnit,InventorySearch,UpdateStock,StockReport,RefundItem,RefundList,RefundBillReport,CustInfo,BillList,SearchByItem,CreditReport
 # from models.otp_model import generateOTP
 from datetime import datetime, date
 from utils import get_hashed_password, verify_password
@@ -1545,6 +1545,30 @@ async def show_refund_bill(recp_no:int):
     if cursor.rowcount>0:
         resData= {"status":1, 
                   "data":result}
+    else:
+        resData= {
+        "status":0,
+        "data":[]
+        }
+    return resData
+
+# Credit Report
+#==================================================================================================
+
+@app.post('/api/credit_report')
+async def credit_report(cr_rep:CreditReport):
+    conn = connect()
+    cursor = conn.cursor()
+
+    query=f"select trn_date, phone_no, receipt_no, net_amt, received_amt as paid_amt, net_amt-received_amt as due_amt from  td_receipt  where pay_mode = 'R' and net_amt-received_amt > 0 and trn_date between '{cr_rep.from_date}' and '{cr_rep.to_date}' and comp_id = {cr_rep.comp_id} AND br_id = {cr_rep.br_id} and created_by='{cr_rep.user_id}' group by phone_no,receipt_no,trn_date,created_by"
+
+    cursor.execute(query)
+    records = cursor.fetchall()
+    result = createResponse(records, cursor.column_names, 1)
+    conn.close()
+    cursor.close()
+    if cursor.rowcount>0:
+        resData= {"status":1, "data":result}
     else:
         resData= {
         "status":0,
