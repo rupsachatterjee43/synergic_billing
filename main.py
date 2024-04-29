@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 from config.database import connect
 from models.master_model import createResponse
-from models.form_model import UserLogin,Receipt,CreatePIN,DashBoard,SearchBill,SaleReport,ItemReport,EditHeaderFooter,EditItem,DiscountSettings,GSTSettings,GeneralSettings,AddItem,AddUnit,EditUnit,InventorySearch,UpdateStock,StockReport,RefundItem,RefundList,RefundBillReport,CustInfo,BillList,SearchByItem,CreditReport
+from models.form_model import UserLogin,Receipt,CreatePIN,DashBoard,SearchBill,SaleReport,ItemReport,EditHeaderFooter,EditItem,DiscountSettings,GSTSettings,GeneralSettings,AddItem,AddUnit,EditUnit,InventorySearch,UpdateStock,StockReport,RefundItem,RefundList,RefundBillReport,CustInfo,BillList,SearchByItem,CreditReport,RecoverBill,RecoveryUpdate
 # from models.otp_model import generateOTP
 from datetime import datetime, date
 from utils import get_hashed_password, verify_password
@@ -436,7 +436,7 @@ async def sale_report(sl_rep:SaleReport):
     conn = connect()
     cursor = conn.cursor()
     # query = f"select a.cust_name, a.phone_no, a.receipt_no, a.trn_date,  count(b.receipt_no)no_of_items, sum(a.price)price, sum(a.discount_amt)discount_amt, sum(a.cgst_amt)cgst_amt, sum(a.sgst_amt)sgst_amt, sum(a.round_off)rount_off, sum(a.amount)net_amt, a.created_by from  td_receipt a,td_item_sale b where a.receipt_no = b.receipt_no  and   a.trn_date between '{sl_rep.from_date}' and '{sl_rep.to_date}' and   b.comp_id = {sl_rep.comp_id} AND   b.br_id = {sl_rep.br_id} group by a.cust_name, a.phone_no, a.receipt_no, a.trn_date, a.created_by"
-    query=f"select a.cust_name, a.phone_no, a.receipt_no, a.trn_date,  count(b.receipt_no)no_of_items, a.price, a.discount_amt, a.cgst_amt, a.sgst_amt,a.round_off, a.net_amt, a.created_by from  td_receipt a,td_item_sale b where a.receipt_no = b.receipt_no  and   a.trn_date between '{sl_rep.from_date}' and '{sl_rep.to_date}' and   b.comp_id = {sl_rep.comp_id} AND   b.br_id = {sl_rep.br_id} and a.created_by='{sl_rep.user_id}' group by a.cust_name, a.phone_no, a.receipt_no, a.trn_date, a.created_by"
+    query=f"select a.cust_name, a.phone_no, a.receipt_no, a.trn_date,  count(b.receipt_no)no_of_items, a.price, a.discount_amt, a.cgst_amt, a.sgst_amt,a.round_off, a.net_amt, a.pay_mode, a.created_by from  td_receipt a,td_item_sale b where a.receipt_no = b.receipt_no  and   a.trn_date between '{sl_rep.from_date}' and '{sl_rep.to_date}' and   b.comp_id = {sl_rep.comp_id} AND   b.br_id = {sl_rep.br_id} and a.created_by='{sl_rep.user_id}' group by a.cust_name, a.phone_no, a.receipt_no, a.trn_date, a.created_by"
     cursor.execute(query)
     records = cursor.fetchall()
     result = createResponse(records, cursor.column_names, 1)
@@ -520,7 +520,7 @@ async def gst_statement(gst_st:SaleReport):
 async def gst_summary(gst_sm:SaleReport):
     conn = connect()
     cursor = conn.cursor()
-    query = f"SELECT cgst_prtg, SUM(cgst_amt)cgst_amt, SUM(sgst_amt)sgst_amt, SUM(cgst_amt) + SUM(sgst_amt)total_tax FROM td_item_sale WHERE comp_id = {gst_sm.comp_id} AND br_id = {gst_sm.br_id} AND created_by = {gst_sm.user_id} AND trn_date BETWEEN '{gst_sm.from_date}' AND '{gst_sm.to_date}' GROUP BY cgst_prtg"
+    query = f"SELECT cgst_prtg, SUM(cgst_amt)cgst_amt, SUM(sgst_amt)sgst_amt, SUM(cgst_amt) + SUM(sgst_amt)total_tax FROM td_item_sale WHERE cgst_amt+sgst_amt>0 AND comp_id = {gst_sm.comp_id} AND br_id = {gst_sm.br_id} AND created_by = {gst_sm.user_id} AND trn_date BETWEEN '{gst_sm.from_date}' AND '{gst_sm.to_date}' GROUP BY cgst_prtg"
     cursor.execute(query)
     records = cursor.fetchall()
     result = createResponse(records, cursor.column_names, 1)
@@ -1574,4 +1574,94 @@ async def credit_report(cr_rep:CreditReport):
         "status":0,
         "data":[]
         }
+    return resData
+
+# Recovery Amount
+#==================================================================================================
+@app.post('/api/recovery_amount')
+async def recovery_amount(bill:RecoverBill):
+    conn = connect()
+    cursor = conn.cursor()
+
+    query = f"SELECT receipt_no, trn_date, net_amt, received_amt, net_amt-received_amt due_amt FROM td_receipt WHERE pay_mode='R' AND net_amt-received_amt > 0 AND comp_id = {bill.comp_id} AND br_id = {bill.br_id} AND phone_no = '{bill.phone_no}'"
+
+    cursor.execute(query)
+    records = cursor.fetchall()
+    result = createResponse(records, cursor.column_names, 1)
+    conn.close()
+    cursor.close()
+    if cursor.rowcount>0:
+        resData = {
+            "status":1,
+            "data":result
+        }
+    else:
+        resData = {
+            "status":0,
+            "data":"No Bill Found"
+        }
+
+    return resData
+
+# Update td_receipt and Insert recovery_bill
+#=================================================================================================
+@app.post('/api/recovery_update')
+async def recovery_update(recover:RecoveryUpdate):
+    current_datetime = datetime.now()
+    receipt = int(round(current_datetime.timestamp()))
+    formatted_dt = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
+    
+    try:
+        conn = connect()
+        cursor = conn.cursor()
+    
+        query = f"SELECT net_amt FROM td_receipt WHERE receipt_no={recover.receipt_no} and pay_mode='R'"
+
+        cursor.execute(query)
+        records = cursor.fetchall()
+        res = createResponse(records, cursor.column_names, 1)
+        conn.close()
+        cursor.close()
+        # print(res[0]['net_amt'])
+        if cursor.rowcount>0:
+        
+            try:
+                conn = connect()
+                cursor = conn.cursor()
+
+                query = f"INSERT INTO td_recovery (recover_id,recover_dt,receipt_no,net_amt,received_amt,pay_mode,created_by,created_dt) VALUES ({receipt},'{formatted_dt}',{recover.receipt_no},'{res[0]['net_amt']}',{recover.received_amt},'{recover.pay_mode}','{recover.user_id}','{formatted_dt}')"
+
+                cursor.execute(query)
+                conn.commit()
+                conn.close()
+                cursor.close()
+                if cursor.rowcount>0:
+
+                    try:
+                        conn = connect()
+                        cursor = conn.cursor()
+
+                        query = f"UPDATE td_receipt SET received_amt = received_amt+{recover.received_amt}, modified_by = '{recover.user_id}', modified_dt = '{formatted_dt}' WHERE receipt_no = {recover.receipt_no}"
+
+                        cursor.execute(query)
+                        conn.commit()
+                        conn.close()
+                        cursor.close()
+                        if cursor.rowcount>0:
+                            resData = {"status":1, "recover_id":receipt, "msg":"data inserted and updated successfully"}
+                        else:
+                            resData = {"status":0, "data":'error while updating td_receipt'}
+                    except:
+                        print("********* Error while updating ************")
+            
+                else:
+                    resData = {"status":-1, "data":"Data not inserted in td_recovery"}
+            except:
+                print("<<<<<<<<<<<<< Error while inserting >>>>>>>>>>>>>>")
+        else:
+            resData = {"status":-2, "data":"Data not selected"}
+
+    except:
+        print("------------- Error while selecting ---------------")
+    
     return resData

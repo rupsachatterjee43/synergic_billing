@@ -246,3 +246,14 @@ class CreditReport(BaseModel):
     comp_id:int
     br_id:int
     user_id:str
+
+class RecoverBill(BaseModel):
+    comp_id:int
+    br_id:int
+    phone_no:str
+
+class RecoveryUpdate(BaseModel):
+    receipt_no:int
+    received_amt:int
+    pay_mode:str
+    user_id:str
