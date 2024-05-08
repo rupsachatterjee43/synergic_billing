@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 from config.database import connect
 from models.master_model import createResponse
-from models.form_model import UserLogin,Receipt,CreatePIN,DashBoard,SearchBill,SaleReport,ItemReport,EditHeaderFooter,EditItem,DiscountSettings,GSTSettings,GeneralSettings,AddItem,AddUnit,EditUnit,InventorySearch,UpdateStock,StockReport,RefundItem,RefundList,RefundBillReport,CustInfo,BillList,SearchByItem,CreditReport,RecoverBill,RecoveryUpdate
+from models.form_model import UserLogin,Receipt,CreatePIN,DashBoard,SearchBill,SaleReport,ItemReport,EditHeaderFooter,EditItem,DiscountSettings,GSTSettings,GeneralSettings,AddItem,AddUnit,EditUnit,InventorySearch,UpdateStock,StockReport,RefundItem,RefundList,RefundBillReport,CustInfo,BillList,SearchByItem,CreditReport,RecoverBill,RecoveryUpdate,LoginFlag
 # from models.otp_model import generateOTP
 from datetime import datetime, date
 from utils import get_hashed_password, verify_password
@@ -121,13 +121,46 @@ async def login(data_login:UserLogin):
     cursor = conn.cursor()
     query = f"SELECT a.*, b.*, c.* FROM md_user a, md_branch b, md_company c WHERE a.user_id='{data_login.user_id}' AND b.id=a.br_id AND c.id=a.comp_id AND a.active_flag='Y' AND a.user_type in ('U','M')"
     cursor.execute(query)
-    print(cursor.rowcount)
     records = cursor.fetchone()
-    result = createResponse(records, cursor.column_names, 0)
-    conn.close()
-    cursor.close()
+    # print(cursor.rowcount)
+    
 
-    if(records is not None):
+    if cursor.rowcount>0:
+        print(len(records),"oooooooooo")
+        result = createResponse(records, cursor.column_names, 0)
+        conn.close()
+        cursor.close()
+
+        conn = connect()
+        cursor = conn.cursor()
+        query = f"select count(*)no_of_user from md_user where comp_id = {result['comp_id']} and login_flag = 'Y'"
+        cursor.execute(query)
+        records = cursor.fetchone()
+        result1 = createResponse(records, cursor.column_names, 0)
+        conn.close()
+        cursor.close()
+       
+        if cursor.rowcount>0:
+            if result1['no_of_user'] < result['max_user']:
+                conn = connect()
+                cursor = conn.cursor()
+                query = f"update md_user set login_flag = 'Y' where comp_id = {result['comp_id']} and user_id = '{data_login.user_id}'"
+                cursor.execute(query)
+                conn.commit()
+                conn.close()
+                cursor.close()
+
+                if cursor.rowcount>0:
+                    res_dt = {"suc": 1, "msg": result, "user": result1['no_of_user']+1}
+                else:
+                    res_dt = {"suc": 0, "msg": "Already logged in"}
+            else:
+                 res_dt = {"suc": 0, "msg": "Max user limit reached"}
+        
+        else:
+            res_dt = {"suc": 0, "msg": "error while selecting no_of_user"}
+
+
         # result = createResponse(records, cursor.column_names, 0)
 
         # conn = connect()
@@ -148,7 +181,7 @@ async def login(data_login:UserLogin):
         # # else:
         # #     res_dt = {"suc": 0, "msg": "Please check your userid or PIN", "otp": {}}
 
-        res_dt = {"suc": 1, "msg": result}
+        
     else:
         res_dt = {"suc": 0, "msg": "No user found"}
 
@@ -1664,4 +1697,30 @@ async def recovery_update(recover:RecoveryUpdate):
     except:
         print("------------- Error while selecting ---------------")
     
+    return resData
+
+#=================================================================================================
+#Logout 
+@app.post('/api/logout')
+async def logout(flag:LoginFlag):
+    conn = connect()
+    cursor = conn.cursor()
+
+    query = f"update md_user set login_flag = 'N' where comp_id={flag.comp_id} and br_id={flag.br_id} and user_id='{flag.user_id}' and user_type in ('U','M')"
+
+    cursor.execute(query)
+    conn.commit()
+    conn.close()
+    cursor.close()
+    if cursor.rowcount>0:
+        resData = {
+            "status":1,
+            "data":"logged out successfully"
+        }
+    else:
+        resData = {
+            "status":0,
+            "data":"No user Found"
+        }
+
     return resData

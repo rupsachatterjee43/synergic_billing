@@ -257,3 +257,8 @@ class RecoveryUpdate(BaseModel):
     received_amt:int
     pay_mode:str
     user_id:str
+
+class LoginFlag(BaseModel):
+    comp_id:int
+    br_id:int
+    user_id:str
