@@ -3,7 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 from config.database import connect
 from models.master_model import createResponse
-from models.form_model import UserLogin,Receipt,CreatePIN,DashBoard,SearchBill,SaleReport,ItemReport,EditHeaderFooter,EditItem,DiscountSettings,GSTSettings,GeneralSettings,AddItem,AddUnit,EditUnit,InventorySearch,UpdateStock,StockReport,RefundItem,RefundList,RefundBillReport,CustInfo,BillList,SearchByItem,CreditReport,RecoverBill,RecoveryUpdate,LoginFlag
+from models.form_model import UserLogin,Receipt,CreatePIN,DashBoard,SearchBill,SaleReport,ItemReport,EditHeaderFooter,EditItem,DiscountSettings,GSTSettings,GeneralSettings,AddItem,AddUnit,EditUnit,InventorySearch,UpdateStock,StockReport,RefundItem,RefundList,RefundBillReport,CustInfo,BillList,SearchByItem,CreditReport,RecoverBill,RecoveryUpdate,LoginFlag,SearchByBarcode,SearchByCategory
 # from models.otp_model import generateOTP
 from datetime import datetime, date
 from utils import get_hashed_password, verify_password
@@ -601,7 +601,9 @@ async def edit_items(edit_item:EditItem):
     formatted_dt = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
     conn = connect()
     cursor = conn.cursor()
-    query = f"UPDATE md_item_rate JOIN md_items ON md_items.id=md_item_rate.item_id SET md_items.item_name = '{edit_item.item_name}', md_item_rate.price = {edit_item.price}, md_item_rate.discount = {edit_item.discount}, md_item_rate.cgst = {edit_item.cgst}, md_item_rate.sgst = {edit_item.sgst}, md_item_rate.modified_by = '{edit_item.modified_by}', md_item_rate.modified_dt = '{formatted_dt}', md_items.modified_by = '{edit_item.modified_by}', md_items.modified_dt = '{formatted_dt}' WHERE md_item_rate.item_id={edit_item.item_id} AND md_items.comp_id={edit_item.comp_id} AND md_items.unit_id={edit_item.unit_id}"
+    
+    query = f"UPDATE md_item_rate JOIN md_items ON md_items.id=md_item_rate.item_id SET md_items.item_name = '{edit_item.item_name}', md_items.unit_id={edit_item.unit_id}, md_item_rate.price = {edit_item.price}, md_item_rate.discount = {edit_item.discount}, md_item_rate.cgst = {edit_item.cgst}, md_item_rate.sgst = {edit_item.sgst}, md_item_rate.modified_by = '{edit_item.modified_by}', md_item_rate.modified_dt = '{formatted_dt}', md_items.modified_by = '{edit_item.modified_by}', md_items.modified_dt = '{formatted_dt}' WHERE md_item_rate.item_id={edit_item.item_id} AND md_items.comp_id={edit_item.comp_id}"
+    
     cursor.execute(query)
     conn.commit()
     conn.close()
@@ -1700,7 +1702,8 @@ async def recovery_update(recover:RecoveryUpdate):
     return resData
 
 #=================================================================================================
-#Logout 
+#Switch login_flag to N while logging out
+
 @app.post('/api/logout')
 async def logout(flag:LoginFlag):
     conn = connect()
@@ -1724,3 +1727,60 @@ async def logout(flag:LoginFlag):
         }
 
     return resData
+
+#==================================================================================================
+# Search item info by barcode
+
+@app.post('/api/search_by_barcode')
+async def search_by_barcode(bar:SearchByBarcode):
+    conn = connect()
+    cursor = conn.cursor()
+    query = f"SELECT a.id, a.comp_id, a.hsn_code, a.item_name, a.description, a.unit_id, a.bar_code, a.created_by, a.created_dt, a.modified_by, a.modified_dt, b.item_id, b.price, b.discount, b.cgst, b.sgst, c.unit_name FROM md_items a JOIN md_item_rate b on a.id=b.item_id LEFT JOIN md_unit c on c.sl_no=a.unit_id WHERE a.comp_id={bar.comp_id} and a.bar_code='{bar.bar_code}'"
+    cursor.execute(query)
+    records = cursor.fetchall()
+    result = createResponse(records, cursor.column_names, 1)
+    conn.close()
+    cursor.close()
+    if cursor.rowcount>0:
+        res_dt={"status":1, "msg":result}
+    else:
+        res_dt={"status":0, "msg":[]}
+    return res_dt
+
+#===============================================================================================
+# Category List
+
+@app.get('/api/category_list/{comp_id}')
+async def category_list(comp_id:int):
+    conn = connect()
+    cursor = conn.cursor()
+    query = f"SELECT sl_no, category_name FROM md_category WHERE comp_id={comp_id}"
+    cursor.execute(query)
+    records = cursor.fetchall()
+    result = createResponse(records, cursor.column_names, 1)
+    conn.close()
+    cursor.close()
+    if cursor.rowcount>0:
+        res_dt={"status":1, "msg":result}
+    else:
+        res_dt={"status":0, "msg":"No Category list found"}
+    return res_dt
+
+#===============================================================================================
+# Search Items by Category:
+
+@app.post('/api/categorywise_item_list')
+async def categorywise_item_list(catg:SearchByCategory):
+    conn = connect()
+    cursor = conn.cursor()
+    query = f"SELECT a.*, b.*, c.unit_name FROM md_items a JOIN md_item_rate b on a.id=b.item_id LEFT JOIN md_unit c on c.sl_no=a.unit_id WHERE a.comp_id={catg.comp_id} AND a.catg_id={catg.catg_id}"
+    cursor.execute(query)
+    records = cursor.fetchall()
+    result = createResponse(records, cursor.column_names, 1)
+    conn.close()
+    cursor.close()
+    if cursor.rowcount>0:
+        res_dt={"status":1, "msg":result}
+    else:
+        res_dt={"status":0, "msg":"No items found"}
+    return res_dt

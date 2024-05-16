@@ -262,3 +262,11 @@ class LoginFlag(BaseModel):
     comp_id:int
     br_id:int
     user_id:str
+
+class SearchByBarcode(BaseModel):
+    comp_id:int
+    bar_code:str
+
+class SearchByCategory(BaseModel):
+    comp_id:int
+    catg_id:int
