@@ -10,7 +10,7 @@ stockRouter = APIRouter()
 
 # Inventory Searching
 #---------------------------------------------------------------------------------------------------------------------------
-stockRouter.post('/stock')
+@stockRouter.post('/stock')
 async def stock(st_list:InventorySearch):
     conn = connect()
     cursor = conn.cursor()
@@ -24,7 +24,7 @@ async def stock(st_list:InventorySearch):
 
 # Stock update
 #---------------------------------------------------------------------------------------------------------------------------
-stockRouter.post('/update_stock')
+@stockRouter.post('/update_stock')
 async def update_stock(update:UpdateStock):
     try:
         current_datetime = datetime.now()
@@ -53,7 +53,7 @@ async def update_stock(update:UpdateStock):
 
 # Stock Report
 #---------------------------------------------------------------------------------------------------------------------------
-stockRouter.post('/stock_report')
+@stockRouter.post('/stock_report')
 async def stock_report(stk_rep:StockReport):
     conn = connect()
     cursor = conn.cursor()
