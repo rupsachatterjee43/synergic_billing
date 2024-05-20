@@ -71,3 +71,50 @@ class SearchByItem(BaseModel):
     to_date:date
     comp_id:int
     item_id:int
+
+class DiscountSettings(BaseModel):
+    comp_id:int
+    discount_flag:str
+    discount_type:str
+    discount_position:str
+    modified_by:str
+
+class GSTSettings(BaseModel):
+    comp_id:int
+    gst_flag:str
+    gst_type:str
+    modified_by:str
+
+class GeneralSettings(BaseModel):
+    comp_id:int
+    rcpt_type:str
+    unit_flag:str
+    cust_inf:str
+    pay_mode:str
+    stock_flag:str
+    price_type:str
+    refund_days:int
+    kot_flag:str
+    modified_by:str
+
+class AddUnit(BaseModel):
+    comp_id:int
+    unit_name:str
+    unit_id:int
+    # created_by:str
+
+class ItemId(BaseModel):
+    item_id:int
+
+class AddEditItem(BaseModel):
+    comp_id:int
+    item_id:int
+    item_name:str
+    unit_id:int
+    price:float
+    discount:float
+    cgst:float
+    sgst:float
+    hsn_code:int
+
+
