@@ -22,7 +22,7 @@ async def unit_list(data:CompId):
     return res_dt
 
 # ==================================================================================================
-# Add New Unit
+# Add And Edit New Unit
 
 @unitRouter.post('/add_unit_details')
 async def add_unit_details(data:AddUnit):

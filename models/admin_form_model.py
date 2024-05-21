@@ -11,6 +11,10 @@ class UserLogin(BaseModel):
 class CompId(BaseModel):
     comp_id:int
 
+class CustomerId(BaseModel):
+    comp_id:int
+    cust_id:int
+
 class SaleReport(BaseModel):
     from_date:date
     to_date:date
@@ -117,4 +121,45 @@ class AddEditItem(BaseModel):
     sgst:float
     hsn_code:int
 
+class AddEditCustomer(BaseModel):
+    comp_id:int
+    cust_id:int
+    cust_name:str
+    phone_no:str
+    bill_address:str
+    delivery_address:str
+    email_id:str
+    pay_mode:str
+    date_of_birth:str
+    gender:str
+
+class AddEditHeaderFooter(BaseModel):
+    comp_id:int
+    header1:str
+    on_off_flag1:str
+    header2:str
+    on_off_flag2:str
+    footer1:str
+    on_off_flag3:str
+    footer2:str
+    on_off_flag4:str
+    
+class AddUser(BaseModel):
+    comp_id:int
+    br_id:int
+    user_name:str
+    phone_no:str
+    email_id:str
+    password:str
+    active_flag:str
+    login_flag:str
+
+class EditUser(BaseModel):
+    comp_id:int
+    user_id:str
+    user_name:str
+    user_type:str
+    phone_no:str
+    login_flag:str
+    active_flag:str
 
