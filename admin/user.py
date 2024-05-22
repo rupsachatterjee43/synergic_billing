@@ -16,7 +16,7 @@ userRouter = APIRouter()
 async def user_list(data:UserList):
     select = "*"
     table_name = "md_user"
-    where = f"comp_id = {data.comp_id} and br_id = {data.br_id} and user_type!='A'"
+    where = f"comp_id = {data.comp_id} {f'and br_id = {data.br_id}' if data.br_id > 0 else ''} and user_type!='A'"
     order = f''
     flag = 1
     res_dt = await db_select(select,table_name,where,order,flag)
@@ -54,10 +54,9 @@ async def outlet_list(data:CompId):
 async def add_user(data:AddUser):
     current_datetime = datetime.now()
     formatted_dt = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
-    pwd = get_hashed_password(data.password)
     table_name = "md_user"
-    fields = "comp_id, br_id, user_name, user_id, phone_no, email_id, password, active_flag, login_flag, created_by, created_dt"
-    values =f"{data.comp_id}, '{data.br_id}', '{data.user_name}', '{data.phone_no}', '{data.phone_no}', '{data.email_id}', '{pwd}', '{data.active_flag}', '{data.login_flag}', 'Admin', '{formatted_dt}'"
+    fields = "comp_id, br_id, user_name, user_type, user_id, phone_no, email_id, active_flag, login_flag, created_by, created_dt"
+    values =f"{data.comp_id}, '{data.br_id}', '{data.user_name}', '{data.user_type}', '{data.phone_no}', '{data.phone_no}', '{data.email_id}', '{data.active_flag}', '{data.login_flag}', 'Admin', '{formatted_dt}'"
     where = None
     flag = 0
     res_dt = await db_Insert(table_name,fields,values,where,flag)

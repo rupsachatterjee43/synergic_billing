@@ -6,7 +6,7 @@ async def db_select(select, schema, where, order, flag):
     whr = f"WHERE {where}" if where != '' else ''
     sql = f"SELECT {select} FROM {schema} {whr} {order}"
     res_dt = {}
-    # print(sql)
+    print(sql)
     try:
         conn = connect()
         cursor = conn.cursor()

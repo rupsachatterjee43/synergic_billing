@@ -17,7 +17,7 @@ async def header_footer_details(data:CompId):
     return res_dt
 
 # ==================================================================================================
-# Add And Edit Header Footer
+# Add Header Footer
 
 @headerfooterRouter.post('/add_header_footer')
 async def add_header_footer(data:AddEditHeaderFooter):
@@ -31,6 +31,9 @@ async def add_header_footer(data:AddEditHeaderFooter):
     res_dt = await db_Insert(table_name,fields,values,where,flag)
 
     return res_dt
+
+# ==================================================================================================
+# Edit Header Footer
 
 @headerfooterRouter.post('/edit_header_footer')
 async def edit_header_footer(data:AddEditHeaderFooter):

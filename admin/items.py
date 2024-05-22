@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from models.master_model import createResponse
 from models.masterApiModel import db_select, db_Insert
-from models.admin_form_model import CompId,ItemId,AddEditItem
+from models.admin_form_model import CompId,ItemId,AddEditItem,CatgId,UpdateCategory
 from datetime import datetime
 
 
@@ -76,3 +76,43 @@ async def add_edit_items(data:AddEditItem):
             res_dt1= await db_Insert(table_name1,fields1,values1,where1,flag1)
     
     return res_dt1
+
+# ==================================================================================================
+# All Category List
+
+@itemRouter.post('/category_list')
+async def category_list(data:CompId):
+    select = "sl_no,category_name,catg_picture"
+    table_name = "md_category"
+    where = f"comp_id = {data.comp_id}"
+    order = f''
+    flag = 1
+    res_dt = await db_select(select,table_name,where,order,flag)
+    return res_dt
+
+# Category-wise Item List
+
+@itemRouter.post('/categorywise_item_list')
+async def categorywise_item_list(data:CatgId):
+    select = "a.*, b.*, c.unit_name"
+    table_name = "md_items a JOIN md_item_rate b on a.id=b.item_id LEFT JOIN md_unit c on c.sl_no=a.unit_id"
+    where = f"a.comp_id={data.comp_id} AND a.catg_id={data.catg_id}"
+    order = f''
+    flag = 1
+    res_dt = await db_select(select,table_name,where,order,flag)
+    return res_dt
+
+# Add or Edit Category
+
+@itemRouter.post('/add_edit_category')
+async def add_edit_category(data:UpdateCategory):
+    current_datetime = datetime.now()
+    formatted_dt = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
+    table_name = "md_category"
+    fields = f"category_name ='{data.category_name}', catg_picture = '{data.catg_picture}', modified_by = 'admin', modified_at = '{formatted_dt}'" if ({data.catg_id}.pop())>0 else "comp_id,category_name,catg_picture,created_by,created_at"
+    values = f"{data.comp_id},'{data.category_name}','{data.catg_picture}','admin','{formatted_dt}'"
+    where = f"comp_id={data.comp_id} and sl_no={data.catg_id}" if ({data.catg_id}.pop())>0 else None
+    flag = 1 if ({data.catg_id}.pop())>0 else 0
+    res_dt = await db_Insert(table_name,fields,values,where,flag)
+    
+    return res_dt

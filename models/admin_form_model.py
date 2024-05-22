@@ -15,6 +15,14 @@ class CustomerId(BaseModel):
     comp_id:int
     cust_id:int
 
+class CatgId(BaseModel):
+    comp_id:int
+    catg_id:int
+
+class SupplierId(BaseModel):
+    comp_id:int
+    sup_id:int
+
 class SaleReport(BaseModel):
     from_date:date
     to_date:date
@@ -148,9 +156,9 @@ class AddUser(BaseModel):
     comp_id:int
     br_id:int
     user_name:str
+    user_type:str
     phone_no:str
     email_id:str
-    password:str
     active_flag:str
     login_flag:str
 
@@ -163,3 +171,27 @@ class EditUser(BaseModel):
     login_flag:str
     active_flag:str
 
+class Stock(BaseModel):
+    comp_id:int
+    item_id:int
+
+class AddStock(BaseModel):
+    comp_id:int
+    br_id:int
+    item_id:int
+    stock_add:int
+    stock_less:int
+
+class UpdateSupplier(BaseModel):
+    sup_id:int
+    comp_id:int
+    supplier_name:str
+    gstin:str
+    address:str
+
+class UpdateCategory(BaseModel):
+    comp_id:int
+    catg_id:int
+    category_name:str
+    catg_picture:str
+    
