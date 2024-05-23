@@ -195,3 +195,15 @@ class UpdateCategory(BaseModel):
     category_name:str
     catg_picture:str
     
+class UpdatePurchase(BaseModel):
+    comp_id:int
+    br_id:int
+    sup_id:int
+    pay_mode:str
+    purchase_id:int
+    invoice_no:str
+    price:float
+    cgst:float
+    sgst:float
+    unit_name:str
+    item_id:int

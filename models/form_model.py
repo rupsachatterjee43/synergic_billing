@@ -270,3 +270,4 @@ class SearchByBarcode(BaseModel):
 class SearchByCategory(BaseModel):
     comp_id:int
     catg_id:int
+    br_id:int

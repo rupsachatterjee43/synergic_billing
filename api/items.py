@@ -136,7 +136,7 @@ async def category_list(comp_id:int):
 async def categorywise_item_list(catg:SearchByCategory):
     conn = connect()
     cursor = conn.cursor()
-    query = f"SELECT a.*, b.*, c.unit_name FROM md_items a JOIN md_item_rate b on a.id=b.item_id LEFT JOIN md_unit c on c.sl_no=a.unit_id WHERE a.comp_id={catg.comp_id} AND a.catg_id={catg.catg_id}"
+    query = f"SELECT a.*, b.*, c.unit_name, d.stock FROM md_items a JOIN md_item_rate b on a.id=b.item_id LEFT JOIN md_unit c on c.sl_no=a.unit_id LEFT JOIN td_stock d on d.comp_id=a.comp_id and d.item_id=a.id WHERE a.comp_id={catg.comp_id} AND a.catg_id={catg.catg_id} AND d.br_id={catg.br_id}"
     cursor.execute(query)
     records = cursor.fetchall()
     result = createResponse(records, cursor.column_names, 1)
