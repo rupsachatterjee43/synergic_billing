@@ -1,8 +1,9 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, File, UploadFile
 from models.master_model import createResponse
 from models.masterApiModel import db_select, db_Insert
 from models.admin_form_model import CompId,ItemId,AddEditItem,CatgId,UpdateCategory
 from datetime import datetime
+from typing import Annotated
 
 
 itemRouter = APIRouter()
@@ -116,3 +117,30 @@ async def add_edit_category(data:UpdateCategory):
     res_dt = await db_Insert(table_name,fields,values,where,flag)
     
     return res_dt
+
+@itemRouter.post('/uploadfile')
+async def uploadfile(files:list[UploadFile]):
+    try:
+        for file in files:
+            data = file
+            print(data,"ooooooooo")
+            filename = data.filename
+            print(filename,"tttttttttttt")
+            document_bytes = await data.read()
+            print(document_bytes,"pppppppppppp")
+            file_path = f"/home/rupsa/Rupsa/fastapi/syn_billing_new_module/upload_file/{filename}"
+            with open(file_path, "wb") as f:
+                f.write(document_bytes())
+            data.close()
+            return {"message": "File saved successfully"}
+            # # Here you should save the file
+            # # file.save(path_to_save_file)
+            # try:
+            #     await data.save(os.path.join(['upload_file'], filename))
+            # except Exception as e:
+            #     return f'Error saving file: {str(e)}', 500
+    except Exception as e:
+        return {"message": e.args}
+    finally:
+        return "data"
+
