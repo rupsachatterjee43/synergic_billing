@@ -1,10 +1,16 @@
-from fastapi import APIRouter, File, UploadFile
+from fastapi import APIRouter, File, UploadFile, Depends
 from models.master_model import createResponse
 from models.masterApiModel import db_select, db_Insert
 from models.admin_form_model import CompId,ItemId,AddEditItem,CatgId,UpdateCategory
 from datetime import datetime
 from typing import Annotated
+import os
 
+# Define the upload folder
+UPLOAD_FOLDER = "upload_file"
+
+# Ensure the upload folder exists
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 itemRouter = APIRouter()
 
@@ -83,7 +89,7 @@ async def add_edit_items(data:AddEditItem):
 
 @itemRouter.post('/category_list')
 async def category_list(data:CompId):
-    select = "sl_no,category_name,catg_picture"
+    select = f"sl_no,category_name,catg_picture"
     table_name = "md_category"
     where = f"comp_id = {data.comp_id}"
     order = f''
@@ -106,41 +112,33 @@ async def categorywise_item_list(data:CatgId):
 # Add or Edit Category
 
 @itemRouter.post('/add_edit_category')
-async def add_edit_category(data:UpdateCategory):
+async def add_edit_category(data:UpdateCategory = Depends(), file: UploadFile = File(...) ):
+    fileName = await uploadfile(file)
+    # return {"body":data,"file":file}
     current_datetime = datetime.now()
     formatted_dt = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
     table_name = "md_category"
-    fields = f"category_name ='{data.category_name}', catg_picture = '{data.catg_picture}', modified_by = 'admin', modified_at = '{formatted_dt}'" if ({data.catg_id}.pop())>0 else "comp_id,category_name,catg_picture,created_by,created_at"
-    values = f"{data.comp_id},'{data.category_name}','{data.catg_picture}','admin','{formatted_dt}'"
+    fields = f"category_name ='{data.category_name}', catg_picture = 'uploads/{fileName}', modified_by = 'admin', modified_at = '{formatted_dt}'" if ({data.catg_id}.pop())>0 else "comp_id,category_name,catg_picture,created_by,created_at"
+    values = f"{data.comp_id},'{data.category_name}','uploads/{fileName}','admin','{formatted_dt}'"
     where = f"comp_id={data.comp_id} and sl_no={data.catg_id}" if ({data.catg_id}.pop())>0 else None
     flag = 1 if ({data.catg_id}.pop())>0 else 0
     res_dt = await db_Insert(table_name,fields,values,where,flag)
     
     return res_dt
 
-@itemRouter.post('/uploadfile')
-async def uploadfile(files:list[UploadFile]):
+
+async def uploadfile(file):
+    res = ""
     try:
-        for file in files:
-            data = file
-            print(data,"ooooooooo")
-            filename = data.filename
-            print(filename,"tttttttttttt")
-            document_bytes = await data.read()
-            print(document_bytes,"pppppppppppp")
-            file_path = f"/home/rupsa/Rupsa/fastapi/syn_billing_new_module/upload_file/{filename}"
-            with open(file_path, "wb") as f:
-                f.write(document_bytes())
-            data.close()
-            return {"message": "File saved successfully"}
-            # # Here you should save the file
-            # # file.save(path_to_save_file)
-            # try:
-            #     await data.save(os.path.join(['upload_file'], filename))
-            # except Exception as e:
-            #     return f'Error saving file: {str(e)}', 500
+        file_location = os.path.join(UPLOAD_FOLDER, file.filename)
+        
+        with open(file_location, "wb") as f:
+            f.write(await file.read())
+        
+        res = file.filename
     except Exception as e:
-        return {"message": e.args}
+        # res = e.args
+        res = ""
     finally:
-        return "data"
+        return res
 

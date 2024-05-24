@@ -1,5 +1,7 @@
 from pydantic import BaseModel
 from datetime import date
+from fastapi import File, UploadFile, Form
+from typing import Annotated
 
 class UserList(BaseModel):
     comp_id:int
@@ -190,10 +192,12 @@ class UpdateSupplier(BaseModel):
     address:str
 
 class UpdateCategory(BaseModel):
-    comp_id:int
-    catg_id:int
-    category_name:str
-    catg_picture:str
+    comp_id: Annotated[int, Form()]
+    catg_id: Annotated[int, Form()]
+    category_name: Annotated[str, Form()]
+    file: Annotated[UploadFile, File(...)]
+    # catg_picture:str
+    
     
 class UpdatePurchase(BaseModel):
     comp_id:int

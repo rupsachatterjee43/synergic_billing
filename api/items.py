@@ -31,7 +31,7 @@ async def edit_items(edit_item:EditItem):
     formatted_dt = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
     conn = connect()
     cursor = conn.cursor()
-    query = f"UPDATE md_item_rate JOIN md_items ON md_items.id=md_item_rate.item_id SET md_items.item_name = '{edit_item.item_name}', md_item_rate.price = {edit_item.price}, md_item_rate.discount = {edit_item.discount}, md_item_rate.cgst = {edit_item.cgst}, md_item_rate.sgst = {edit_item.sgst}, md_item_rate.modified_by = '{edit_item.modified_by}', md_item_rate.modified_dt = '{formatted_dt}', md_items.modified_by = '{edit_item.modified_by}', md_items.modified_dt = '{formatted_dt}' WHERE md_item_rate.item_id={edit_item.item_id} AND md_items.comp_id={edit_item.comp_id} AND md_items.unit_id={edit_item.unit_id}"
+    query = f"UPDATE md_item_rate JOIN md_items ON md_items.id=md_item_rate.item_id SET md_items.item_name = '{edit_item.item_name}', md_item_rate.price = {edit_item.price}, md_item_rate.discount = {edit_item.discount}, md_item_rate.cgst = {edit_item.cgst}, md_item_rate.sgst = {edit_item.sgst}, md_item_rate.modified_by = '{edit_item.modified_by}', md_item_rate.modified_dt = '{formatted_dt}', md_items.modified_by = '{edit_item.modified_by}', md_items.modified_dt = '{formatted_dt}' WHERE md_item_rate.item_id={edit_item.item_id} AND md_items.comp_id={edit_item.comp_id} AND md_items.unit_id={edit_item.unit_id} AND md_items.catg_id={edit_item.catg_id}"
     cursor.execute(query)
     conn.commit()
     conn.close()
@@ -56,7 +56,7 @@ async def add_items(add_item:AddItem):
     formatted_dt = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
     conn = connect()
     cursor = conn.cursor()
-    query = f"INSERT INTO md_items(comp_id, hsn_code, item_name, unit_id, created_by, created_dt) VALUES ({add_item.comp_id}, '{add_item.hsn_code}', '{add_item.item_name}', {add_item.unit_id}, '{add_item.created_by}', '{formatted_dt}')"
+    query = f"INSERT INTO md_items(comp_id, hsn_code, item_name, unit_id, catg_id, created_by, created_dt) VALUES ({add_item.comp_id}, '{add_item.hsn_code}', '{add_item.item_name}', {add_item.unit_id}, '{add_item.catg_id}','{add_item.created_by}', '{formatted_dt}')"
     cursor.execute(query)
     conn.commit()
     conn.close()
@@ -111,39 +111,4 @@ async def search_by_barcode(bar:SearchByBarcode):
     return res_dt
 
 #===============================================================================================
-# Category List
 
-@itmRouter.get('/category_list/{comp_id}')
-async def category_list(comp_id:int):
-    conn = connect()
-    cursor = conn.cursor()
-    query = f"SELECT sl_no, category_name FROM md_category WHERE comp_id={comp_id}"
-    cursor.execute(query)
-    records = cursor.fetchall()
-    result = createResponse(records, cursor.column_names, 1)
-    conn.close()
-    cursor.close()
-    if cursor.rowcount>0:
-        res_dt={"status":1, "msg":result}
-    else:
-        res_dt={"status":0, "msg":[]}
-    return res_dt
-
-#===============================================================================================
-# Search Items by Category:
-
-@itmRouter.post('/categorywise_item_list')
-async def categorywise_item_list(catg:SearchByCategory):
-    conn = connect()
-    cursor = conn.cursor()
-    query = f"SELECT a.*, b.*, c.unit_name, d.stock FROM md_items a JOIN md_item_rate b on a.id=b.item_id LEFT JOIN md_unit c on c.sl_no=a.unit_id LEFT JOIN td_stock d on d.comp_id=a.comp_id and d.item_id=a.id WHERE a.comp_id={catg.comp_id} AND a.catg_id={catg.catg_id} AND d.br_id={catg.br_id}"
-    cursor.execute(query)
-    records = cursor.fetchall()
-    result = createResponse(records, cursor.column_names, 1)
-    conn.close()
-    cursor.close()
-    if cursor.rowcount>0:
-        res_dt={"status":1, "msg":result}
-    else:
-        res_dt={"status":0, "msg":[]}
-    return res_dt

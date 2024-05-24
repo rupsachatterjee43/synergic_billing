@@ -95,6 +95,7 @@ class EditItem(BaseModel):
     sgst:float
     # unit_name:str
     unit_id:int
+    catg_id:int
     modified_by:str
     
 class DiscountSettings(BaseModel):
@@ -128,6 +129,7 @@ class AddItem(BaseModel):
     hsn_code:str
     item_name:str
     unit_id:int
+    catg_id:int
     # unit_name:str
     created_by:str
     price:float
@@ -271,3 +273,14 @@ class SearchByCategory(BaseModel):
     comp_id:int
     catg_id:int
     br_id:int
+
+class EditCategory(BaseModel):
+    comp_id:int
+    sl_no:int
+    category_name:str
+    modified_by:str
+
+class AddCategory(BaseModel):
+    comp_id:int
+    category_name:str
+    created_by:str

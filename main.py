@@ -3,9 +3,13 @@ from fastapi.middleware.cors import CORSMiddleware
 import uvicorn
 from api.main import router as apiRouter
 from admin.main import router as adminRouter
+from fastapi.staticfiles import StaticFiles
 
 # testing git
 app = FastAPI()
+app.mount("/uploads", StaticFiles(directory="upload_file"), name="uploads")
+
+
 
 origins = [
     "http://localhost",

@@ -4,6 +4,7 @@ from . import user,report,searchbill,settings,items,unit,headerfooter,customer,s
 
 router = APIRouter(prefix="/admin", tags=["Admin API"])
 
+
 router.include_router(user.userRouter)
 router.include_router(report.reportRouter)
 router.include_router(searchbill.searchRouter)
