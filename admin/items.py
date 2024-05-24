@@ -116,10 +116,11 @@ async def add_edit_category(data:UpdateCategory = Depends(), file: UploadFile = 
     fileName = await uploadfile(file)
     # return {"body":data,"file":file}
     current_datetime = datetime.now()
+    receipt = str(round(current_datetime.timestamp()))
     formatted_dt = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
     table_name = "md_category"
-    fields = f"category_name ='{data.category_name}', catg_picture = 'uploads/{fileName}', modified_by = 'admin', modified_at = '{formatted_dt}'" if ({data.catg_id}.pop())>0 else "comp_id,category_name,catg_picture,created_by,created_at"
-    values = f"{data.comp_id},'{data.category_name}','uploads/{fileName}','admin','{formatted_dt}'"
+    fields = f"category_name ='{data.category_name}', catg_picture = 'uploads/{fileName+receipt}', modified_by = 'admin', modified_at = '{formatted_dt}'" if ({data.catg_id}.pop())>0 else "comp_id,category_name,catg_picture,created_by,created_at"
+    values = f"{data.comp_id},'{data.category_name}','uploads/{fileName+receipt}','admin','{formatted_dt}'"
     where = f"comp_id={data.comp_id} and sl_no={data.catg_id}" if ({data.catg_id}.pop())>0 else None
     flag = 1 if ({data.catg_id}.pop())>0 else 0
     res_dt = await db_Insert(table_name,fields,values,where,flag)
