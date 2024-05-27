@@ -116,11 +116,10 @@ async def add_edit_category(data:UpdateCategory = Depends(), file: UploadFile = 
     fileName = await uploadfile(file)
     # return {"body":data,"file":file}
     current_datetime = datetime.now()
-    receipt = str(round(current_datetime.timestamp()))
     formatted_dt = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
     table_name = "md_category"
-    fields = f"category_name ='{data.category_name}', catg_picture = 'uploads/{fileName+receipt}', modified_by = 'admin', modified_at = '{formatted_dt}'" if ({data.catg_id}.pop())>0 else "comp_id,category_name,catg_picture,created_by,created_at"
-    values = f"{data.comp_id},'{data.category_name}','uploads/{fileName+receipt}','admin','{formatted_dt}'"
+    fields = f"category_name ='{data.category_name}', catg_picture = '/uploads/{fileName}', modified_by = 'admin', modified_at = '{formatted_dt}'" if ({data.catg_id}.pop())>0 else "comp_id,category_name,catg_picture,created_by,created_at"
+    values = f"{data.comp_id},'{data.category_name}','/uploads/{fileName}','admin','{formatted_dt}'"
     where = f"comp_id={data.comp_id} and sl_no={data.catg_id}" if ({data.catg_id}.pop())>0 else None
     flag = 1 if ({data.catg_id}.pop())>0 else 0
     res_dt = await db_Insert(table_name,fields,values,where,flag)
@@ -129,17 +128,32 @@ async def add_edit_category(data:UpdateCategory = Depends(), file: UploadFile = 
 
 
 async def uploadfile(file):
+    current_datetime = datetime.now()
+    receipt = int(round(current_datetime.timestamp()))
+    modified_filename = f"{receipt}"+file.filename
     res = ""
     try:
-        file_location = os.path.join(UPLOAD_FOLDER, file.filename)
+        file_location = os.path.join(UPLOAD_FOLDER, modified_filename)
+        print(file_location)
         
         with open(file_location, "wb") as f:
             f.write(await file.read())
         
-        res = file.filename
+        res = modified_filename
+        print(res)
     except Exception as e:
         # res = e.args
         res = ""
     finally:
         return res
 
+
+@itemRouter.post('/category_dtls')
+async def category_dtls(data:CatgId):
+    select = f"category_name,catg_picture"
+    table_name = "md_category"
+    where = f"comp_id = {data.comp_id} and sl_no={data.catg_id}"
+    order = f''
+    flag = 1
+    res_dt = await db_select(select,table_name,where,order,flag)
+    return res_dt
