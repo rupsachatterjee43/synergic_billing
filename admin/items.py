@@ -1,9 +1,9 @@
-from fastapi import APIRouter, File, UploadFile, Depends
+from fastapi import APIRouter, File, UploadFile, Depends, Form
 from models.master_model import createResponse
 from models.masterApiModel import db_select, db_Insert
 from models.admin_form_model import CompId,ItemId,AddEditItem,CatgId,UpdateCategory
 from datetime import datetime
-from typing import Annotated
+from typing import Annotated, Union, Optional
 import os
 
 # Define the upload folder
@@ -112,16 +112,24 @@ async def categorywise_item_list(data:CatgId):
 # Add or Edit Category
 
 @itemRouter.post('/add_edit_category')
-async def add_edit_category(data:UpdateCategory = Depends(), file: UploadFile = File(...) ):
-    fileName = await uploadfile(file)
+async def add_edit_category(
+    comp_id: str = Form(...),
+    catg_id: str = Form(...),
+    category_name: str = Form(...),
+    file: Optional[UploadFile] = File(None)
+    ):
+    print(file)
+    fileName = None if not file else await uploadfile(file)
     # return {"body":data,"file":file}
     current_datetime = datetime.now()
     formatted_dt = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
     table_name = "md_category"
-    fields = f"category_name ='{data.category_name}', catg_picture = '/uploads/{fileName}', modified_by = 'admin', modified_at = '{formatted_dt}'" if ({data.catg_id}.pop())>0 else "comp_id,category_name,catg_picture,created_by,created_at"
-    values = f"{data.comp_id},'{data.category_name}','/uploads/{fileName}','admin','{formatted_dt}'"
-    where = f"comp_id={data.comp_id} and sl_no={data.catg_id}" if ({data.catg_id}.pop())>0 else None
-    flag = 1 if ({data.catg_id}.pop())>0 else 0
+    catg_pic = f", catg_picture = '/uploads/{fileName}'" if fileName != None else ''
+    catg_pic1 = f",'/uploads/{fileName}'" if fileName != None else ', ""'
+    fields = f"category_name ='{category_name}' {catg_pic}, modified_by = 'admin', modified_at = '{formatted_dt}'" if int(catg_id)>0 else "comp_id,category_name,catg_picture,created_by,created_at"
+    values = f"{comp_id},'{category_name}' {catg_pic1}, 'admin','{formatted_dt}'"
+    where = f"comp_id={comp_id} and sl_no={catg_id}" if int(catg_id) >0 else None
+    flag = 1 if int(catg_id)>0 else 0
     res_dt = await db_Insert(table_name,fields,values,where,flag)
     
     return res_dt
@@ -130,7 +138,7 @@ async def add_edit_category(data:UpdateCategory = Depends(), file: UploadFile = 
 async def uploadfile(file):
     current_datetime = datetime.now()
     receipt = int(round(current_datetime.timestamp()))
-    modified_filename = f"{receipt}"+file.filename
+    modified_filename = f"{receipt}_{file.filename}"
     res = ""
     try:
         file_location = os.path.join(UPLOAD_FOLDER, modified_filename)
@@ -157,3 +165,10 @@ async def category_dtls(data:CatgId):
     flag = 1
     res_dt = await db_select(select,table_name,where,order,flag)
     return res_dt
+
+# @itemRouter.post("/uploadfile/")
+# async def create_upload_file(file: Union[UploadFile, None] = None):
+#     if not file:
+#         return {"message": "No upload file sent"}
+#     else:
+#         return {"filename": file.filename}

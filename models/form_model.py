@@ -1,5 +1,6 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from datetime import date
+from typing import Annotated, Union, Optional
 
 class CreatePIN(BaseModel):
     PIN:str
@@ -32,7 +33,7 @@ class Receipt(BaseModel):
     received_amt:str
     pay_dtls:str
     cust_name:str
-    phone_no:str
+    phone_no:Optional[str] = None
     gst_flag:str
     gst_type:str
     discount_flag:str
@@ -113,6 +114,8 @@ class GSTSettings(BaseModel):
 
 class GeneralSettings(BaseModel):
     comp_id:int
+    rcpt_flag:str
+    rcv_cash_flag:str
     rcpt_type:str
     unit_flag:str
     cust_inf:str

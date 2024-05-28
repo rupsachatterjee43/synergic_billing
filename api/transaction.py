@@ -11,6 +11,7 @@ tnxRouter = APIRouter()
 #---------------------------------------------------------------------------------------------------------------------------
 @tnxRouter.post('/saleinsert')
 async def register(rcpt:list[Receipt]):
+    # return rcpt
     current_datetime = datetime.now()
     receipt = int(round(current_datetime.timestamp()))
     formatted_datetime = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
@@ -54,7 +55,9 @@ async def register(rcpt:list[Receipt]):
     
     conn = connect()
     cursor = conn.cursor()
-    query = f"INSERT INTO td_receipt (receipt_no, comp_id, br_id, trn_date, price, discount_amt, cgst_amt, sgst_amt, amount, round_off, net_amt, pay_mode, received_amt, pay_dtls, cust_name, phone_no, gst_flag, gst_type, discount_flag, discount_type, discount_position, created_by, created_dt) VALUES ('{receipt}', {rcpt[0].comp_id}, {rcpt[0].br_id},'{formatted_datetime}',{rcpt[0].tprice},{rcpt[0].tdiscount_amt},{tcgst_amt},{tsgst_amt},{rcpt[0].amount},{rcpt[0].round_off},{rcpt[0].net_amt},'{rcpt[0].pay_mode}','{rcpt[0].received_amt}','{rcpt[0].pay_dtls}','{rcpt[0].cust_name}','{rcpt[0].phone_no}','{rcpt[0].gst_flag}', '{rcpt[0].gst_type}','{rcpt[0].discount_flag}','{rcpt[0].discount_type}','{rcpt[0].discount_position}','{rcpt[0].created_by}','{formatted_datetime}')"
+    print(rcpt[0],"tttttttttttttttt")
+    phn_no1 = f",'{rcpt[0].phone_no}'" if rcpt[0].phone_no != None else ",''"
+    query = f"INSERT INTO td_receipt (receipt_no, comp_id, br_id, trn_date, price, discount_amt, cgst_amt, sgst_amt, amount, round_off, net_amt, pay_mode, received_amt, pay_dtls, cust_name, phone_no, gst_flag, gst_type, discount_flag, discount_type, discount_position, created_by, created_dt) VALUES ('{receipt}', {rcpt[0].comp_id}, {rcpt[0].br_id},'{formatted_datetime}',{rcpt[0].tprice},{rcpt[0].tdiscount_amt},{tcgst_amt},{tsgst_amt},{rcpt[0].amount},{rcpt[0].round_off},{rcpt[0].net_amt},'{rcpt[0].pay_mode}','{rcpt[0].received_amt}','{rcpt[0].pay_dtls}','{rcpt[0].cust_name}' {phn_no1},'{rcpt[0].gst_flag}', '{rcpt[0].gst_type}','{rcpt[0].discount_flag}','{rcpt[0].discount_type}','{rcpt[0].discount_position}','{rcpt[0].created_by}','{formatted_datetime}')"
     print(query)
     cursor.execute(query)
     conn.commit()
@@ -107,7 +110,8 @@ async def register(rcpt:list[Receipt]):
     else:
         conn = connect()
         cursor = conn.cursor()
-        query= f"insert into md_customer (comp_id,cust_name,phone_no,pay_mode,created_by,created_dt) values ({rcpt[0].comp_id},'{rcpt[0].cust_name}','{rcpt[0].phone_no}','{rcpt[0].pay_mode}','{rcpt[0].created_by}','{formatted_datetime}')"
+        phn_no = f",'{rcpt[0].phone_no}'" if rcpt[0].phone_no != None else ",''"
+        query= f"insert into md_customer (comp_id,cust_name,phone_no,pay_mode,created_by,created_dt) values ({rcpt[0].comp_id},'{rcpt[0].cust_name}' {phn_no},'{rcpt[0].pay_mode}','{rcpt[0].created_by}','{formatted_datetime}')"
         cursor.execute(query)
         conn.commit()
         conn.close()
