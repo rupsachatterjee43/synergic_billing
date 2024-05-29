@@ -72,7 +72,6 @@ class ItemReport(BaseModel):
     comp_id:int
     br_id:int
     item_id:int
-    user_id:str
 
 class EditHeaderFooter(BaseModel):
     comp_id:int

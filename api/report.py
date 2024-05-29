@@ -93,7 +93,7 @@ async def collection_report(col_rep:SaleReport):
 async def item_report(item_rep:ItemReport):
     conn = connect()
     cursor = conn.cursor()
-    query = f"select a.receipt_no,a.trn_date,a.qty,a.price,a.discount_amt,a.cgst_amt,a.sgst_amt,b.amount,b.pay_mode,c.item_name,d.branch_name from   td_item_sale a, td_receipt b, md_items c, md_branch d where  a.receipt_no = b.receipt_no AND a.comp_id = c.comp_id AND a.comp_id = d.comp_id AND a.br_id = d.id AND a.item_id = c.id And a.trn_date BETWEEN '{item_rep.from_date}' and '{item_rep.to_date}' And a.comp_id = {item_rep.comp_id} AND a.br_id = {item_rep.br_id} AND a.item_id = {item_rep.item_id} and b.created_by='{item_rep.user_id}'"
+    query = f"SELECT receipt_no,trn_date,(price*qty)price,cgst_amt,sgst_amt,qty FROM td_item_sale where trn_date BETWEEN '{item_rep.from_date}' and '{item_rep.to_date}' and comp_id = {item_rep.comp_id} and br_id = {item_rep.br_id} and item_id = {item_rep.item_id}"
     cursor.execute(query)
     records = cursor.fetchall()
     result = createResponse(records, cursor.column_names, 1)

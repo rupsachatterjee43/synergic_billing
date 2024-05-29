@@ -38,6 +38,13 @@ class CollectionReport(BaseModel):
     br_id:int
     user_id:str
 
+class ItemReport(BaseModel):
+    from_date:date
+    to_date:date
+    comp_id:int
+    br_id:int
+    item_id:int
+
 class PayModeReport(BaseModel):
     from_date:date
     to_date:date
@@ -86,6 +93,9 @@ class SearchByItem(BaseModel):
     comp_id:int
     item_id:int
 
+class PrintBill(BaseModel):
+    recp_no:int
+
 class DiscountSettings(BaseModel):
     comp_id:int
     discount_flag:str
@@ -130,6 +140,7 @@ class AddEditItem(BaseModel):
     cgst:float
     sgst:float
     hsn_code:int
+    catg_id:int
 
 class AddEditCustomer(BaseModel):
     comp_id:int

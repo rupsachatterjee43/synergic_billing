@@ -32,7 +32,7 @@ async def item_list(data:CompId):
 
 @itemRouter.post('/item_details')
 async def item_details(data:ItemId):
-    select = "a.id,a.comp_id,a.hsn_code,a.item_name, a.unit_id,b.price,b.discount,b.cgst,b.sgst"
+    select = "a.id,a.comp_id,a.catg_id,a.hsn_code,a.item_name, a.unit_id,b.price,b.discount,b.cgst,b.sgst"
     table_name = "md_items a , md_item_rate b"
     where = f"a.id = b.item_id AND a.id = {data.item_id}"
     order = f''
@@ -51,7 +51,7 @@ async def add_edit_items(data:AddEditItem):
     if ({data.item_id}.pop())>0:
 
         table_name = "md_items"
-        fields = f"item_name ='{data.item_name}', unit_id = {data.unit_id}, modified_by = 'admin', modified_dt = '{formatted_dt}'"
+        fields = f"item_name ='{data.item_name}', catg_id = {data.catg_id}, unit_id = {data.unit_id}, modified_by = 'admin', modified_dt = '{formatted_dt}'"
         values = None
         where = f"id = {data.item_id} and comp_id = {data.comp_id}"
         flag = 1
@@ -67,8 +67,8 @@ async def add_edit_items(data:AddEditItem):
     else:
 
         table_name = "md_items"
-        fields = "comp_id,hsn_code,item_name, unit_id,created_by,created_dt"
-        values =f"{data.comp_id},{data.hsn_code},'{data.item_name}', {data.unit_id},'admin','{formatted_dt}'"
+        fields = "comp_id,hsn_code,catg_id,item_name, unit_id,created_by,created_dt"
+        values =f"{data.comp_id},{data.hsn_code},{data.catg_id},'{data.item_name}', {data.unit_id},'admin','{formatted_dt}'"
         where = None
         print(data.unit_id)
         order = f""

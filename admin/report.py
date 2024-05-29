@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from models.master_model import createResponse
 from models.masterApiModel import db_select, db_Insert
-from models.admin_form_model import SaleReport,CollectionReport,PayModeReport,UserWiseReport,GSTstatement,RefundReport,CreditReport
+from models.admin_form_model import SaleReport,CollectionReport,PayModeReport,UserWiseReport,GSTstatement,RefundReport,CreditReport,ItemReport
 
 reportRouter = APIRouter()
 
@@ -166,4 +166,16 @@ async def credit_report(data:CreditReport):
     return res_dt
 
 # ==================================================================================================
+# Item Wise Sale Report
 
+@reportRouter.post('/item_report')
+async def collection_report(data:ItemReport):
+   
+    select = f"receipt_no,trn_date,(price*qty)price,cgst_amt,sgst_amt,qty"
+    table_name = "td_item_sale"
+    where = f"trn_date BETWEEN '{data.from_date}' and '{data.to_date}' and comp_id = {data.comp_id} and br_id = {data.br_id} and item_id = {data.item_id}"
+    order = ""
+    flag = 1
+    res_dt = await db_select(select,table_name,where,order,flag)
+    
+    return res_dt
