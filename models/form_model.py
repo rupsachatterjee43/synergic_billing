@@ -113,7 +113,6 @@ class GSTSettings(BaseModel):
 
 class GeneralSettings(BaseModel):
     comp_id:int
-    rcpt_flag:str
     rcv_cash_flag:str
     rcpt_type:str
     unit_flag:str

@@ -119,7 +119,7 @@ async def edit_general_settings(rcp_set:GeneralSettings):
     formatted_dt = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
     conn = connect()
     cursor = conn.cursor()
-    query = f"UPDATE md_receipt_settings SET rcpt_flag='{rcp_set.rcpt_flag}', rcv_cash_flag='{rcp_set.rcv_cash_flag}', rcpt_type='{rcp_set.rcpt_type}', unit_flag='{rcp_set.unit_flag}', cust_inf='{rcp_set.cust_inf}', pay_mode='{rcp_set.pay_mode}', stock_flag='{rcp_set.stock_flag}', price_type='{rcp_set.price_type}', refund_days='{rcp_set.refund_days}', kot_flag='{rcp_set.kot_flag}', modified_by='{rcp_set.modified_by}', modified_at='{formatted_dt}' WHERE comp_id={rcp_set.comp_id}"
+    query = f"UPDATE md_receipt_settings SET rcv_cash_flag='{rcp_set.rcv_cash_flag}', rcpt_type='{rcp_set.rcpt_type}', unit_flag='{rcp_set.unit_flag}', cust_inf='{rcp_set.cust_inf}', pay_mode='{rcp_set.pay_mode}', stock_flag='{rcp_set.stock_flag}', price_type='{rcp_set.price_type}', refund_days='{rcp_set.refund_days}', kot_flag='{rcp_set.kot_flag}', modified_by='{rcp_set.modified_by}', modified_at='{formatted_dt}' WHERE comp_id={rcp_set.comp_id}"
     cursor.execute(query)
     conn.commit()
     conn.close()
