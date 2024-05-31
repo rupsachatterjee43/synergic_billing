@@ -9,6 +9,7 @@ class UserList(BaseModel):
 
 class UserLogin(BaseModel):
     user_id:str
+    password:str
 
 class CompId(BaseModel):
     comp_id:int
@@ -43,7 +44,6 @@ class ItemReport(BaseModel):
     to_date:date
     comp_id:int
     br_id:int
-    item_id:int
 
 class PayModeReport(BaseModel):
     from_date:date

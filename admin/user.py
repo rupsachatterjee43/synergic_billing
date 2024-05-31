@@ -26,12 +26,25 @@ async def user_list(data:UserList):
 #------------------------------------------------------------------------------------------------------
 @userRouter.post('/user_login')
 async def user_login(data_login:UserLogin):
+    # pwd = get_hashed_password(data_login.password)
+    # print(pwd)
+    res_dt = {}
     select = "a.*, b.*, c.*"
     table_name = "md_user a, md_branch b, md_company c"
     where = f"a.user_id='{data_login.user_id}' AND b.id=a.br_id AND c.id=a.comp_id AND a.active_flag='Y'"
     order = f''
-    flag = 1
-    res_dt = await db_select(select,table_name,where,order,flag)
+    flag = 0
+    result = await db_select(select,table_name,where,order,flag)
+    if(result['suc'] > 0 and result['suc'] < 2):
+        if(verify_password(data_login.password, result['msg']['password'])):
+            res_dt = {"suc": 1, "msg": [result['msg']]}
+        else:
+            res_dt = {"suc": 2, "msg": "Please check your userID or password"}
+    elif(result['suc'] == 2):
+        res_dt = {"suc": 2, "msg": "Please check your userID or password"}
+    else:
+        res_dt = {"suc": 0, "msg": "No Data Found"}
+
     return res_dt
 
 # ==================================================================================================

@@ -29,7 +29,7 @@ async def recovery_amount(bill:RecoverBill):
     else:
         resData = {
             "status":0,
-            "data":"No Bill Found"
+            "data":[]
         }
 
     return resData

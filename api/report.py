@@ -93,7 +93,7 @@ async def collection_report(col_rep:SaleReport):
 async def item_report(item_rep:ItemReport):
     conn = connect()
     cursor = conn.cursor()
-    query = f"SELECT receipt_no,trn_date,(price*qty)price,cgst_amt,sgst_amt,qty FROM td_item_sale where trn_date BETWEEN '{item_rep.from_date}' and '{item_rep.to_date}' and comp_id = {item_rep.comp_id} and br_id = {item_rep.br_id} and item_id = {item_rep.item_id}"
+    query = f"SELECT a.item_id,b.item_name,SUM(a.qty)qty,sum(a.price*a.qty)price FROM td_item_sale a, md_items b where a.item_id = b.id and a.trn_date BETWEEN  '{item_rep.from_date}' and '{item_rep.to_date}' and a.comp_id = {item_rep.comp_id} and a.br_id = {item_rep.br_id} group by a.item_id,b.item_name"
     cursor.execute(query)
     records = cursor.fetchall()
     result = createResponse(records, cursor.column_names, 1)

@@ -15,7 +15,7 @@ itmRouter = APIRouter()
 async def show_items(comp_id:int):
     conn = connect()
     cursor = conn.cursor()
-    query = f"SELECT a.*, b.*, c.unit_name FROM md_items a JOIN md_item_rate b on a.id=b.item_id LEFT JOIN md_unit c on c.sl_no=a.unit_id WHERE a.comp_id={comp_id}"
+    query = f"SELECT a.*, b.*, c.unit_name, d.category_name FROM md_items a JOIN md_item_rate b on a.id=b.item_id JOIN md_category d on d.sl_no = a.catg_id LEFT JOIN md_unit c on c.sl_no=a.unit_id WHERE a.comp_id={comp_id}"
     cursor.execute(query)
     records = cursor.fetchall()
     result = createResponse(records, cursor.column_names, 1)
@@ -56,7 +56,7 @@ async def add_items(add_item:AddItem):
     formatted_dt = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
     conn = connect()
     cursor = conn.cursor()
-    query = f"INSERT INTO md_items(comp_id, hsn_code, item_name, unit_id, catg_id, created_by, created_dt) VALUES ({add_item.comp_id}, '{add_item.hsn_code}', '{add_item.item_name}', {add_item.unit_id}, '{add_item.catg_id}','{add_item.created_by}', '{formatted_dt}')"
+    query = f"INSERT INTO md_items(comp_id, hsn_code, item_name, unit_id, catg_id, created_by, created_dt) VALUES ({add_item.comp_id}, '{add_item.hsn_code}', '{add_item.item_name}', {add_item.unit_id}, {add_item.catg_id},'{add_item.created_by}', '{formatted_dt}')"
     cursor.execute(query)
     conn.commit()
     conn.close()

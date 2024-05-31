@@ -169,12 +169,11 @@ async def credit_report(data:CreditReport):
 # Item Wise Sale Report
 
 @reportRouter.post('/item_report')
-async def collection_report(data:ItemReport):
-   
-    select = f"receipt_no,trn_date,(price*qty)price,cgst_amt,sgst_amt,qty"
-    table_name = "td_item_sale"
-    where = f"trn_date BETWEEN '{data.from_date}' and '{data.to_date}' and comp_id = {data.comp_id} and br_id = {data.br_id} and item_id = {data.item_id}"
-    order = ""
+async def collection_report(item_rep:ItemReport):
+    select = f"a.item_id,b.item_name,sum(a.qty)qty,sum(a.price*a.qty)price"
+    table_name = "td_item_sale a, md_items b"
+    where = f"a.item_id = b.id and a.trn_date BETWEEN  '{item_rep.from_date}' and '{item_rep.to_date}' and a.comp_id = {item_rep.comp_id} and a.br_id = {item_rep.br_id}"
+    order = "group by a.item_id,b.item_name"
     flag = 1
     res_dt = await db_select(select,table_name,where,order,flag)
     

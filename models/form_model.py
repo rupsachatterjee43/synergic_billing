@@ -34,6 +34,7 @@ class Receipt(BaseModel):
     pay_dtls:str
     cust_name:str
     phone_no:Optional[str] = None
+    rcv_cash_flag:str
     gst_flag:str
     gst_type:str
     discount_flag:str
@@ -71,7 +72,6 @@ class ItemReport(BaseModel):
     to_date:date
     comp_id:int
     br_id:int
-    item_id:int
 
 class EditHeaderFooter(BaseModel):
     comp_id:int
