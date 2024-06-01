@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from . import user, unit, transaction, stock, settings, report, refund, recovery, master, items, category
+from . import user, unit, transaction, stock, settings, report, refund, recovery, master, items, category, cancelbill
 
 router = APIRouter(prefix="/api", tags=["Mobile API"])
 
@@ -15,3 +15,5 @@ router.include_router(recovery.recoRouter)
 router.include_router(master.masterRouter)
 router.include_router(items.itmRouter)
 router.include_router(category.categoryRouter)
+router.include_router(cancelbill.cancelRouter)
+

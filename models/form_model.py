@@ -138,9 +138,9 @@ class AddItem(BaseModel):
     cgst:float
     sgst:float
 
-# class CancelBill(BaseModel):
-#     receipt_no:int
-#     user_id:str
+class CancelBill(BaseModel):
+    receipt_no:int
+    user_id:str
 
 class AddUnit(BaseModel):
     comp_id:int

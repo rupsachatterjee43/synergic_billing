@@ -41,7 +41,7 @@ async def search_by_phone(data:SearchByPhone):
 @searchRouter.post('/search_by_item')
 async def search_by_item(data:SearchByItem):
 
-    select = "a.receipt_no,c.trn_date,a.item_id,b.item_name,a.qty,a.price,c.pay_mode"
+    select = "a.receipt_no,c.trn_date,a.item_id,b.item_name,a.qty,a.price,c.pay_mode,c.created_by"
     table_name = "td_item_sale a, md_items b, td_receipt c"
     where = f"a.receipt_no=c.receipt_no AND a.item_id=b.id AND a.comp_id=b.comp_id AND a.comp_id = {data.comp_id} AND b.id = {data.item_id} AND a.trn_date BETWEEN '{data.from_date}' AND '{data.to_date}'"
     order = f""

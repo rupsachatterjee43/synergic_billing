@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from models.master_model import createResponse
 from models.masterApiModel import db_select, db_Insert
-from models.admin_form_model import UserLogin,CompId,UserList,AddUser,EditUser
+from models.admin_form_model import UserLogin,CompId,UserList,AddUser,EditUser,UserProfile
 from utils import get_hashed_password,verify_password
 from datetime import datetime
 
@@ -87,4 +87,27 @@ async def edit_user(data:EditUser):
     flag = 1
     res_dt = await db_Insert(table_name,fields,values,where,flag)
 
+    return res_dt
+
+##################################################################################################
+# Profile
+
+@userRouter.post('/user_profile')
+async def user_profile(data:UserProfile):
+    select = "user_name,user_id,phone_no,email_id"
+    table_name = "md_user"
+    where = f"comp_id = {data.comp_id} and user_id = '{data.user_id}' and user_type = 'A'"
+    order = f''
+    flag = 1
+    res_dt = await db_select(select,table_name,where,order,flag)
+    return res_dt
+
+@userRouter.post('/store_profile')
+async def user_profile(data:CompId):
+    select = "company_name,address,location,contact_person,phone_no,email_id"
+    table_name = "md_company"
+    where = f"id = {data.comp_id}"
+    order = f''
+    flag = 1
+    res_dt = await db_select(select,table_name,where,order,flag)
     return res_dt
