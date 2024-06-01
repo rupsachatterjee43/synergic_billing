@@ -15,6 +15,12 @@ class UserProfile(BaseModel):
     comp_id:int
     user_id:str
 
+class ResetPassword(BaseModel):
+    old_password:str
+    new_password:str
+    comp_id:int
+    user_id:str
+
 class CompId(BaseModel):
     comp_id:int
 

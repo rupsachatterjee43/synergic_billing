@@ -170,6 +170,7 @@ async def credit_report(data:CreditReport):
 
 @reportRouter.post('/item_report')
 async def collection_report(item_rep:ItemReport):
+    
     select = f"a.item_id,b.item_name,sum(a.qty)qty,sum(a.price*a.qty)price"
     table_name = "td_item_sale a, md_items b"
     where = f"a.item_id = b.id and a.trn_date BETWEEN  '{item_rep.from_date}' and '{item_rep.to_date}' and a.comp_id = {item_rep.comp_id} and a.br_id = {item_rep.br_id}" if item_rep.br_id>0 else f"a.item_id = b.id and a.trn_date BETWEEN  '{item_rep.from_date}' and '{item_rep.to_date}' and a.comp_id = {item_rep.comp_id}"
