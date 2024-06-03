@@ -31,7 +31,7 @@ async def edit_discount_settings(data:DiscountSettings):
     formatted_dt = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
     table_name = f"md_receipt_settings"
     fields = f"discount_flag='{data.discount_flag}', discount_type='{data.discount_type}', discount_position='{data.discount_position}', modified_by='{data.modified_by}', modified_at='{formatted_dt}'"
-    values =f"{data.comp_id},'{data.discount_flag}','{data.discount_type}','{data.discount_position}','{data.modified_by}','{formatted_dt}',"
+    values = None
     where = f"comp_id = {data.comp_id}"
     order = ""
     flag = 1
@@ -49,7 +49,7 @@ async def edit_gst_settings(data:GSTSettings):
     formatted_dt = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
     table_name = f"md_receipt_settings"
     fields = f"gst_flag='{data.gst_flag}', gst_type='{data.gst_type}', modified_by='{data.modified_by}', modified_at='{formatted_dt}'"
-    values =f"{data.comp_id},'{data.gst_flag}','{data.gst_type}','{data.modified_by}','{formatted_dt}',"
+    values = None
     where = f"comp_id = {data.comp_id}"
     order = ""
     flag = 1
@@ -66,8 +66,8 @@ async def edit_general_settings(data:GeneralSettings):
     current_datetime = datetime.now()
     formatted_dt = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
     table_name = f"md_receipt_settings"
-    fields = f"rcpt_type='{data.rcpt_type}', unit_flag='{data.unit_flag}', cust_inf='{data.cust_inf}', pay_mode='{data.pay_mode}', stock_flag='{data.stock_flag}', price_type='{data.price_type}', refund_days='{data.refund_days}', kot_flag='{data.kot_flag}', modified_by='{data.modified_by}', modified_at='{formatted_dt}'"
-    values =f"{data.comp_id},'{data.rcpt_type}','{data.unit_flag}','{data.cust_inf}','{data.pay_mode}','{data.stock_flag}','{data.price_type}','{data.refund_days}','{data.kot_flag}','{data.modified_by}','{formatted_dt}'"
+    fields = f"rcv_cash_flag='{data.rcv_cash_flag}' ,rcpt_type='{data.rcpt_type}', unit_flag='{data.unit_flag}', cust_inf='{data.cust_inf}', pay_mode='{data.pay_mode}', stock_flag='{data.stock_flag}', price_type='{data.price_type}', refund_days='{data.refund_days}', kot_flag='{data.kot_flag}', modified_by='{data.modified_by}', modified_at='{formatted_dt}'"
+    values = None
     where = f"comp_id = {data.comp_id}"
     order = ""
     flag = 1

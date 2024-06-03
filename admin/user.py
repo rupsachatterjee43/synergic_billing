@@ -119,19 +119,16 @@ async def user_profile(data:CompId):
 async def reset_password(data:ResetPassword):
     current_datetime = datetime.now()
     formatted_dt = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
-    # pwd = get_hashed_password(data.new_password)
     select = "password"
     table_name = "md_user"
     where = f"comp_id = {data.comp_id} and user_id='{data.user_id}' and user_type = 'A'"
     order = f''
     flag = 0
     result = await db_select(select,table_name,where,order,flag)
-    print(result['suc'])
-    # print(res_dt["msg"][0]["password"])
+    print(result['msg'])
     if(result['suc'] > 0 and result['suc'] < 2):
         try:
-            old_pwd = verify_password(data.old_password, result['msg'][0]['password'])
-            if old_pwd == True:
+            if(verify_password(data.old_password, result['msg']['password'])):
 
                 new_pwd = get_hashed_password(data.new_password)
                 table_name = "md_user"
