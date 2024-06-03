@@ -67,6 +67,20 @@ class SaleReport(BaseModel):
     br_id:int
     user_id:str
 
+class CancelReport(BaseModel):
+    from_date:date
+    to_date:date
+    comp_id:int
+    br_id:int
+    user_id:str
+
+class DaybookReport(BaseModel):
+    from_date:date
+    to_date:date
+    comp_id:int
+    br_id:int
+    user_id:str
+
 class ItemReport(BaseModel):
     from_date:date
     to_date:date

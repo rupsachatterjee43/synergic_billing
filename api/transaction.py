@@ -133,11 +133,34 @@ async def show_bill(recp_no:int):
     conn.close()
     cursor.close()
     if cursor.rowcount>0:
-        resData= {"status":1, 
-                  "data":result}
+        try:
+            conn1 = connect()
+            cursor1 = conn1.cursor()
+            query1 = f"SELECT count(*)Count FROM td_receipt_cancel_new WHERE receipt_no = {recp_no}"
+            cursor1.execute(query1)
+            records1 = cursor1.fetchall()
+            result1 = createResponse(records1, cursor1.column_names, 1)
+            conn1.close()
+            cursor1.close()
+            print(result1[0]["Count"])
+            if result1[0]["Count"]>0:
+                resData = {"status":1,
+                            "cancel_flag":"Y", 
+                            "data":result}
+            else:
+                resData = {"status":1,
+                            "cancel_flag":"N", 
+                            "data":result}
+            
+        except:
+            return "Error 1"
+
+        # resData= {"status":1, 
+        #           "data":result}
     else:
         resData= {
         "status":0,
+        "cancel_flag":"N",
         "data":[]
         }
     return resData
