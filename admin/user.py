@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from models.master_model import createResponse
 from models.masterApiModel import db_select, db_Insert
-from models.admin_form_model import UserLogin,CompId,UserList,AddUser,EditUser,UserProfile,ResetPassword
+from models.admin_form_model import UserLogin,CompId,UserList,AddUser,EditUser,UserProfile,ResetPassword,CheckPassword
 from utils import get_hashed_password,verify_password
 from datetime import datetime
 
@@ -149,3 +149,23 @@ async def reset_password(data:ResetPassword):
     
 #===================================================================================================
 # Check Password 
+
+@userRouter.post('/check_password')
+async def check_password(data:CheckPassword):
+    select = "password"
+    table_name = "md_user"
+    where = f"comp_id = {data.comp_id} and user_id='{data.user_id}' and user_type = 'A'"
+    order = f''
+    flag = 0
+    result = await db_select(select,table_name,where,order,flag)
+
+    if(result['suc'] > 0 and result['suc'] < 2):
+        if(verify_password(data.old_password, result['msg']['password'])):
+            res_dt = {"suc": 1, "msg": "Passwords matched"}
+        else:
+            res_dt = {"suc": 0, "msg": "Please check your userID or password"}
+
+    else:
+        res_dt = {"suc": 0, "msg": "Please check your userID"}
+
+    return res_dt

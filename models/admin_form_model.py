@@ -11,6 +11,11 @@ class UserLogin(BaseModel):
     user_id:str
     password:str
 
+class CheckPassword(BaseModel):
+    old_password:str
+    comp_id:int
+    user_id:str
+
 class UserProfile(BaseModel):
     comp_id:int
     user_id:str
