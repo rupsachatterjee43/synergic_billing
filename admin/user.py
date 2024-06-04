@@ -14,9 +14,9 @@ userRouter = APIRouter()
 
 @userRouter.post('/user_list')
 async def user_list(data:UserList):
-    select = "*"
-    table_name = "md_user"
-    where = f"comp_id = {data.comp_id} {f'and br_id = {data.br_id}' if data.br_id > 0 else ''} and user_type!='A'"
+    select = "a.*,b.branch_name"
+    table_name = "md_user a, md_branch b"
+    where = f"a.br_id=b.id and a.comp_id = {data.comp_id} {f'and a.br_id = {data.br_id}' if data.br_id > 0 else ''} and a.user_type!='A'"
     order = f''
     flag = 1
     res_dt = await db_select(select,table_name,where,order,flag)
