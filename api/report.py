@@ -193,7 +193,7 @@ async def search_bill_by_phone(bill:BillList):
     else:
         resData = {
             "status":0,
-            "data":"No Bill Found"
+            "data":[]
         }
 
     return resData

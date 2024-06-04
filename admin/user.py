@@ -147,3 +147,5 @@ async def reset_password(data:ResetPassword):
 
     return res_dt
     
+#===================================================================================================
+# Check Password 
