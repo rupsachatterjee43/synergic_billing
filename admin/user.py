@@ -60,6 +60,16 @@ async def outlet_list(data:CompId):
     res_dt = await db_select(select,table_name,where,order,flag)
     return res_dt
 
+
+@userRouter.post('/outlet_details')
+async def outlet_list(data:UserList):
+    select = "id,branch_name,branch_address,location,contact_person,phone_no,email_id"
+    table_name = "md_branch"
+    where = f"comp_id = {data.comp_id} and id = {data.br_id}"
+    order = f''
+    flag = 1
+    res_dt = await db_select(select,table_name,where,order,flag)
+    return res_dt
 # ==================================================================================================
 # User Management
 
