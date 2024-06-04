@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from models.master_model import createResponse
 from models.masterApiModel import db_select, db_Insert
-from models.admin_form_model import UserLogin,CompId,UserList,AddUser,EditUser,UserProfile,ResetPassword,CheckPassword
+from models.admin_form_model import UserLogin,CompId,UserList,AddUser,EditUser,UserProfile,ResetPassword,CheckPassword,AddEditOutlet
 from utils import get_hashed_password,verify_password
 from datetime import datetime
 
@@ -169,3 +169,37 @@ async def check_password(data:CheckPassword):
         res_dt = {"suc": 0, "msg": "Please check your userID"}
 
     return res_dt
+
+#==================================================================================================
+# Outlet Management
+
+@userRouter.post('/add_edit_outlet')
+async def add__edit_outlet(data:AddEditOutlet):
+    current_datetime = datetime.now()
+    formatted_dt = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
+    table_name = "md_branch"
+
+    fields = f"branch_name = '{data.branch_name}', branch_address = '{data.branch_address}', location = {data.location}, contact_person = '{data.contact_person}', phone_no = {data.phone_no}, email_id = '{data.email_id}', modified_by = '{data.user_id}', modified_dt = '{formatted_dt}'" if data.br_id>0 else "comp_id, branch_name, branch_address, location, contact_person, phone_no, email_id, created_by, created_dt"    
+
+    values =f"{data.comp_id}, '{data.branch_name}', '{data.branch_address}', {data.location}, '{data.contact_person}', {data.phone_no}, '{data.email_id}', '{data.user_id}', '{formatted_dt}'"
+
+    where = f"comp_id={data.comp_id} and id={data.br_id}" if data.br_id>0 else None 
+
+    flag = 1 if data.br_id>0 else 0
+
+    res_dt = await db_Insert(table_name,fields,values,where,flag)
+
+    return res_dt
+
+# @userRouter.post('/edit_user')
+# async def edit_user(data:EditUser):
+#     current_datetime = datetime.now()
+#     formatted_dt = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
+#     table_name = "md_user"
+#     fields = f"user_name = '{data.user_name}', user_type = '{data.user_type}', phone_no = '{data.phone_no}', login_flag = '{data.login_flag}', active_flag = '{data.active_flag}', modified_by = 'Admin', modified_dt = '{formatted_dt}'"
+#     values = None
+#     where = f"comp_id={data.comp_id} and user_id='{data.user_id}' and user_type!='A'"
+#     flag = 1
+#     res_dt = await db_Insert(table_name,fields,values,where,flag)
+
+#     return res_dt

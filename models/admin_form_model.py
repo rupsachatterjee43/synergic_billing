@@ -250,3 +250,14 @@ class UpdatePurchase(BaseModel):
     sgst:float
     unit_name:str
     item_id:int
+
+class AddEditOutlet(BaseModel):
+    br_id:int
+    comp_id:int
+    branch_name:str
+    branch_address:str
+    location:int
+    contact_person:str
+    phone_no:int
+    email_id:str
+    user_id:str
