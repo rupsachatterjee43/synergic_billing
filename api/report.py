@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from config.database import connect
 from models.master_model import createResponse
-from models.form_model import DashBoard,SaleReport,ItemReport,RefundBillReport,BillList,SearchByItem,CreditReport,CancelReport,DaybookReport
+from models.form_model import DashBoard,SaleReport,ItemReport,RefundBillReport,BillList,SearchByItem,CreditReport,CancelReport,DaybookReport,SearchByRcpt,SearchByName
 
 # testing git
 repoRouter = APIRouter()
@@ -221,8 +221,59 @@ async def billsearch_by_item(item:SearchByItem):
         "data":[]
         }
     return resData
+#==================================================================================================
+# Search by Receipt No
+
+@repoRouter.post('/search_bill_by_receipt')
+async def search_bill_by_receipt(bill:SearchByRcpt):
+    conn = connect()
+    cursor = conn.cursor()
+    query = f"SELECT DISTINCT receipt_no, trn_date, pay_mode, net_amt FROM td_receipt WHERE comp_id = {bill.comp_id} AND br_id = {bill.br_id} AND receipt_no = '{bill.receipt_no}'"
+    cursor.execute(query)
+    records = cursor.fetchall()
+    result = createResponse(records, cursor.column_names, 1)
+    conn.close()
+    cursor.close()
+    if cursor.rowcount>0:
+        resData = {
+            "status":1,
+            "data":result
+        }
+    else:
+        resData = {
+            "status":0,
+            "data":[]
+        }
+
+    return resData
 
 #==================================================================================================
+# Search Bill by Customer Name
+
+@repoRouter.post('/search_bill_by_name')
+async def search_bill_by_receipt(bill:SearchByName):
+    conn = connect()
+    cursor = conn.cursor()
+    query = f"SELECT DISTINCT receipt_no, trn_date, pay_mode, net_amt FROM td_receipt WHERE comp_id = {bill.comp_id} AND br_id = {bill.br_id} AND cust_name LIKE '%{bill.cust_name}%'"
+    cursor.execute(query)
+    records = cursor.fetchall()
+    result = createResponse(records, cursor.column_names, 1)
+    conn.close()
+    cursor.close()
+    if cursor.rowcount>0:
+        resData = {
+            "status":1,
+            "data":result
+        }
+    else:
+        resData = {
+            "status":0,
+            "data":[]
+        }
+
+    return resData
+
+#=================================================================================================
 
 @repoRouter.get('/show_refund_bill/{recp_no}')
 async def show_refund_bill(recp_no:int):

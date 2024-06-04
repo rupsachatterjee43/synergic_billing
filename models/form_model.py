@@ -60,6 +60,16 @@ class SearchBill(BaseModel):
     br_id:int
     user_id:str
 
+class SearchByRcpt(BaseModel):
+    comp_id:int
+    br_id:int
+    receipt_no:int
+
+class SearchByName(BaseModel):
+    comp_id:int
+    br_id:int
+    cust_name:str
+
 class SaleReport(BaseModel):
     from_date:date
     to_date:date

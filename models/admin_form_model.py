@@ -86,6 +86,18 @@ class CreditReport(BaseModel):
     comp_id:int
     br_id:int
 
+class CancelReport(BaseModel):
+    from_date:date
+    to_date:date
+    comp_id:int
+    br_id:int
+
+class DaybookReport(BaseModel):
+    from_date:date
+    to_date:date
+    comp_id:int
+    br_id:int
+
 class SearchByDate(BaseModel):
     from_date:date
     to_date:date
