@@ -80,6 +80,7 @@ cancelRouter = APIRouter()
 #     return resData
 
 #=================================================================================================
+# Cancel Bill
 
 @cancelRouter.post('/cancel_bill_two')
 async def cancel_bill_two(del_bill: CancelBill):
@@ -87,17 +88,20 @@ async def cancel_bill_two(del_bill: CancelBill):
     conn = connect()
     cursor = conn.cursor()
 
+    # query = f"SELECT a.receipt_no, b.qty FROM td_receipt a, td_item_sale b WHERE a.receipt_no = b.receipt_no AND a.receipt_no={del_bill.receipt_no}"
+
     query = f"SELECT receipt_no FROM td_receipt WHERE receipt_no={del_bill.receipt_no}"
 
     cursor.execute(query)
     record = cursor.fetchone()
     # conn.close()
     # cursor.close()
-    # print(record,"yyyyyyyyyyyy")
+    # print(list(record[0:1]),"yyyyyyyyyyyy")
 
     if record:
         try:
 
+            # rec = list(record[0:1])
             rec = list(record)
             rec.append(del_bill.user_id)
             rec.append(current_datetime)
