@@ -30,7 +30,7 @@ async def sale_report(sale:SaleReport):
 
 #===================================================================================================
 # Bill Report / Collection Report
-
+'''
 @reportRouter.post('/collection_report')
 async def collection_report(data:CollectionReport):
 
@@ -41,7 +41,8 @@ async def collection_report(data:CollectionReport):
     flag = 1
     res_dt = await db_select(select,table_name,where,order,flag)
     
-    return res_dt
+    return res_dt 
+    '''
 
 # ==================================================================================================
 # PayMode Report
@@ -49,10 +50,12 @@ async def collection_report(data:CollectionReport):
 @reportRouter.post('/paymode_report')
 async def paymode_report(data:PayModeReport):
 
-    select = "a.created_by,a.pay_mode, IF(a.pay_mode='C', 'Cash', IF(a.pay_mode='U', 'UPI', IF(a.pay_mode='D', 'Card', IF(a.pay_mode='R', 'Credit', '')))) pay_mode_name, SUM(a.net_amt)net_amt,user_name, count(a.receipt_no)no_of_bills"
-    table_name = f"(Select Distinct a.created_by created_by,a.pay_mode pay_mode,a.net_amt net_amt,c.user_name user_name, a.receipt_no receipt_no from td_receipt a, td_item_sale b, md_user c where  a.created_by=c.user_id and a.receipt_no = b.receipt_no and a.trn_date BETWEEN '{data.from_date}' AND '{data.to_date}' and b.comp_id = {data.comp_id} AND b.br_id = {data.br_id} AND a.pay_mode = '{data.pay_mode}')a" if data.br_id>0 else f"(Select Distinct a.created_by created_by,a.pay_mode pay_mode,a.net_amt net_amt,c.user_name user_name, a.receipt_no receipt_no from td_receipt a, td_item_sale b, md_user c where  a.created_by=c.user_id and a.receipt_no = b.receipt_no and a.trn_date BETWEEN '{data.from_date}' AND '{data.to_date}' and b.comp_id = {data.comp_id} AND a.pay_mode = '{data.pay_mode}')a"
+    select = "count(receipt_no)no_of_rcpt, IF(a.pay_mode='C', 'Cash', IF(a.pay_mode='U', 'UPI', IF(a.pay_mode='D', 'Card', IF(a.pay_mode='R', 'Credit', '')))) pay_mode, Sum(net_amt) net_amt, sum(cancelled_amt)can_amt"
+
+    table_name = f"(select receipt_no, pay_mode, net_amt, 0 cancelled_amt from td_receipt where trn_date BETWEEN '{data.from_date}' and '{data.to_date}' and comp_id= {data.comp_id} AND br_id = {data.br_id} UNION select a.receipt_no receipt_no, a.pay_mode pay_mode, 0 net_amt, a.net_amt cancelled_amt from td_receipt a,td_receipt_cancel_new b where a.receipt_no = b.receipt_no and date(b.cancelled_dt) BETWEEN '{data.from_date}' and '{data.to_date}' and a.comp_id= {data.comp_id} AND a.br_id = {data.br_id})a"
+
     where = f""
-    order = "GROUP BY a.created_by,a.pay_mode"
+    order = "GROUP BY pay_mode"
     flag = 1
     res_dt = await db_select(select,table_name,where,order,flag)
     
@@ -64,10 +67,10 @@ async def paymode_report(data:PayModeReport):
 @reportRouter.post('/userwise_sale_report')
 async def userwise_sale_report(data:UserWiseReport):
 
-    select = "a.created_by,SUM(a.net_amt)net_amt,user_name, count(a.receipt_no)no_of_bills"
-    table_name = f"(Select Distinct a.created_by created_by,a.pay_mode pay_mode,a.net_amt net_amt,c.user_name user_name, a.receipt_no receipt_no from td_receipt a, td_item_sale b, md_user c where  a.created_by=c.user_id and a.receipt_no = b.receipt_no and a.trn_date BETWEEN '{data.from_date}' AND '{data.to_date}' and b.comp_id = {data.comp_id} AND b.br_id = {data.br_id})a" if data.br_id>0 else f"(Select Distinct a.created_by created_by,a.pay_mode pay_mode,a.net_amt net_amt,c.user_name user_name, a.receipt_no receipt_no from td_receipt a, td_item_sale b, md_user c where  a.created_by=c.user_id and a.receipt_no = b.receipt_no and a.trn_date BETWEEN '{data.from_date}' AND '{data.to_date}' and b.comp_id = {data.comp_id})a"
+    select = "created_by, sum(net_amt)net_amt, sum(cancelled_amt)cancelled_amt, COUNT(receipt_no)no_of_receipts, user_name"
+    table_name = f"( Select a.created_by created_by, a.net_amt net_amt, 0 cancelled_amt, c.user_name user_name, a.receipt_no receipt_no from td_receipt a, md_user c where a.created_by=c.user_id and a.trn_date BETWEEN '{data.from_date}' and '{data.to_date}' and a.comp_id = {data.comp_id} AND a.br_id = {data.br_id} UNION Select a.created_by created_by, 0 net_amt, a.net_amt cancelled_amt, c.user_name user_name, b.receipt_no receipt_no from td_receipt a, md_user c,td_receipt_cancel_new b where a.receipt_no = b.receipt_no and a.created_by=c.user_id and date(b.cancelled_dt) BETWEEN '{data.from_date}' and '{data.to_date}' and a.comp_id = {data.comp_id} AND a.br_id = {data.br_id})a"
     where = f""
-    order = "GROUP BY a.created_by"
+    order = "GROUP BY created_by,user_name"
     flag = 1
     res_dt = await db_select(select,table_name,where,order,flag)
     

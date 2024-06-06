@@ -94,6 +94,13 @@ class ItemReport(BaseModel):
     comp_id:int
     br_id:int
 
+class UserwiseReport(BaseModel):
+    from_date:date
+    to_date:date
+    comp_id:int
+    br_id:int
+    user_id:str
+
 class EditHeaderFooter(BaseModel):
     comp_id:int
     header1:str

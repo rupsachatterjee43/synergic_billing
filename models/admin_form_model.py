@@ -65,7 +65,7 @@ class PayModeReport(BaseModel):
     to_date:date
     comp_id:int
     br_id:int
-    pay_mode:str
+
 
 class UserWiseReport(BaseModel):
     from_date:date
