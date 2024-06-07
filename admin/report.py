@@ -5,7 +5,7 @@ from models.admin_form_model import SaleReport,CollectionReport,PayModeReport,Us
 
 reportRouter = APIRouter()
 
-#================================================================================================
+#======================================================================================================
 # Sale Report
 
 @reportRouter.post('/sale_report')
