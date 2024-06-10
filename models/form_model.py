@@ -76,6 +76,20 @@ class SaleReport(BaseModel):
     comp_id:int
     br_id:int
 
+class GSTStatement(BaseModel):
+    from_date:date
+    to_date:date
+    comp_id:int
+    br_id:int
+    user_id:int
+
+class GSTSummary(BaseModel):
+    from_date:date
+    to_date:date
+    comp_id:int
+    br_id:int
+    user_id:int
+
 class CancelReport(BaseModel):
     from_date:date
     to_date:date

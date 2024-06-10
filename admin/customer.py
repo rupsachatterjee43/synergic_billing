@@ -6,7 +6,7 @@ from datetime import datetime
 
 customerRouter = APIRouter()
 # ==================================================================================================
-# Customer List
+# Customer List of All customers
 
 @customerRouter.post('/all_customer_list')
 async def all_customer_list(data:CompId):
@@ -17,6 +17,9 @@ async def all_customer_list(data:CompId):
     flag = 1
     res_dt = await db_select(select,table_name,where,order,flag)
     return res_dt
+
+# ========================================================================================================
+# Details of a Perticular Customer
 
 @customerRouter.post('/customer_list')
 async def customer_list(data:CustomerId):
@@ -53,3 +56,5 @@ async def add_edit_customer(data:AddEditCustomer):
         res_dt = await db_Insert(table_name,fields,values,where,flag)
     
     return res_dt
+
+# ============================================================================================================

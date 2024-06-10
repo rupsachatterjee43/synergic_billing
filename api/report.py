@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from config.database import connect
 from models.master_model import createResponse
-from models.form_model import DashBoard,SaleReport,ItemReport,RefundBillReport,BillList,SearchByItem,CreditReport,CancelReport,DaybookReport,SearchByRcpt,SearchByName,UserwiseReport
+from models.form_model import DashBoard,SaleReport,GSTStatement,GSTSummary,ItemReport,RefundBillReport,BillList,SearchByItem,CreditReport,CancelReport,DaybookReport,SearchByRcpt,SearchByName,UserwiseReport
 
 # testing git
 repoRouter = APIRouter()
@@ -111,7 +111,7 @@ async def item_report(item_rep:ItemReport):
 # GST Statement
 #-------------------------------------------------------------------------------------------------------------
 @repoRouter.post('/gst_statement')
-async def gst_statement(gst_st:SaleReport):
+async def gst_statement(gst_st:GSTStatement):
     conn = connect()
     cursor = conn.cursor()
     query = f"select distinct a.receipt_no, a.trn_date, (a.price - a.discount_amt)taxable_amt, a.cgst_amt, a.sgst_amt, (a.cgst_amt + a.sgst_amt)total_tax, a.net_amt from td_receipt a, td_item_sale b where a.receipt_no = b.receipt_no and b.comp_id = {gst_st.comp_id} and b.br_id = {gst_st.br_id} and a.created_by = {gst_st.user_id} and (a.cgst_amt + a.sgst_amt) > '0' and a.trn_date BETWEEN '{gst_st.from_date}' and '{gst_st.to_date}'"
@@ -132,7 +132,7 @@ async def gst_statement(gst_st:SaleReport):
 # GST  Summary
 #-------------------------------------------------------------------------------------------------------------
 @repoRouter.post('/gst_summary')
-async def gst_summary(gst_sm:SaleReport):
+async def gst_summary(gst_sm:GSTSummary):
     conn = connect()
     cursor = conn.cursor()
     query = f"SELECT cgst_prtg, SUM(cgst_amt)cgst_amt, SUM(sgst_amt)sgst_amt, SUM(cgst_amt) + SUM(sgst_amt)total_tax FROM td_item_sale WHERE cgst_amt+sgst_amt>0 AND comp_id = {gst_sm.comp_id} AND br_id = {gst_sm.br_id} AND created_by = {gst_sm.user_id} AND trn_date BETWEEN '{gst_sm.from_date}' AND '{gst_sm.to_date}' GROUP BY cgst_prtg"

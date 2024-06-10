@@ -15,7 +15,7 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 itemRouter = APIRouter()
 
 # ==================================================================================================
-# Item List
+# All Item List
 
 @itemRouter.post('/item_list')
 async def item_list(data:CompId):
@@ -28,7 +28,7 @@ async def item_list(data:CompId):
     return res_dt
 
 # ==================================================================================================
-# All details of an Item
+# All details of a perticualr Item
 
 @itemRouter.post('/item_details')
 async def item_details(data:ItemId):
