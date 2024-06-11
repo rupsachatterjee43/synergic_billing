@@ -11,7 +11,7 @@ searchRouter = APIRouter()
 @searchRouter.post('/search_by_date')
 async def search_by_date(data:SearchByDate):
 
-    select = "receipt_no,trn_date,created_by,net_amt,pay_mode"
+    select = "receipt_no,trn_date,created_by,net_amt,IF(pay_mode='C', 'Cash', IF(pay_mode='U', 'UPI', IF(pay_mode='D', 'Card', IF(pay_mode='R', 'Credit', '')))) pay_mode"
     table_name = "td_receipt"
     where = f"comp_id = {data.comp_id} AND trn_date BETWEEN '{data.from_date}' AND '{data.to_date}'"
     order = f""
@@ -26,7 +26,7 @@ async def search_by_date(data:SearchByDate):
 @searchRouter.post('/search_by_phone')
 async def search_by_phone(data:SearchByPhone):
 
-    select = "receipt_no,trn_date,created_by,net_amt,pay_mode"
+    select = "receipt_no,trn_date,created_by,net_amt,IF(pay_mode='C', 'Cash', IF(pay_mode='U', 'UPI', IF(pay_mode='D', 'Card', IF(pay_mode='R', 'Credit', '')))) pay_mode"
     table_name = "td_receipt"
     where = f"comp_id = {data.comp_id} AND phone_no = {data.phone_no} AND trn_date BETWEEN '{data.from_date}' AND '{data.to_date}'"
     order = f""
@@ -41,7 +41,7 @@ async def search_by_phone(data:SearchByPhone):
 @searchRouter.post('/search_by_item')
 async def search_by_item(data:SearchByItem):
 
-    select = "a.receipt_no,c.trn_date,a.item_id,b.item_name,a.qty,a.price,c.pay_mode,c.created_by"
+    select = "a.receipt_no,c.trn_date,a.item_id,b.item_name,a.qty,a.price,IF(c.pay_mode='C', 'Cash', IF(c.pay_mode='U', 'UPI', IF(c.pay_mode='D', 'Card', IF(c.pay_mode='R', 'Credit', '')))) pay_mode,c.created_by"
     table_name = "td_item_sale a, md_items b, td_receipt c"
     where = f"a.receipt_no=c.receipt_no AND a.item_id=b.id AND a.comp_id=b.comp_id AND a.comp_id = {data.comp_id} AND b.id = {data.item_id} AND a.trn_date BETWEEN '{data.from_date}' AND '{data.to_date}'"
     order = f""
@@ -64,3 +64,18 @@ async def print_bill(data:PrintBill):
     res_dt = await db_select(select,table_name,where,order,flag)
     
     return res_dt
+
+# =========================================================================================================
+# Search Bill by Receipt
+
+# @searchRouter.post('/search_by_receipt')
+# async def search_by_receipt(data:SearchByReceipt):
+
+#     select = "receipt_no,trn_date,created_by,net_amt,pay_mode"
+#     table_name = "td_receipt"
+#     where = f"comp_id = {data.comp_id} AND receipt_no = {data.receipt_no}"
+#     order = f""
+#     flag = 1
+#     res_dt = await db_select(select,table_name,where,order,flag)
+    
+#     return res_dt

@@ -143,6 +143,10 @@ class SearchByPhone(BaseModel):
     comp_id:int
     phone_no:str
 
+# class SearchByReceipt(BaseModel):
+#     comp_id:int
+#     receipt_no:int
+
 class SearchByItem(BaseModel):
     from_date:date
     to_date:date

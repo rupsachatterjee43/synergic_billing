@@ -25,7 +25,7 @@ async def category_list(comp_id:int):
         res_dt={"status":0, "msg":[]}
     return res_dt
 
-#===============================================================================================
+#==========================================================================================================
 # Search Items by Category:
 
 @categoryRouter.post('/categorywise_item_list')
