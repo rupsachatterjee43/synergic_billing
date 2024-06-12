@@ -102,7 +102,7 @@ async def login(data_login:UserLogin):
 
         conn = connect()
         cursor = conn.cursor()
-        query = f"select count(*)no_of_user from md_user where comp_id = {result['comp_id']} and login_flag = 'Y'"
+        query = f"select count(*)no_of_user from md_user where comp_id = {result['comp_id']} AND user_type in ('U','M') and login_flag = 'Y'"
         cursor.execute(query)
         records = cursor.fetchone()
         result1 = createResponse(records, cursor.column_names, 0)

@@ -56,9 +56,9 @@ async def search_by_item(data:SearchByItem):
 @searchRouter.post('/print_bill')
 async def print_bill(data:PrintBill):
 
-    select = "a.receipt_no, a.comp_id, a.br_id, a.item_id, a.trn_date, a.price, a.dis_pertg, a.discount_amt, a.cgst_prtg, a.cgst_amt, a.sgst_prtg, a.sgst_amt, a.qty, a.created_by, a.created_dt, a.modified_by, a.modified_dt, b.price AS tprice, b.discount_amt AS tdiscount_amt, b.cgst_amt AS tcgst_amt, b.sgst_amt AS tsgst_amt, b.amount, b.round_off, b.net_amt, b.pay_mode, b.received_amt, b.pay_dtls, b.cust_name, b.phone_no, b.gst_flag, b.gst_type, b.discount_flag, b.discount_type, b.discount_position, b.created_by AS tcreated_by, b.created_dt AS tcreated_dt, b.modified_by AS tmodified_by, b.modified_dt AS tmodified_dt, c.item_name"
-    table_name = "td_item_sale a, td_receipt b, md_items c"
-    where = f"a.receipt_no=b.receipt_no and a.trn_date=b.trn_date and a.item_id=c.id and a.receipt_no={data.recp_no}"
+    select = "a.receipt_no, a.comp_id, a.br_id, a.item_id, a.trn_date, a.price, a.dis_pertg, a.discount_amt, a.cgst_prtg, a.cgst_amt, a.sgst_prtg, a.sgst_amt, a.qty, a.created_by, a.created_dt, a.modified_by, a.modified_dt, b.price AS tprice, b.discount_amt AS tdiscount_amt, b.cgst_amt AS tcgst_amt, b.sgst_amt AS tsgst_amt, b.amount, b.round_off, b.net_amt, b.pay_mode, b.received_amt, b.pay_dtls, b.cust_name, b.phone_no, b.gst_flag, b.gst_type, b.discount_flag, b.discount_type, b.discount_position, b.created_by AS tcreated_by, b.created_dt AS tcreated_dt, b.modified_by AS tmodified_by, b.modified_dt AS tmodified_dt, c.item_name, d.header1, d.on_off_flag1, d.header2, d.on_off_flag2, d.footer1, d.on_off_flag3, d.footer2, d.on_off_flag4"
+    table_name = "td_item_sale a, td_receipt b, md_items c, md_header_footer d"
+    where = f"a.receipt_no=b.receipt_no and b.comp_id=d.comp_id and a.trn_date=b.trn_date and a.item_id=c.id and a.receipt_no={data.recp_no}"
     order = ""
     flag = 1
     res_dt = await db_select(select,table_name,where,order,flag)
