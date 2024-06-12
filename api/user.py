@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from config.database import connect
 from models.master_model import createResponse
-from models.form_model import LoginFlag, UserLogin,CreatePIN
+from models.form_model import LoginFlag, UserLogin,LoginStatus,CreatePIN
 # from models.otp_model import generateOTP
 from utils import get_hashed_password
 
@@ -83,6 +83,23 @@ async def OTP(phone_no:int):
     return {"status":1, "data":"1234"}
 
 # USER LOGIN
+
+@userRouter.post('/update_login_status')
+async def update_login_status(data:LoginStatus):
+    conn = connect()
+    cursor = conn.cursor()
+    query = f"update md_user set login_flag = 'Y' where user_id = '{data.user_id}'"
+    cursor.execute(query)
+    conn.commit()
+    conn.close()
+    cursor.close()
+    if cursor.rowcount>0:
+        resData={"suc":1, "msg":"User login flag updated"}
+    else:
+        resData={"suc":0, "msg":"failed to update login_flag"}
+
+    return resData
+
 #-----------------------------------------------------------------------------------------------------------  
 @userRouter.post('/login')
 async def login(data_login:UserLogin):
@@ -111,18 +128,8 @@ async def login(data_login:UserLogin):
        
         if cursor.rowcount>0:
             if result1['no_of_user'] < result['max_user']:
-                conn = connect()
-                cursor = conn.cursor()
-                query = f"update md_user set login_flag = 'Y' where comp_id = {result['comp_id']} and user_id = '{data_login.user_id}'"
-                cursor.execute(query)
-                conn.commit()
-                conn.close()
-                cursor.close()
-
-                if cursor.rowcount>0:
-                    res_dt = {"suc": 1, "msg": result, "user": result1['no_of_user']+1}
-                else:
-                    res_dt = {"suc": 0, "msg": "Already logged in"}
+                res_dt = {"suc": 1, "msg": result, "user": result1['no_of_user']+1}
+               
             else:
                  res_dt = {"suc": 0, "msg": "Max user limit reached"}
         

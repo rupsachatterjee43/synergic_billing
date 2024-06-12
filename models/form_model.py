@@ -10,6 +10,9 @@ class UserLogin(BaseModel):
     user_id:str
     # PIN:str
 
+class LoginStatus(BaseModel):
+    user_id:str
+
 class Receipt(BaseModel):
     comp_id:int
     br_id:int
