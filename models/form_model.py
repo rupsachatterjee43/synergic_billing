@@ -300,8 +300,14 @@ class RecoverBill(BaseModel):
     br_id:int
     phone_no:str
 
+# class RecoveryUpdate(BaseModel):
+#     receipt_no:int
+#     received_amt:int
+#     pay_mode:str
+#     user_id:str
+
 class RecoveryUpdate(BaseModel):
-    receipt_no:int
+    phone_no:str
     received_amt:int
     pay_mode:str
     user_id:str

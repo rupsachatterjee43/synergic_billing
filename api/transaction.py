@@ -63,6 +63,7 @@ async def register(rcpt:list[Receipt]):
     conn.commit()
     conn.close()
     cursor.close()
+    # print(rcpt[0].pay_mode,"tttttttttt")
     if cursor.rowcount==1:
         try:
             if rcpt[0].kot_flag == 'Y':
@@ -93,7 +94,25 @@ async def register(rcpt:list[Receipt]):
             else:
                 ResData = {"status":1, "data":resData}
         except:
-            print("----------Error in kot---------")
+            print("!!!!!!!!!!Error in kot!!!!!!!!!!!!!")
+
+# Inserting Data in td_recovery #
+        try:
+            if rcpt[0].pay_mode == 'R':
+                conn = connect()
+                cursor = conn.cursor()
+                query = f"INSERT INTO td_recovery (recover_dt,phone_no,paid_amt,due_amt,pay_mode,created_by,created_dt) VALUES ('{formatted_datetime}','{rcpt[0].phone_no}','{rcpt[0].received_amt}',{rcpt[0].net_amt-int(rcpt[0].received_amt)},'{rcpt[0].pay_mode}','{rcpt[0].created_by}','{formatted_datetime}')"
+                cursor.execute(query)
+                conn.commit()
+                conn.close()
+                cursor.close()
+                if cursor.rowcount>0:
+                    ResData = {"status":1, "data":resData, "msg":"recovery data inserted successfully"}
+                else:
+                    ResData = {"status":1, "data":"Data not inserted in recovery table"}
+
+        except:
+            print("----------Error in recovery---------")
     else:
         ResData = {"status":0, "data":"Data not inserted"}
     
