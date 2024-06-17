@@ -296,8 +296,8 @@ class CreditReport(BaseModel):
     user_id:str
 
 class RecoverBill(BaseModel):
-    # comp_id:int
-    # br_id:int
+    comp_id:int
+    br_id:int
     phone_no:str
 
 # class RecoveryUpdate(BaseModel):
@@ -307,6 +307,8 @@ class RecoverBill(BaseModel):
 #     user_id:str
 
 class RecoveryUpdate(BaseModel):
+    comp_id:int
+    br_id:int
     phone_no:str
     received_amt:int
     pay_mode:str

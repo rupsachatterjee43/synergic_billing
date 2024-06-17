@@ -41,7 +41,7 @@ async def recovery_amount(bill:RecoverBill):
     conn = connect()
     cursor = conn.cursor()
 
-    query = f"SELECT SUM(due_amt) net_amt, SUM(paid_amt) paid_amt FROM td_recovery_new WHERE phone_no = '{bill.phone_no}'"
+    query = f"SELECT SUM(due_amt) net_amt, SUM(paid_amt) paid_amt FROM td_recovery_new WHERE {bill.comp_id} AND br_id = {bill.br_id} AND phone_no = '{bill.phone_no}'"
 
     cursor.execute(query)
     records = cursor.fetchall()
@@ -140,7 +140,7 @@ async def recovery_update(recover:RecoveryUpdate):
     
         # query = f"SELECT SUM(net_amt)-SUM(received_amt) due_amt from td_receipt WHERE phone_no = '{recover.phone_no}' AND pay_mode = 'R'"
 
-        query = f"SELECT curr_due_amt FROM td_recovery_new where phone_no = '{recover.phone_no}' ORDER BY recover_id DESC LIMIT 1"
+        query = f"SELECT curr_due_amt FROM td_recovery_new where comp_id = {recover.comp_id} AND br_id = {recover.br_id} AND phone_no = '{recover.phone_no}' ORDER BY recover_id DESC LIMIT 1"
 
         cursor.execute(query)
         records = cursor.fetchall()
@@ -184,7 +184,7 @@ async def recovery_update(recover:RecoveryUpdate):
                 conn = connect()
                 cursor = conn.cursor()
 
-                query = f"INSERT INTO td_recovery_new (recover_dt,phone_no,paid_amt,due_amt,curr_due_amt,pay_mode,created_by,created_dt) VALUES ('{formatted_dt}',{recover.phone_no},{recover.received_amt},'0', {curr_due_amt},'{recover.pay_mode}','{recover.user_id}','{formatted_dt}')"
+                query = f"INSERT INTO td_recovery_new (comp_id,br_id,recover_dt,phone_no,paid_amt,due_amt,curr_due_amt,pay_mode,created_by,created_dt) VALUES ({recover.comp_id},{recover.br_id},'{formatted_dt}',{recover.phone_no},{recover.received_amt},'0', {curr_due_amt},'{recover.pay_mode}','{recover.user_id}','{formatted_dt}')"
 
                 cursor.execute(query)
                 conn.commit()
