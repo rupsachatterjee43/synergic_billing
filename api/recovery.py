@@ -1,5 +1,6 @@
 from fastapi import APIRouter
 from config.database import connect
+import mysql.connector
 from models.master_model import createResponse
 from models.form_model import RecoverBill,RecoveryUpdate
 from datetime import datetime
@@ -40,7 +41,7 @@ async def recovery_amount(bill:RecoverBill):
     conn = connect()
     cursor = conn.cursor()
 
-    query = f"SELECT SUM(a.net_amt) net_amt, SUM(b.paid_amt) paid_amt FROM td_receipt a, td_recovery b WHERE a.pay_mode='R' AND a.comp_id = {bill.comp_id} AND a.br_id = {bill.br_id} AND a.phone_no = b.phone_no AND a.phone_no = '{bill.phone_no}'"
+    query = f"SELECT SUM(due_amt) net_amt, SUM(paid_amt) paid_amt FROM td_recovery_new WHERE phone_no = '{bill.phone_no}'"
 
     cursor.execute(query)
     records = cursor.fetchall()
@@ -137,7 +138,9 @@ async def recovery_update(recover:RecoveryUpdate):
         conn = connect()
         cursor = conn.cursor()
     
-        query = f"SELECT SUM(net_amt)-SUM(received_amt) due_amt from td_receipt WHERE phone_no = '{recover.phone_no}' AND pay_mode = 'R'"
+        # query = f"SELECT SUM(net_amt)-SUM(received_amt) due_amt from td_receipt WHERE phone_no = '{recover.phone_no}' AND pay_mode = 'R'"
+
+        query = f"SELECT curr_due_amt FROM td_recovery_new where phone_no = '{recover.phone_no}' ORDER BY recover_id DESC LIMIT 1"
 
         cursor.execute(query)
         records = cursor.fetchall()
@@ -146,43 +149,58 @@ async def recovery_update(recover:RecoveryUpdate):
         cursor.close()
         # print(res[0]['net_amt'])
         if cursor.rowcount>0:
-        
+            curr_due_amt = result[0]['curr_due_amt']
+            curr_due_amt -= recover.received_amt
+            # try:
+            #     conn = connect()
+            #     cursor = conn.cursor()
+            #     query = f"SELECT ifnull(SUM(paid_amt),0) tot_paid_amt from td_recovery WHERE phone_no = '{recover.phone_no}' AND pay_mode != 'R'"
+            #     cursor.execute(query)
+            #     records = cursor.fetchall()
+            #     result1 = createResponse(records, cursor.column_names, 1)
+            #     conn.close()
+            #     cursor.close()
+
+            #     if cursor.rowcount>0:
+
+            #         conn = connect()
+            #         cursor = conn.cursor()
+
+            #         query = f"INSERT INTO td_recovery (recover_dt,phone_no,paid_amt,due_amt,pay_mode,created_by,created_dt) VALUES ('{formatted_dt}',{recover.phone_no},{recover.received_amt},'{result[0]['due_amt']-(result1[0]['tot_paid_amt']+recover.received_amt)}','{recover.pay_mode}','{recover.user_id}','{formatted_dt}')"
+
+            #         cursor.execute(query)
+            #         conn.commit()
+            #         conn.close()
+            #         cursor.close()
+            #         if cursor.rowcount>0:
+            #             resData = {"status":1, "msg":"data inserted successfully"}
+
+            #         else:
+            #             resData = {"status":0, "data":"Data not inserted in td_recovery"}
+            #     else:
+            #         resData = {"status":-2, "data":"Data not selected from td_recovery"}
+
             try:
                 conn = connect()
                 cursor = conn.cursor()
-                query = f"SELECT ifnull(SUM(paid_amt),0) tot_paid_amt from td_recovery WHERE phone_no = '{recover.phone_no}' AND pay_mode != 'R'"
+
+                query = f"INSERT INTO td_recovery_new (recover_dt,phone_no,paid_amt,due_amt,curr_due_amt,pay_mode,created_by,created_dt) VALUES ('{formatted_dt}',{recover.phone_no},{recover.received_amt},'0', {curr_due_amt},'{recover.pay_mode}','{recover.user_id}','{formatted_dt}')"
+
                 cursor.execute(query)
-                records = cursor.fetchall()
-                result1 = createResponse(records, cursor.column_names, 1)
+                conn.commit()
                 conn.close()
                 cursor.close()
-
                 if cursor.rowcount>0:
-
-                    conn = connect()
-                    cursor = conn.cursor()
-
-                    query = f"INSERT INTO td_recovery (recover_dt,phone_no,paid_amt,due_amt,pay_mode,created_by,created_dt) VALUES ('{formatted_dt}',{recover.phone_no},{recover.received_amt},'{result[0]['due_amt']-(result1[0]['tot_paid_amt']+recover.received_amt)}','{recover.pay_mode}','{recover.user_id}','{formatted_dt}')"
-
-                    cursor.execute(query)
-                    conn.commit()
-                    conn.close()
-                    cursor.close()
-                    if cursor.rowcount>0:
-                        resData = {"status":1, "msg":"data inserted successfully"}
-
-                    else:
-                        resData = {"status":0, "data":"Data not inserted in td_recovery"}
+                    resData = {"status":1, "msg":"data inserted successfully"}
                 else:
-                    resData = {"status":-2, "data":"Data not selected from td_recovery"}
-            except:
+                    resData = {"status":0, "data":"Data not inserted in td_recovery"}
+            except mysql.connector.Error as err:
                 print("<<<<<<<<<<<<< Error while inserting >>>>>>>>>>>>>>")
+                print(err)
         else:
             resData = {"status":-1, "data":"Data not selected"}
-
-    except:
+    except mysql.connector.Error as err:
         print("------------- Error while selecting ---------------")
-
-
+        print(err)
     
     return resData

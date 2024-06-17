@@ -1,5 +1,8 @@
 from fastapi import APIRouter
 from config.database import connect
+
+import mysql.connector
+
 from models.master_model import createResponse
 from models.form_model import Receipt,SearchBill
 from datetime import datetime
@@ -98,21 +101,65 @@ async def register(rcpt:list[Receipt]):
 
 # Inserting Data in td_recovery #
         try:
+            # if rcpt[0].pay_mode == 'R':
+            #     conn = connect()
+            #     cursor = conn.cursor()
+            #     query = f"INSERT INTO td_recovery (recover_dt,phone_no,paid_amt,due_amt,pay_mode,created_by,created_dt) VALUES ('{formatted_datetime}','{rcpt[0].phone_no}','{rcpt[0].received_amt}',{rcpt[0].net_amt-int(rcpt[0].received_amt)},'{rcpt[0].pay_mode}','{rcpt[0].created_by}','{formatted_datetime}')"
+            #     cursor.execute(query)
+            #     conn.commit()
+            #     conn.close()
+            #     cursor.close()
+            #     if cursor.rowcount>0:
+            #         ResData = {"status":1, "data":resData, "msg":"recovery data inserted successfully"}
+            #     else:
+            #         ResData = {"status":1, "data":"Data not inserted in recovery table"}
+
             if rcpt[0].pay_mode == 'R':
                 conn = connect()
                 cursor = conn.cursor()
-                query = f"INSERT INTO td_recovery (recover_dt,phone_no,paid_amt,due_amt,pay_mode,created_by,created_dt) VALUES ('{formatted_datetime}','{rcpt[0].phone_no}','{rcpt[0].received_amt}',{rcpt[0].net_amt-int(rcpt[0].received_amt)},'{rcpt[0].pay_mode}','{rcpt[0].created_by}','{formatted_datetime}')"
+                query = f"SELECT curr_due_amt FROM td_recovery_new where phone_no = '{rcpt[0].phone_no}' ORDER BY recover_id DESC LIMIT 1"
+                cursor.execute(query)
+                records = cursor.fetchall()
+                recov_dt = createResponse(records, cursor.column_names, 1)
+                conn.close()
+                cursor.close()
+
+                curr_due_amt = recov_dt[0]['curr_due_amt'] if(cursor.rowcount>0) else 0
+
+                curr_due_amt += rcpt[0].net_amt
+
+                conn = connect()
+                cursor = conn.cursor()
+                query = f"INSERT INTO td_recovery_new (recover_dt,receipt_no,phone_no,paid_amt,due_amt,curr_due_amt,pay_mode,created_by,created_dt) VALUES ('{formatted_datetime}', {receipt},'{rcpt[0].phone_no}',0,{rcpt[0].net_amt}, {curr_due_amt},'{rcpt[0].pay_mode}','{rcpt[0].created_by}','{formatted_datetime}')"
                 cursor.execute(query)
                 conn.commit()
                 conn.close()
                 cursor.close()
                 if cursor.rowcount>0:
-                    ResData = {"status":1, "data":resData, "msg":"recovery data inserted successfully"}
+                    if int(rcpt[0].received_amt) > 0:
+                        curr_due_amt -= int(rcpt[0].received_amt)
+
+                        conn = connect()
+                        cursor = conn.cursor()
+                        query = f"INSERT INTO td_recovery_new (recover_dt,receipt_no,phone_no,paid_amt,due_amt,curr_due_amt,pay_mode,created_by,created_dt) VALUES ('{formatted_datetime}', {receipt},'{rcpt[0].phone_no}',{rcpt[0].received_amt},0,{curr_due_amt},'{rcpt[0].pay_mode}','{rcpt[0].created_by}','{formatted_datetime}')"
+                        cursor.execute(query)
+                        conn.commit()
+                        conn.close()
+                        cursor.close()
+
+                        if cursor.rowcount>0:
+                            ResData = {"status":1, "data":resData, "msg":"recovery data inserted successfully"}
+                        else:
+                            ResData = {"status":1, "data":"Data not inserted in recovery table"}
+                    else:
+                        ResData = {"status":1, "data":resData, "msg":"recovery data inserted successfully"}
                 else:
                     ResData = {"status":1, "data":"Data not inserted in recovery table"}
 
-        except:
+        except mysql.connector.Error as err:
             print("----------Error in recovery---------")
+            print(err)
+
     else:
         ResData = {"status":0, "data":"Data not inserted"}
     
