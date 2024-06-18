@@ -318,5 +318,18 @@ class AddEditCompany(BaseModel):
     user_id:str
 
 # ---------------Manage User--------------------
-# class AddEditUser(BaseModel):
+class AddEditUser(BaseModel):
+    id:int
+    comp_id:int
+    br_id:int
+    user_name:str
+    user_type:str
+    user_id:str
+    phone_no:int
+    email_id:str
+    device_id:str | None
+    password:str
+    active_flag:str
+    login_flag:str
+    created_by:str
 

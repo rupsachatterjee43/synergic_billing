@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from models.master_model import createResponse
 from models.masterApiModel import db_select, db_Insert
-from models.admin_form_model import AddEditLocation, AddEditCompany
+from models.admin_form_model import AddEditLocation, AddEditCompany, AddEditUser
 from datetime import datetime
 
 superadminRouter = APIRouter()
@@ -41,10 +41,10 @@ async def add_edit_location(data:AddEditLocation):
 
 # -------------------Select Company-----------------
 @superadminRouter.get('/S_Admin/select_shop')
-async def select_shop():
+async def select_shop(id:int):
     select = "id,company_name,address,phone_no,email_id,active_flag,max_user"
     table_name = "md_company"
-    where = f""
+    where = f"id={id}" if id>0 else f""
     order = f""
     flag = 1
     res_dt = await db_select(select,table_name,where,order,flag)
@@ -70,13 +70,28 @@ async def add_edit_shop(data:AddEditCompany):
 
 # --------------Select All Users-------------
 @superadminRouter.get('/S_Admin/select_user')
-async def select_user():
+async def select_user(id:int):
     select = "id,comp_id,br_id,user_name,user_type,user_id,phone_no,email_id,active_flag,login_flag"
     table_name = "md_user"
-    where = f""
+    where = f"id={id}" if id>0 else f""
     order = f"ORDER BY comp_id,br_id,user_type"
     flag = 1
     res_dt = await db_select(select,table_name,where,order,flag)
     return res_dt
 
 # ---------------Add And Edit User---------------
+@superadminRouter.post('/S_Admin/add_edit_user')
+async def add_edit_user(data:AddEditUser):
+    current_datetime = datetime.now()
+    formatted_dt = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
+    table_name = f"md_user"
+    fields = f"comp_id={data.comp_id}, br_id={data.br_id}, user_name='{data.user_name}', user_type='{data.user_type}', user_id='{data.user_id}', phone_no={data.phone_no}, email_id='{data.email_id}', device_id='{data.device_id}',password='{data.password}',active_flag='{data.active_flag}',login_flag='{data.login_flag}',modified_by='{data.created_by}', modified_dt='{formatted_dt}'" if data.id>0 else f"comp_id,br_id,user_name,user_type,user_id,phone_no,email_id,device_id,password,active_flag,login_flag,created_by, created_dt"
+    values = None if data.id>0 else f"{data.comp_id},{data.br_id},'{data.user_name}','{data.user_type}','{data.user_id}',{data.phone_no},'{data.email_id}','{data.device_id}','{data.password}','{data.active_flag}','{data.login_flag}','{data.created_by}', '{formatted_dt}'"
+    where = f"id = {data.id}" if data.id>0 else None
+    order = ""
+    flag = 1 if data.id>0 else 0
+    res_dt = await db_Insert(table_name,fields,values,where,flag)
+    
+    return res_dt
+
+# =========================================================================================================
