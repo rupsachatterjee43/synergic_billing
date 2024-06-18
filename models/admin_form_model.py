@@ -295,24 +295,28 @@ class UpdatePurchase(BaseModel):
 
 # ====================================================================================================
 # Manage Super Admin
-# -------------------Manage Location---------------
 
+# -------------------Manage Location---------------
 class AddEditLocation(BaseModel):
     sl_no:int
     location_name:str
     user_id:str
 
+# --------------------Manage Shop(Company)----------------
 class AddEditCompany(BaseModel):
     id:int
     company_name:str
     address:str
-    location:int 
+    location:int | None
     contact_person:str | None
-    phone_no:int | None
-    email_id:str | None
+    phone_no:int 
+    email_id:str 
     logo:str | None
-    web_portal:str
+    web_portal:str | None
     active_flag:str
     max_user:int
     user_id:str
+
+# ---------------Manage User--------------------
+# class AddEditUser(BaseModel):
 

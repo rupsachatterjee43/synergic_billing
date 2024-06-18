@@ -66,3 +66,17 @@ async def add_edit_shop(data:AddEditCompany):
     return res_dt
 
 # =======================================================================================================
+# Manage User
+
+# --------------Select All Users-------------
+@superadminRouter.get('/S_Admin/select_user')
+async def select_user():
+    select = "id,comp_id,br_id,user_name,user_type,user_id,phone_no,email_id,active_flag,login_flag"
+    table_name = "md_user"
+    where = f""
+    order = f"ORDER BY comp_id,br_id,user_type"
+    flag = 1
+    res_dt = await db_select(select,table_name,where,order,flag)
+    return res_dt
+
+# ---------------Add And Edit User---------------
