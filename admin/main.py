@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from . import user,report,searchbill,settings,items,unit,headerfooter,customer,stock,purchase
+from . import user,report,searchbill,settings,items,unit,headerfooter,customer,stock,purchase,superadmin
 
 router = APIRouter(prefix="/admin", tags=["Admin API"])
 
@@ -15,6 +15,8 @@ router.include_router(headerfooter.headerfooterRouter)
 router.include_router(customer.customerRouter)
 router.include_router(stock.stockRouter)
 router.include_router(purchase.purchaseRouter)
+router.include_router(superadmin.superadminRouter)
+
 
 
 

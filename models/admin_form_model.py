@@ -293,3 +293,12 @@ class UpdatePurchase(BaseModel):
     unit_name:str
     item_id:int
 
+# ====================================================================================================
+# Manage Super Admin
+# -------------------Manage Location---------------
+
+class AddEditLocation(BaseModel):
+    sl_no:int
+    location_name:str
+    user_id:str
+
