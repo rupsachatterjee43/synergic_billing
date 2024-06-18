@@ -302,3 +302,17 @@ class AddEditLocation(BaseModel):
     location_name:str
     user_id:str
 
+class AddEditCompany(BaseModel):
+    id:int
+    company_name:str
+    address:str
+    location:int 
+    contact_person:str | None
+    phone_no:int | None
+    email_id:str | None
+    logo:str | None
+    web_portal:str
+    active_flag:str
+    max_user:int
+    user_id:str
+
