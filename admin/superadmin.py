@@ -95,3 +95,14 @@ async def add_edit_user(data:AddEditUser):
     return res_dt
 
 # =========================================================================================================
+# Manage Outlet
+# ----------------company wise branch select-----------------
+@superadminRouter.get('/S_Admin/select_outlet')
+async def select_outlet(comp_id:int):
+    select = "id,comp_id,branch_name,branch_address,location,contact_person,phone_no,email_id"
+    table_name = "md_branch"
+    where = f"comp_id={comp_id}"
+    order = f""
+    flag = 1
+    res_dt = await db_select(select,table_name,where,order,flag)
+    return res_dt
