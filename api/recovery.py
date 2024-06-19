@@ -48,18 +48,19 @@ async def recovery_amount(bill:RecoverBill):
     result = createResponse(records, cursor.column_names, 1)
     conn.close()
     cursor.close()
-    if cursor.rowcount>0:
+    # print(records,"77777",result,"999999999")
+    if records==[(None, None)]:
 
-        resData = {
-            "status":1,
-            "data":result
-        }
-    else:
         resData = {
             "status":0,
             "data":[]
         }
-
+    else:
+        resData = {
+            "status":1,
+            "data":result
+        }
+        
     return resData
 
 # Update td_receipt and Insert recovery_bill
