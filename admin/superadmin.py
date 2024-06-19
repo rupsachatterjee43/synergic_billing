@@ -42,7 +42,7 @@ async def add_edit_location(data:AddEditLocation):
 # -------------------Select Company-----------------
 @superadminRouter.get('/S_Admin/select_shop')
 async def select_shop(id:int):
-    select = "id,company_name,address,phone_no,email_id,active_flag,max_user"
+    select = "id,company_name,address,location,phone_no,email_id,active_flag,max_user"
     table_name = "md_company"
     where = f"id={id}" if id>0 else f""
     order = f""
