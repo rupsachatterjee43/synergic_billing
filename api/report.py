@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from config.database import connect
 from models.master_model import createResponse
-from models.form_model import DashBoard,SaleReport,GSTStatement,GSTSummary,ItemReport,RefundBillReport,BillList,SearchByItem,CreditReport,CancelReport,DaybookReport,SearchByRcpt,SearchByName,UserwiseReport
+from models.form_model import DashBoard,SaleReport,GSTStatement,GSTSummary,ItemReport,RefundBillReport,BillList,SearchByItem,CreditReport,CancelReport,DaybookReport,SearchByRcpt,SearchByName,UserwiseReport,CustomerLedger
 
 # testing git
 repoRouter = APIRouter()
@@ -373,6 +373,28 @@ async def userwise_report(data:UserwiseReport):
     conn = connect()
     cursor = conn.cursor()
     query = f"select created_by, sum(net_amt)net_amt, sum(cancelled_amt)cancelled_amt, COUNT(receipt_no)no_of_receipts, user_name from( Select a.created_by created_by, a.net_amt net_amt, 0 cancelled_amt, c.user_name user_name, a.receipt_no receipt_no from td_receipt a, md_user c where a.created_by=c.user_id and a.trn_date BETWEEN '{data.from_date}' AND '{data.to_date}' and a.created_by='{data.user_id}' and a.comp_id = {data.comp_id} AND a.br_id = {data.br_id} UNION Select a.created_by created_by, 0 net_amt, a.net_amt cancelled_amt, c.user_name user_name, b.receipt_no receipt_no from td_receipt a, md_user c,td_receipt_cancel_new b where a.receipt_no = b.receipt_no and a.created_by=c.user_id and date(b.cancelled_dt) BETWEEN '{data.from_date}' AND '{data.to_date}' and b.cancelled_by = '{data.user_id}' and a.comp_id = {data.comp_id} AND a.br_id = {data.br_id})a group by created_by,user_name"
+    cursor.execute(query)
+    records = cursor.fetchall()
+    result = createResponse(records, cursor.column_names, 1)
+    conn.close()
+    cursor.close()
+    if records==[]:
+        resData= {"status":0, "data":[]}
+    else:
+        resData= {
+        "status":1,
+        "data":result
+        }
+    return resData
+
+# ===================================================================================================
+# Customer Ledger
+
+@repoRouter.post('/customer_ledger')
+async def customer_ledger(data:CustomerLedger):
+    conn = connect()
+    cursor = conn.cursor()
+    query = f"select ifnull(b.cust_name,'NA')cust_name, a.phone_no, a.recover_dt, a.paid_amt, a.due_amt, a.curr_due_amt balance from td_recovery_new a,md_customer b where a.comp_id = b.comp_id and a.phone_no = b.phone_no and a.comp_id = {data.comp_id} and a.br_id = {data.br_id} and a.phone_no = {data.phone_no} order by a.recover_dt,a.recover_id"
     cursor.execute(query)
     records = cursor.fetchall()
     result = createResponse(records, cursor.column_names, 1)

@@ -338,3 +338,8 @@ class AddCategory(BaseModel):
     comp_id:int
     category_name:str
     created_by:str
+
+class CustomerLedger(BaseModel):
+    comp_id:int
+    br_id:int
+    phone_no:str
