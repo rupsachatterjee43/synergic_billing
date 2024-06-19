@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from models.master_model import createResponse
 from models.masterApiModel import db_select, db_Insert
-from models.admin_form_model import SaleReport,CollectionReport,PayModeReport,UserWiseReport,GSTstatement,RefundReport,CreditReport,ItemReport,CancelReport,DaybookReport
+from models.admin_form_model import SaleReport,CollectionReport,PayModeReport,UserWiseReport,GSTstatement,RefundReport,CreditReport,ItemReport,CancelReport,DaybookReport,CustomerLedger
 
 reportRouter = APIRouter()
 
@@ -212,3 +212,19 @@ async def daybook_report(data:DaybookReport):
     res_dt = await db_select(select,table_name,where,order,flag)
     
     return res_dt
+
+# ======================================================================================================
+# Customer Ledger
+
+@reportRouter.post('/customer_ledger')
+async def customer_ledger(data:CustomerLedger):
+    select = f"ifnull(b.cust_name,'NA')cust_name, a.phone_no, a.recover_dt, a.paid_amt, a.due_amt, a.curr_due_amt balance"
+    table_name = "td_recovery_new a,md_customer b"
+    where = f"a.comp_id = b.comp_id and a.phone_no = b.phone_no and a.comp_id = {data.comp_id} and a.br_id = {data.br_id} and a.phone_no = {data.phone_no} order by a.recover_dt,a.recover_id" if data.br_id>0 else f"a.comp_id = b.comp_id and a.phone_no = b.phone_no and a.comp_id = {data.comp_id} and a.phone_no = {data.phone_no} order by a.recover_dt,a.recover_id"
+    order = ""
+    flag = 1
+    res_dt = await db_select(select,table_name,where,order,flag)
+    
+    return res_dt
+
+    

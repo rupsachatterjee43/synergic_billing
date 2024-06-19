@@ -343,3 +343,14 @@ class CustomerLedger(BaseModel):
     comp_id:int
     br_id:int
     phone_no:str
+
+class RecveryReport(BaseModel):
+    comp_id:int
+    br_id:int
+    from_date:date
+    to_date:date
+
+class DueReport(BaseModel):
+    comp_id:int
+    br_id:int
+    date:date

@@ -129,6 +129,11 @@ class DaybookReport(BaseModel):
     comp_id:int
     br_id:int
 
+class CustomerLedger(BaseModel):
+    comp_id:int
+    br_id:int
+    phone_no:str
+
 # ======================================================================================================
 # Search By Date, Phone and Item
 
