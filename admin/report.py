@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from models.master_model import createResponse
 from models.masterApiModel import db_select, db_Insert
-from models.admin_form_model import SaleReport,CollectionReport,PayModeReport,UserWiseReport,GSTstatement,RefundReport,CreditReport,ItemReport,CancelReport,DaybookReport,CustomerLedger
+from models.admin_form_model import SaleReport,CollectionReport,PayModeReport,UserWiseReport,GSTstatement,RefundReport,CreditReport,ItemReport,CancelReport,DaybookReport,CustomerLedger,RecveryReport,DueReport
 
 reportRouter = APIRouter()
 
@@ -227,4 +227,31 @@ async def customer_ledger(data:CustomerLedger):
     
     return res_dt
 
+# =============================================================================================================
+# Recovery Report
+
+@reportRouter.post('/recovery_report')
+async def recovery_report(data:RecveryReport):
+    select = f"ifnull(b.cust_name,'NA')cust_name, a.phone_no, a.recover_dt, Sum(a.paid_amt)recovery_amt"
+    table_name = "td_recovery_new a,md_customer b"
+    where = f"a.comp_id = b.comp_id and a.phone_no = b.phone_no and a.comp_id = {data.comp_id} and a.br_id = {data.br_id} and a.recover_dt between '{data.from_date}' and '{data.to_date}' GROUP BY b.cust_name,a.phone_no,a.recover_dt order by a.recover_dt" if data.br_id>0 else f"a.comp_id = b.comp_id and a.phone_no = b.phone_no and a.comp_id = {data.comp_id} and a.recover_dt between '{data.from_date}' and '{data.to_date}' GROUP BY b.cust_name,a.phone_no,a.recover_dt order by a.recover_dt"
+    order = ""
+    flag = 1
+    res_dt = await db_select(select,table_name,where,order,flag)
+    
+    return res_dt
+
+# =============================================================================================================
+# Due Report
+
+@reportRouter.post('/due_report')
+async def due_report(data:DueReport):
+    select = f"ifnull(b.cust_name,'NA')cust_name, a.phone_no, Sum(due_amt) - Sum(paid_amt)due_amt"
+    table_name = "td_recovery_new a,md_customer b"
+    where = f"a.comp_id = b.comp_id and a.phone_no = b.phone_no and a.comp_id = {data.comp_id} and a.br_id = {data.br_id} and a.recover_dt <= '{data.date}' GROUP BY b.cust_name,a.phone_no" if data.br_id>0 else f"a.comp_id = b.comp_id and a.phone_no = b.phone_no and a.comp_id = {data.comp_id} and a.recover_dt <= '{data.date}' GROUP BY b.cust_name,a.phone_no"
+    order = ""
+    flag = 1
+    res_dt = await db_select(select,table_name,where,order,flag)
+    
+    return res_dt
     
