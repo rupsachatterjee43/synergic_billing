@@ -30,9 +30,11 @@ class AddUser(BaseModel):
     user_name:str
     user_type:str
     phone_no:str
-    email_id:str
-    active_flag:str
-    login_flag:str
+    email_id:str | None
+    device_id:str | None
+    # active_flag:str
+    # login_flag:str
+    created_by:str
 
 class EditUser(BaseModel):
     comp_id:int

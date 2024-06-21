@@ -73,13 +73,26 @@ async def outlet_list(data:UserList):
 # ==================================================================================================
 # User Management
 
+# @userRouter.post('/add_user')
+# async def add_user(data:AddUser):
+#     current_datetime = datetime.now()
+#     formatted_dt = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
+#     table_name = "md_user"
+#     fields = "comp_id, br_id, user_name, user_type, user_id, phone_no, email_id, active_flag, login_flag, created_by, created_dt"
+#     values =f"{data.comp_id}, '{data.br_id}', '{data.user_name}', '{data.user_type}', '{data.phone_no}', '{data.phone_no}', '{data.email_id}', '{data.active_flag}', '{data.login_flag}', 'Admin', '{formatted_dt}'"
+#     where = None
+#     flag = 0
+#     res_dt = await db_Insert(table_name,fields,values,where,flag)
+
+#     return res_dt
+
 @userRouter.post('/add_user')
 async def add_user(data:AddUser):
     current_datetime = datetime.now()
     formatted_dt = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
     table_name = "md_user"
-    fields = "comp_id, br_id, user_name, user_type, user_id, phone_no, email_id, active_flag, login_flag, created_by, created_dt"
-    values =f"{data.comp_id}, '{data.br_id}', '{data.user_name}', '{data.user_type}', '{data.phone_no}', '{data.phone_no}', '{data.email_id}', '{data.active_flag}', '{data.login_flag}', 'Admin', '{formatted_dt}'"
+    fields = "comp_id, br_id, user_name, user_type, user_id, phone_no, email_id, device_id, active_flag, login_flag, created_by, created_dt"
+    values =f"{data.comp_id}, '{data.br_id}', '{data.user_name}', '{data.user_type}', '{data.phone_no}', '{data.phone_no}', '{data.email_id}', '{data.device_id}', 'Y', 'N', '{data.created_by}', '{formatted_dt}'"
     where = None
     flag = 0
     res_dt = await db_Insert(table_name,fields,values,where,flag)
