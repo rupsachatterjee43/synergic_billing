@@ -254,4 +254,4 @@ async def due_report(data:DueReport):
     res_dt = await db_select(select,table_name,where,order,flag)
     
     return res_dt
-    
+

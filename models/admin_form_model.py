@@ -345,9 +345,25 @@ class AddEditUser(BaseModel):
     user_id:str
     phone_no:int
     email_id:str
-    device_id:str | None
+    # device_id:str | None
     password:str
     active_flag:str
     login_flag:str
     created_by:str
 
+# ---------------Manage Outlets---------------
+
+class OneOutlet(BaseModel):
+    comp_id:int
+    br_id:int
+
+class AddEditOutletS(BaseModel):
+    br_id:int
+    comp_id:int
+    branch_name:str
+    branch_address:str
+    location:int
+    contact_person:str
+    phone_no:int
+    email_id:str
+    created_by:str
