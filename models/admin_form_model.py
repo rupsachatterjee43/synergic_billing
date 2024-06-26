@@ -367,3 +367,43 @@ class AddEditOutletS(BaseModel):
     phone_no:int
     email_id:str
     created_by:str
+
+# -------------------Manage Header Footer-------------------
+
+class AddHeaderFooter(BaseModel):
+    comp_id:int
+    header1:str | None
+    on_off_flag1:str
+    header2:str | None
+    on_off_flag2:str
+    footer1:str | None
+    on_off_flag3:str
+    footer2:str | None
+    on_off_flag4:str
+    created_by:str
+
+# -------------------Manage Setting Details-------------------
+
+class AddEditSettings(BaseModel):
+    comp_id:int
+    rcv_cash_flag:str
+    rcpt_type:str
+    gst_flag:str
+    gst_type:str
+    unit_flag:str
+    cust_inf:str
+    pay_mode:str
+    discount_flag:str
+    stock_flag:str
+    discount_type:str
+    discount_position:str
+    price_type:str
+    refund_days:int|None
+    kot_flag:str
+    created_by:str
+
+class AddEditUnit(BaseModel):
+    sl_no:int
+    comp_id:int
+    unit_name:str
+    created_by:str
