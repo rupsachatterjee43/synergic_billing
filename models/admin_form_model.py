@@ -211,6 +211,7 @@ class ItemId(BaseModel):
 
 class AddEditItem(BaseModel):
     comp_id:int
+    # br_id:int
     item_id:int
     item_name:str
     unit_id:int 
@@ -219,7 +220,8 @@ class AddEditItem(BaseModel):
     cgst:float 
     sgst:float 
     hsn_code:int 
-    catg_id:int 
+    catg_id:int
+    created_by:str 
 
 class CatgId(BaseModel):
     comp_id:int

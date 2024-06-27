@@ -1,8 +1,9 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, File, UploadFile, Depends, Form
 from models.master_model import createResponse
 from models.masterApiModel import db_select, db_Insert
 from models.admin_form_model import AddEditLocation,AddEditCompany,AddEditUser,AddEditOutletS,OneOutlet,AddHeaderFooter,AddEditSettings,AddEditUnit
 from datetime import datetime
+from typing import Annotated, Union, Optional
 
 superadminRouter = APIRouter()
 
@@ -233,10 +234,10 @@ async def add_edit_settings(data:AddEditSettings):
 # Manage Unit
 
 @superadminRouter.get('/S_Admin/select_unit')
-async def select_unit(comp_id:int):
+async def select_unit(comp_id:int,unit_id:int):
     select = "sl_no,comp_id,unit_name"
     table_name = "md_unit"
-    where = f"comp_id={comp_id}" if comp_id>0 else f""
+    where = f"comp_id={comp_id} AND sl_no={unit_id}" if comp_id>0 and unit_id>0 else f"comp_id={comp_id}" if comp_id>0 else f""
     order = "order by comp_id"
     flag = 1
     res_dt = await db_select(select,table_name,where,order,flag)
@@ -255,3 +256,63 @@ async def add_edit_unit(data:AddEditUnit):
     res_dt = await db_Insert(table_name,fields,values,where,flag)
     
     return res_dt
+
+# ====================================================================================================
+# Manage Category
+
+@superadminRouter.get('/S_Admin/select_category')
+async def select_category(comp_id:int,catg_id:int):
+    select = "sl_no,comp_id,category_name,catg_picture"
+    table_name = "md_category"
+    where = f"comp_id={comp_id} AND sl_no={catg_id}" if comp_id>0 and catg_id>0 else f"comp_id={comp_id}" if comp_id>0 else f""
+    order = f""
+    flag = 1
+    res_dt = await db_select(select,table_name,where,order,flag)
+    return res_dt
+
+# Add or Edit Category
+
+@superadminRouter.post('/S_Admin/add_edit_category')
+async def add_edit_category(
+    comp_id: str = Form(...),
+    catg_id: str = Form(...),
+    category_name: str = Form(...),
+    created_by: str = Form(...),
+    file: Optional[UploadFile] = File(None)
+    ):
+    print(file)
+    fileName = None if not file else await uploadfile(file)
+    # return {"body":data,"file":file}
+    current_datetime = datetime.now()
+    formatted_dt = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
+    table_name = "md_category"
+    catg_pic = f", catg_picture = '/uploads/{fileName}'" if fileName != None else ''
+    catg_pic1 = f",'/uploads/{fileName}'" if fileName != None else ', ""'
+    fields = f"category_name ='{category_name}' {catg_pic}, modified_by = '{created_by}', modified_at = '{formatted_dt}'" if int(catg_id)>0 else "comp_id,category_name,catg_picture,created_by,created_at"
+    values = f"{comp_id},'{category_name}' {catg_pic1}, '{created_by}','{formatted_dt}'"
+    where = f"comp_id={comp_id} and sl_no={catg_id}" if int(catg_id) >0 else None
+    flag = 1 if int(catg_id)>0 else 0
+    res_dt = await db_Insert(table_name,fields,values,where,flag)
+    
+    return res_dt
+
+
+async def uploadfile(file):
+    current_datetime = datetime.now()
+    receipt = int(round(current_datetime.timestamp()))
+    modified_filename = f"{receipt}_{file.filename}"
+    res = ""
+    try:
+        file_location = os.path.join(UPLOAD_FOLDER, modified_filename)
+        print(file_location)
+        
+        with open(file_location, "wb") as f:
+            f.write(await file.read())
+        
+        res = modified_filename
+        print(res)
+    except Exception as e:
+        # res = e.args
+        res = ""
+    finally:
+        return res

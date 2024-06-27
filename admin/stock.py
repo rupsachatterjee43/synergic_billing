@@ -11,10 +11,11 @@ stockRouter = APIRouter()
 
 @stockRouter.post('/stock_list')
 async def stock_list(data:Stock):
-    select = "a.id, a.item_name, a.comp_id, IF(b.stock > 0, b.stock, 0) stock,b.br_id"
-    table_name = "md_items a LEFT JOIN td_stock b on a.id=b.item_id AND a.comp_id=b.comp_id"
-    where = f"a.comp_id = {data.comp_id} {f'AND a.id = {data.item_id}' if data.item_id > 0 else ''}"
-    order = 'GROUP BY a.id'
+    select = "a.id, a.item_name, a.comp_id, IF(b.stock > 0, b.stock, 0) stock,b.br_id,c.branch_name"
+    table_name = "md_items a LEFT JOIN td_stock b on a.id=b.item_id AND a.comp_id=b.comp_id LEFT JOIN md_branch c on b.br_id=c.id"
+    where = f"a.comp_id = {data.comp_id} {f'AND a.id = {data.item_id}' if data.item_id > 0 else f''}"
+    # order = 'GROUP BY a.id'
+    order = f""
     flag = 1
     res_dt = await db_select(select,table_name,where,order,flag)
     return res_dt

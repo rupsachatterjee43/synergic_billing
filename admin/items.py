@@ -51,40 +51,57 @@ async def add_edit_items(data:AddEditItem):
     if ({data.item_id}.pop())>0:
 
         table_name = "md_items"
-        fields = f"item_name ='{data.item_name}', catg_id = {data.catg_id}, unit_id = {data.unit_id}, modified_by = 'admin', modified_dt = '{formatted_dt}'"
+        fields = f"item_name ='{data.item_name}', catg_id = {data.catg_id}, unit_id = {data.unit_id}, modified_by = '{data.created_by}', modified_dt = '{formatted_dt}'"
         values = None
         where = f"id = {data.item_id} and comp_id = {data.comp_id}"
         flag = 1
         res_dt = await db_Insert(table_name,fields,values,where,flag)
         if res_dt["suc"] > 0:
-            table_name1 = "md_item_rate"
-            fields1 = f"price = {data.price},discount = {data.discount},cgst = {data.cgst},sgst = {data.sgst}, modified_by = 'admin', modified_dt = '{formatted_dt}'"
-            values1 = None
-            where1 = f"item_id = {data.item_id}"
-            flag1 = 1
-            res_dt1 = await db_Insert(table_name1,fields1,values1,where1,flag1)
+            table_name2 = "md_item_rate"
+            fields2 = f"price = {data.price},discount = {data.discount},cgst = {data.cgst},sgst = {data.sgst}, modified_by = '{data.created_by}', modified_dt = '{formatted_dt}'"
+            values2 = None
+            where2 = f"item_id = {data.item_id}"
+            flag2 = 1
+            res_dt2 = await db_Insert(table_name2,fields2,values2,where2,flag2)
 
     else:
 
         table_name = "md_items"
         fields = "comp_id,hsn_code,catg_id,item_name, unit_id,created_by,created_dt"
-        values =f"{data.comp_id},{data.hsn_code},{data.catg_id},'{data.item_name}', {data.unit_id},'admin','{formatted_dt}'"
+        values =f"{data.comp_id},{data.hsn_code},{data.catg_id},'{data.item_name}', {data.unit_id},'{data.created_by}','{formatted_dt}'"
         where = None
         print(data.unit_id)
         order = f""
         flag = 0
         res_dt = await db_Insert(table_name,fields,values,where,flag)
+        # print(res_dt['lastId'],"uuuuuuuuu")
         if res_dt["suc"] > 0:
             table_name1 = "md_item_rate"
             fields1 = "item_id,price,discount,cgst,sgst,created_by,created_dt"
-            values1 = f"{res_dt['lastId']},{data.price},{data.discount},{data.cgst},{data.sgst},'admin','{formatted_dt}'"
+            values1 = f"{res_dt['lastId']},{data.price},{data.discount},{data.cgst},{data.sgst},'{data.created_by}','{formatted_dt}'"
             where1 = None
             flag1 = 0
             res_dt1= await db_Insert(table_name1,fields1,values1,where1,flag1)
+            if res_dt1["suc"] > 0:
+                select = "id"
+                table_name = "md_branch"
+                where = f"comp_id = {data.comp_id}"
+                order = f''
+                flag = 1
+                res_dt3 = await db_select(select,table_name,where,order,flag)
+                if res_dt3["suc"]>0:
+                    for i in res_dt3["msg"]:
+                        
+                        table_name2 = "td_stock"
+                        fields2 = "comp_id, br_id, item_id, stock, created_by, created_dt"
+                        values2 = f"{data.comp_id},{i['id']},{res_dt['lastId']},'0','{data.created_by}','{formatted_dt}'"
+                        where2 = None
+                        flag2 = 0
+                        res_dt2= await db_Insert(table_name2,fields2,values2,where2,flag2)
     
-    return res_dt1
+    return res_dt2
 
-# ==================================================================================================
+# ===================================================================================================
 # All Category List
 
 @itemRouter.post('/category_list')
@@ -172,3 +189,19 @@ async def category_dtls(data:CatgId):
 #         return {"message": "No upload file sent"}
 #     else:
 #         return {"filename": file.filename}
+
+# @itemRouter.get('/test')
+# async def test(comp_id:int):
+#     select = "id"
+#     table_name = "md_branch"
+#     where = f"comp_id = {comp_id}"
+#     order = f""
+#     flag = 1
+#     res_dt = await db_select(select,table_name,where,order,flag)
+#     print(res_dt["msg"])
+#     for i in res_dt["msg"]:
+#         print(i["id"])
+        
+#     return res_dt
+    
+        
