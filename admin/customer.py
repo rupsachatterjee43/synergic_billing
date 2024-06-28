@@ -12,7 +12,7 @@ customerRouter = APIRouter()
 async def all_customer_list(data:CompId):
     select = "*"
     table_name = "md_customer"
-    where = f"comp_id = {data.comp_id}"
+    where = f"(cust_name != '' OR phone_no != '') AND comp_id = {data.comp_id}"
     order = f''
     flag = 1
     res_dt = await db_select(select,table_name,where,order,flag)
