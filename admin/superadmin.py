@@ -4,20 +4,30 @@ from models.masterApiModel import db_select, db_Insert
 from models.admin_form_model import AddEditLocation,AddEditCompany,AddEditUser,AddEditOutletS,OneOutlet,AddHeaderFooter,AddEditSettings,AddEditUnit
 from datetime import datetime
 from typing import Annotated, Union, Optional
+import os
+# import pandas as pd
+
+# df = pd.read_excel('/home/rupsa/Documents/Data.xlsx')
+# print(df)
+
+UPLOAD_FOLDER = "upload_file"
+
+# Ensure the upload folder exists
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 superadminRouter = APIRouter()
 
 # ======================================================================================================
 # Check Superadmin
-# @superadminRouter.get('/S_Admin/user_type')
-# async def select_location(user_id:str):
-#     select = "user_type"
-#     table_name = "md_user"
-#     where = f"user_id = '{user_id}'"
-#     order = f""
-#     flag = 1
-#     res_dt = await db_select(select,table_name,where,order,flag)
-#     return res_dt
+@superadminRouter.get('/S_Admin/user_type')
+async def select_location(user_id:str):
+    select = "user_type"
+    table_name = "md_user"
+    where = f"user_id = '{user_id}'"
+    order = f""
+    flag = 1
+    res_dt = await db_select(select,table_name,where,order,flag)
+    return res_dt
 
 # Manage Location
 # ========================================================================================================
@@ -282,6 +292,7 @@ async def add_edit_category(
     ):
     print(file)
     fileName = None if not file else await uploadfile(file)
+    print(fileName,"mmmmmmmmmm")
     # return {"body":data,"file":file}
     current_datetime = datetime.now()
     formatted_dt = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
@@ -316,3 +327,26 @@ async def uploadfile(file):
         res = ""
     finally:
         return res
+
+# Select Item Details by comp_id:
+# ===========================================================================================================
+
+@superadminRouter.get('/S_Admin/item_detail')
+async def item_detail(comp_id:int):
+    select = 'a.*, b.*'
+    table_name = "md_items a, md_item_rate b"
+    where = f"a.id=b.item_id AND a.comp_id = {comp_id}"
+    order = f""
+    flag = 1
+    res_dt = await db_select(select,table_name,where,order,flag)
+    return res_dt
+
+
+# @superadminRouter.get('/S_Admin/insert_excel')
+# async def insert_excel():
+#     current_datetime = datetime.now()
+#     formatted_dt = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
+
+#     for index, row in df.iterrows():
+#         print(row)
+#         return tuple(row)

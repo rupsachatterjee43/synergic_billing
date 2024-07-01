@@ -5,3 +5,5 @@ mysql-connector-python
 passlib[bcrypt]
 python-multipart
 requests
+pandas
+openpyxl

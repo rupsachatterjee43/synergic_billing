@@ -238,7 +238,8 @@ async def show_bill(recp_no:int):
 async def search_bills(search:SearchBill):
     conn = connect()
     cursor = conn.cursor()
-    query = f"SELECT a.* FROM td_receipt a, md_user b, md_branch c, md_company d WHERE a.created_by=b.user_id and b.br_id=c.id and b.comp_id=d.id and d.id={search.comp_id} and c.id={search.br_id} and a.created_by='{search.user_id}' and a.trn_date BETWEEN '{search.from_date}' AND '{search.to_date}'"
+    # query = f"SELECT a.* FROM td_receipt a, md_user b, md_branch c, md_company d WHERE a.created_by=b.user_id and b.br_id=c.id and b.comp_id=d.id and d.id={search.comp_id} and c.id={search.br_id} and a.created_by='{search.user_id}' and a.trn_date BETWEEN '{search.from_date}' AND '{search.to_date}'"
+    query = f"SELECT * FROM td_receipt WHERE comp_id={search.comp_id} and br_id={search.br_id} and created_by='{search.user_id}' and trn_date BETWEEN '{search.from_date}' AND '{search.to_date}'"
     cursor.execute(query)
     records = cursor.fetchall()
     result = createResponse(records, cursor.column_names, 1)
