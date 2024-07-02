@@ -409,3 +409,8 @@ class AddEditUnit(BaseModel):
     comp_id:int
     unit_name:str
     created_by:str
+
+class Excel(BaseModel):
+    comp_id:int
+    catg_id:int
+    created_by:str

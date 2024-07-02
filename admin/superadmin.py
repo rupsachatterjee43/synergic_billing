@@ -1,12 +1,21 @@
 from fastapi import APIRouter, File, UploadFile, Depends, Form
+import pathlib
+from pathlib import Path
 from models.master_model import createResponse
 from models.masterApiModel import db_select, db_Insert
-from models.admin_form_model import AddEditLocation,AddEditCompany,AddEditUser,AddEditOutletS,OneOutlet,AddHeaderFooter,AddEditSettings,AddEditUnit
+from models.admin_form_model import AddEditLocation,AddEditCompany,AddEditUser,AddEditOutletS,OneOutlet,AddHeaderFooter,AddEditSettings,AddEditUnit,Excel
 from datetime import datetime
 from typing import Annotated, Union, Optional
+from io import BytesIO
 import os
-# import pandas as pd
+from pandas import read_excel
+# import openpyxl
 
+
+
+# cwd = os.getcwd()  # Get the current working directory (cwd)
+# files = os.listdir(cwd)  # Get all the files in that directory
+# print("Files in %r: %s" % (cwd, files))
 # df = pd.read_excel('/home/rupsa/Documents/Data.xlsx')
 # print(df)
 
@@ -342,11 +351,107 @@ async def item_detail(comp_id:int):
     return res_dt
 
 
-# @superadminRouter.get('/S_Admin/insert_excel')
-# async def insert_excel():
+# @superadminRouter.post('/S_Admin/insert_excel')
+# async def insert_excel(data:Excel):
 #     current_datetime = datetime.now()
 #     formatted_dt = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
-
+#     df = pd.read_excel(file.filename)
+#     print(df)
 #     for index, row in df.iterrows():
-#         print(row)
-#         return tuple(row)
+#         table_name = "md_items"
+#         fields = "comp_id,catg_id,hsn_code,item_name,created_by,created_dt"
+#         values =f"{data.comp_id},{data.catg_id},{row['hsn_code']},'{row['item_name']}', '{data.created_by}','{formatted_dt}'"
+#         where = None
+#         # print(data.unit_id)
+#         order = f""
+#         flag = 0
+#         # print(row["item_name"])
+#         res_dt = await db_Insert(table_name,fields,values,where,flag)
+        
+#         if res_dt["suc"]>0:
+#             table_name = "md_item_rate"
+#             fields = "item_id,price,discount,cgst,sgst,created_by,created_dt"
+#             values =f"{res_dt['lastId']},{row['price']},{row['discount']},{row['cgst']},{row['sgst']},'{data.created_by}','{formatted_dt}'"
+#             where = None
+#             # print(data.unit_id)
+#             order = f""
+#             flag = 0
+#             # print(row["item_name"])
+#             res_dt2 = await db_Insert(table_name,fields,values,where,flag)
+        
+#     return res_dt2
+
+# async def uploadxl(file):
+#     current_datetime = datetime.now()
+#     receipt = int(round(current_datetime.timestamp()))
+#     modified_filename = f"{receipt}_{file.filename}"
+#     print(modified_filename)
+#     res = ""
+#     try:
+#         file_location = os.path.join(UPLOAD_FOLDER, modified_filename)
+#         print(file_location,"pppppppp")
+#     except:
+#         print("oooooo")
+        
+    #     with open(file_location, "wb") as f:
+    #         f.to_excel(file.read_excel(file.filename))
+        
+    #     res = modified_filename
+    #     print(res)
+    # except Exception as e:
+    #     # res = e.args
+    #     res = ""
+    # finally:
+    #     return res
+
+
+@superadminRouter.post('/S_Admin/insert_excel')
+async def insert_excel(
+    comp_id: int = Form(...),
+    catg_id: int = Form(...),
+    created_by: str = Form(...),
+    file: UploadFile = File
+):
+    
+    # fileName = file.filename
+    # excel = os.path.abspath(fileName)
+    # print(fileName,"============")
+    current_datetime = datetime.now()
+    formatted_dt = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
+    # receipt = int(round(current_datetime.timestamp()))
+    # modified_filename = f"{receipt}_{fileName}"
+    # try:
+    #     file_location = os.path.join(UPLOAD_FOLDER, modified_filename)
+    #     print(file_location,"pppppppp")
+    # except:
+    #     print("oooooo")
+    # df = pd.read_excel(fileName)
+    contents = await file.read()
+    df = read_excel(BytesIO(contents))
+    # print(df,"==============")
+    data = df.to_dict(orient="records")
+    # return data
+    # print(df)
+    for row in data:
+        table_name = "md_items"
+        fields = "comp_id,catg_id,hsn_code,item_name,created_by,created_dt"
+        values =f"{comp_id},{catg_id},{row['hsn_code']},'{row['item_name']}', '{created_by}','{formatted_dt}'"
+        where = None
+        # print(data.unit_id)
+        order = f""
+        flag = 0
+        # print(row["item_name"])
+        res_dt = await db_Insert(table_name,fields,values,where,flag)
+        
+        if res_dt["suc"]>0:
+            table_name = "md_item_rate"
+            fields = "item_id,price,discount,cgst,sgst,created_by,created_dt"
+            values =f"{res_dt['lastId']},{row['price']},{row['discount']},{row['cgst']},{row['sgst']},'{created_by}','{formatted_dt}'"
+            where = None
+            # print(data.unit_id)
+            order = f""
+            flag = 0
+            # print(row["item_name"])
+            res_dt2 = await db_Insert(table_name,fields,values,where,flag)
+        
+    return res_dt2
