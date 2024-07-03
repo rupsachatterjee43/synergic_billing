@@ -3,7 +3,7 @@ import pathlib
 from pathlib import Path
 from models.master_model import createResponse
 from models.masterApiModel import db_select, db_Insert
-from models.admin_form_model import AddEditLocation,AddEditCompany,AddEditUser,AddEditOutletS,OneOutlet,AddHeaderFooter,AddEditSettings,AddEditUnit,Excel
+from models.admin_form_model import AddEditLocation,AddEditCompany,AddEditUser,AddEditOutletS,OneOutlet,AddHeaderFooter,AddEditSettings,AddEditUnit,Excel,EditItemDtls
 from datetime import datetime
 from typing import Annotated, Union, Optional
 from io import BytesIO
@@ -350,6 +350,16 @@ async def item_detail(comp_id:int):
     res_dt = await db_select(select,table_name,where,order,flag)
     return res_dt
 
+@superadminRouter.get('/S_Admin/one_item_detail')
+async def item_detail(comp_id:int,item_id:int):
+    select = 'a.*, b.*'
+    table_name = "md_items a, md_item_rate b"
+    where = f"a.id=b.item_id AND a.id = {item_id} AND a.comp_id = {comp_id}"
+    order = f""
+    flag = 1
+    res_dt = await db_select(select,table_name,where,order,flag)
+    return res_dt
+
 
 # @superadminRouter.post('/S_Admin/insert_excel')
 # async def insert_excel(data:Excel):
@@ -381,29 +391,6 @@ async def item_detail(comp_id:int):
         
 #     return res_dt2
 
-# async def uploadxl(file):
-#     current_datetime = datetime.now()
-#     receipt = int(round(current_datetime.timestamp()))
-#     modified_filename = f"{receipt}_{file.filename}"
-#     print(modified_filename)
-#     res = ""
-#     try:
-#         file_location = os.path.join(UPLOAD_FOLDER, modified_filename)
-#         print(file_location,"pppppppp")
-#     except:
-#         print("oooooo")
-        
-    #     with open(file_location, "wb") as f:
-    #         f.to_excel(file.read_excel(file.filename))
-        
-    #     res = modified_filename
-    #     print(res)
-    # except Exception as e:
-    #     # res = e.args
-    #     res = ""
-    # finally:
-    #     return res
-
 
 @superadminRouter.post('/S_Admin/insert_excel')
 async def insert_excel(
@@ -413,19 +400,8 @@ async def insert_excel(
     file: UploadFile = File
 ):
     
-    # fileName = file.filename
-    # excel = os.path.abspath(fileName)
-    # print(fileName,"============")
     current_datetime = datetime.now()
     formatted_dt = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
-    # receipt = int(round(current_datetime.timestamp()))
-    # modified_filename = f"{receipt}_{fileName}"
-    # try:
-    #     file_location = os.path.join(UPLOAD_FOLDER, modified_filename)
-    #     print(file_location,"pppppppp")
-    # except:
-    #     print("oooooo")
-    # df = pd.read_excel(fileName)
     contents = await file.read()
     df = read_excel(BytesIO(contents))
     # print(df,"==============")
@@ -437,10 +413,8 @@ async def insert_excel(
         fields = "comp_id,catg_id,hsn_code,item_name,created_by,created_dt"
         values =f"{comp_id},{catg_id},{row['hsn_code']},'{row['item_name']}', '{created_by}','{formatted_dt}'"
         where = None
-        # print(data.unit_id)
         order = f""
         flag = 0
-        # print(row["item_name"])
         res_dt = await db_Insert(table_name,fields,values,where,flag)
         
         if res_dt["suc"]>0:
@@ -448,10 +422,45 @@ async def insert_excel(
             fields = "item_id,price,discount,cgst,sgst,created_by,created_dt"
             values =f"{res_dt['lastId']},{row['price']},{row['discount']},{row['cgst']},{row['sgst']},'{created_by}','{formatted_dt}'"
             where = None
-            # print(data.unit_id)
             order = f""
             flag = 0
-            # print(row["item_name"])
-            res_dt2 = await db_Insert(table_name,fields,values,where,flag)
+            res_dt1 = await db_Insert(table_name,fields,values,where,flag)
+            if res_dt1["suc"] > 0:
+                select = "id"
+                table_name = "md_branch"
+                where = f"comp_id = {comp_id}"
+                order = f''
+                flag = 1
+                res_dt2 = await db_select(select,table_name,where,order,flag)
+                if res_dt2["suc"]>0:
+                    for i in res_dt2["msg"]:
+                        
+                        table_name2 = "td_stock"
+                        fields2 = "comp_id, br_id, item_id, stock, created_by, created_dt"
+                        values2 = f"{comp_id},{i['id']},{res_dt['lastId']},'0','{created_by}','{formatted_dt}'"
+                        where2 = None
+                        flag2 = 0
+                        res_dt3= await db_Insert(table_name2,fields2,values2,where2,flag2)
         
+    return res_dt3
+
+@superadminRouter.post('/S_Admin/edit_item_dtls')
+async def edit_item_dtls(data:EditItemDtls):
+    current_datetime = datetime.now()
+    formatted_dt = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
+
+    table_name = "md_items"
+    fields = f"item_name ='{data.item_name}', hsn_code = '{data.hsn_code}', catg_id = {data.catg_id}, unit_id = {data.unit_id}, bar_code = '{data.bar_code}', modified_by = '{data.created_by}', modified_dt = '{formatted_dt}'"
+    values = None
+    where = f"id = {data.item_id} and comp_id = {data.comp_id}"
+    flag = 1
+    res_dt = await db_Insert(table_name,fields,values,where,flag)
+    if res_dt["suc"] > 0:
+        table_name2 = "md_item_rate"
+        fields2 = f"price = {data.price},discount = {data.discount},cgst = {data.cgst},sgst = {data.sgst}, modified_by = '{data.created_by}', modified_dt = '{formatted_dt}'"
+        values2 = None
+        where2 = f"item_id = {data.item_id}"
+        flag2 = 1
+        res_dt2 = await db_Insert(table_name2,fields2,values2,where2,flag2)
+
     return res_dt2

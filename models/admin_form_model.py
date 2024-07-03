@@ -414,3 +414,17 @@ class Excel(BaseModel):
     comp_id:int
     catg_id:int
     created_by:str
+
+class EditItemDtls(BaseModel):
+    comp_id:int
+    item_id:int
+    item_name:str
+    hsn_code:str
+    catg_id:int
+    unit_id:int
+    bar_code:str
+    price:float
+    discount:float
+    cgst:float
+    sgst:float
+    created_by:str
