@@ -354,3 +354,13 @@ class DueReport(BaseModel):
     comp_id:int
     br_id:int
     date:date
+
+class CalReceipt(BaseModel):
+    comp_id:int
+    br_id:int
+    price:float
+    qty:int
+    tprice:float
+    round_off:float
+    net_amt:int
+    created_by:str
