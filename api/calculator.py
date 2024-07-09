@@ -2,7 +2,7 @@ from fastapi import APIRouter
 from config.database import connect
 import mysql.connector
 from models.master_model import createResponse
-from models.form_model import CalReceipt
+from models.form_model import CalReceipt,SaleReport
 from datetime import datetime
 
 CalRouter = APIRouter()
@@ -82,5 +82,29 @@ async def show_bill(recp_no:int):
         resData= {
         "status":0,
         "data":[]
+        }
+    return resData
+
+# =========================================================================================================
+# Sale Report
+
+@CalRouter.post('/calculator/sale_report')
+async def sale_report(sl_rep:SaleReport):
+    conn = connect()
+    cursor = conn.cursor()
+
+    query=f"select a.receipt_no, a.trn_date,  count(b.receipt_no)no_of_items, a.price, a.round_off, a.net_amt, a.created_by from  td_receipt a,td_item_sale b where a.receipt_no = b.receipt_no  and   a.trn_date between '{sl_rep.from_date}' and '{sl_rep.to_date}' and   b.comp_id = {sl_rep.comp_id} AND   b.br_id = {sl_rep.br_id} group by a.receipt_no, a.trn_date, a.price, a.round_off, a.net_amt, a.created_by Order by a.trn_date,a.receipt_no"
+
+    cursor.execute(query)
+    records = cursor.fetchall()
+    result = createResponse(records, cursor.column_names, 1)
+    conn.close()
+    cursor.close()
+    if records==[]:
+        resData= {"status":0, "data":[]}
+    else:
+        resData= {
+        "status":1,
+        "data":result
         }
     return resData
