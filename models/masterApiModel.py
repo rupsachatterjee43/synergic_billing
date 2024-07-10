@@ -66,7 +66,7 @@ async def db_Insert(table_name, fields, values, where, flag):
     except mysql.connector.Error as err:
         # conn.close()
         # cursor.close()
-         res_dt =  {"suc": 0, "msg": err, "lastId":0}
+        res_dt =  {"suc": 0, "msg": err, "lastId":0}
 
     finally:
         return res_dt
