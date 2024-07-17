@@ -276,6 +276,16 @@ class AddStock(BaseModel):
     stock_add:int
     stock_less:int
 
+class StockIn(BaseModel):
+    comp_id:int
+    br_id:int
+    item_id:int
+    in_price:float | None
+    in_cgst:float | None
+    in_sgst:float | None
+    qty:int
+    created_by:str
+
 # ============================================================================================================
 
 class SupplierId(BaseModel):
