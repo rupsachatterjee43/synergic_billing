@@ -269,6 +269,11 @@ class Stock(BaseModel):
     comp_id:int
     item_id:int
 
+class Fetch(BaseModel):
+    comp_id:int
+    br_id:int
+    item_id:int
+
 class AddStock(BaseModel):
     comp_id:int
     br_id:int
@@ -284,6 +289,15 @@ class StockIn(BaseModel):
     in_cgst:float | None
     in_sgst:float | None
     qty:int
+    created_by:str
+
+class StockOut(BaseModel):
+    comp_id:int
+    br_id:int
+    item_id:int
+    qty:int
+    damage_flag:str
+    remarks:str | None
     created_by:str
 
 # ============================================================================================================
