@@ -1,8 +1,8 @@
 from fastapi import APIRouter
 from models.master_model import createResponse
 from models.masterApiModel import db_select, db_Insert
-from models.admin_form_model import SaleReport,CollectionReport,PayModeReport,UserWiseReport,GSTstatement,RefundReport,CreditReport,ItemReport,CancelReport,DaybookReport,CustomerLedger,RecveryReport,DueReport
-
+from models.admin_form_model import SaleReport,CollectionReport,PayModeReport,UserWiseReport,GSTstatement,RefundReport,CreditReport,ItemReport,CancelReport,DaybookReport,CustomerLedger,RecveryReport,DueReport,dashboard
+from datetime import date
 reportRouter = APIRouter()
 
 #======================================================================================================
@@ -255,3 +255,19 @@ async def due_report(data:DueReport):
     
     return res_dt
 
+# =====================================================================================================
+
+# @reportRouter.post('/stock_InOut_report')
+# async def due_report(from_date:date, to_date:date):
+#     select = f"a.stock, b.qty Stock_Out, c.qty Stock_In"
+#     table_name = "td_stock a, td_return b, td_stock_in c"
+#     where = f""
+#     order = ""
+#     flag = 1
+#     res_dt = await db_select(select,table_name,where,order,flag)
+    
+#     return res_dt
+
+# **************
+# SELECT a.item_id, a.stock, SUM(b.qty) stock_in, SUM(c.qty) stock_out FROM td_stock a, td_stock_in b, td_return c WHERE a.comp_id=b.comp_id AND b.comp_id=c.comp_id AND a.br_id=b.br_id and b.br_id=c.br_id AND a.item_id=b.item_id AND b.item_id=c.item_id AND a.comp_id=1 AND a.br_id=1 AND c.item_id=1;
+# **************

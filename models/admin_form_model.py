@@ -147,6 +147,11 @@ class DueReport(BaseModel):
     br_id:int
     date:date
 
+class dashboard(BaseModel):
+    comp_id:int
+    from_date:date
+    to_date:date
+
 # ======================================================================================================
 # Search By Date, Phone and Item
 

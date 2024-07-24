@@ -464,3 +464,38 @@ async def edit_item_dtls(data:EditItemDtls):
         res_dt2 = await db_Insert(table_name2,fields2,values2,where2,flag2)
 
     return res_dt2
+
+@superadminRouter.get('/S_Admin/item_stock')
+async def item_stock_dtls(comp_id:int,br_id:int):
+    select = f"a.id item_id, a.item_name, b.stock"
+    table_name = "md_items a, td_stock b"
+    where = f"a.id=b.item_id and a.comp_id=b.comp_id and a.comp_id = {comp_id} and b.br_id = {br_id}"
+    order = f''
+    flag = 1
+    res_dt = await db_select(select,table_name,where,order,flag)
+    return res_dt
+
+@superadminRouter.post('/S_Admin/stock_in')
+async def stock_in(
+    comp_id: int = Form(...),
+    br_id: int = Form(...),
+    # catg_id: int = Form(...),
+    created_by: str = Form(...),
+    file: UploadFile = File
+):
+    current_datetime = datetime.now()
+    formatted_dt = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
+    contents = await file.read()
+    df = read_excel(BytesIO(contents))
+    data = df.to_dict(orient="records")
+
+    for row in data:
+        print(row)
+        table_name = "td_stock"
+        fields = f"stock = stock+{row['stock']}, created_by='{created_by}', created_dt='{formatted_dt}'"
+        values = None
+        where = f"comp_id = {comp_id} and br_id = {br_id} and item_id = {row['item_id']}"
+        flag = 1
+        res_dt= await db_Insert(table_name,fields,values,where,flag)
+
+    return res_dt
