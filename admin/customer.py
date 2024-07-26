@@ -57,4 +57,19 @@ async def add_edit_customer(data:AddEditCustomer):
     
     return res_dt
 
+
+# @customerRouter.post('/add_edit_customer')
+# async def add_edit_customer(data:AddEditCustomer):
+
+#     current_datetime = datetime.now()
+#     formatted_dt = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
+#     table_name = "md_customer"
+#     fields = f"cust_name = '{data.cust_name}', phone_no = '{data.phone_no}', bill_address = '{data.bill_address}', delivery_address = '{data.delivery_address}', email_id = '{data.email_id}', pay_mode = '{data.pay_mode}', date_of_birth = '{data.date_of_birth}', gender = '{data.gender}', modified_by = 'Admin', modified_dt = '{formatted_dt}'" if data.cust_id > 0 else f"comp_id, cust_name, phone_no, bill_address, delivery_address, email_id, pay_mode, date_of_birth, gender, created_by, created_dt"
+#     values = None if data.cust_id>0 else f"{data.comp_id}, '{data.cust_name}', '{data.phone_no}', '{data.bill_address}', '{data.delivery_address}', '{data.email_id}', '{data.pay_mode}', '{data.date_of_birth}', '{data.gender}', 'Admin', '{formatted_dt}'"
+#     where = f"comp_id={data.comp_id} and cust_id={data.cust_id}" if data.cust_id>0 else None
+#     flag = 1 if data.cust_id>0 else 0
+#     res_dt = await db_Insert(table_name,fields,values,where,flag)
+
+#     return res_dt
+
 # ============================================================================================================

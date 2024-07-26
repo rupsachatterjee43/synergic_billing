@@ -8,23 +8,36 @@ reportRouter = APIRouter()
 #======================================================================================================
 # Sale Report
 
+# @reportRouter.post('/sale_report')
+# async def sale_report(sale:SaleReport):
+#     if ({sale.br_id}.pop())>0:
+#         select = "a.cust_name,a.phone_no,a.receipt_no,a.trn_date,count(b.receipt_no)no_of_items, SUM(b.qty) qty,a.price price,a.discount_amt discount_amt,a.cgst_amt cgst_amt,a.sgst_amt sgst_amt,a.round_off rount_off,a.net_amt,IF(a.pay_mode='C', 'Cash', IF(a.pay_mode='U', 'UPI', IF(a.pay_mode='D', 'Card', IF(a.pay_mode='R', 'Credit', '')))) pay_mode,c.user_name created_by"
+#         table_name = "td_receipt a,td_item_sale b,md_user c"
+#         where = f"a.receipt_no = b.receipt_no AND a.trn_date BETWEEN '{sale.from_date}' AND '{sale.to_date}' AND b.comp_id = {sale.comp_id} AND b.br_id = {sale.br_id} AND a.created_by=c.user_id and a.receipt_no not in (select receipt_no from td_receipt_cancel_new where date(cancelled_dt) between '{sale.from_date}' and '{sale.to_date}')"
+#         order = "Group BY a.cust_name,a.phone_no,a.receipt_no,a.trn_date,a.price,a.discount_amt,a.cgst_amt,a.sgst_amt,a.round_off,a.net_amt,a.pay_mode,a.created_by Order by a.trn_date,a.receipt_no"
+#         flag = 1
+#         res_dt = await db_select(select,table_name,where,order,flag)
+    
+#     else:
+#         select = "a.cust_name,a.phone_no,a.receipt_no,a.trn_date,count(b.receipt_no)no_of_items, SUM(b.qty) qty,a.price price,a.discount_amt discount_amt,a.cgst_amt cgst_amt,a.sgst_amt sgst_amt,a.round_off rount_off,a.net_amt,IF(a.pay_mode='C', 'Cash', IF(a.pay_mode='U', 'UPI', IF(a.pay_mode='D', 'Card', IF(a.pay_mode='R', 'Credit', '')))) pay_mode,c.user_name created_by"
+#         table_name = "td_receipt a,td_item_sale b,md_user c"
+#         where = f"a.receipt_no = b.receipt_no AND a.trn_date BETWEEN '{sale.from_date}' AND '{sale.to_date}' AND b.comp_id = {sale.comp_id} AND a.created_by=c.user_id and a.receipt_no not in (select receipt_no from td_receipt_cancel_new where date(cancelled_dt) between '{sale.from_date}' and '{sale.to_date}')"
+#         order = "Group BY a.cust_name,a.phone_no,a.receipt_no,a.trn_date,a.price,a.discount_amt,a.cgst_amt,a.sgst_amt,a.round_off,a.net_amt,a.pay_mode,a.created_by Order by a.trn_date,a.receipt_no"
+#         flag = 1
+#         res_dt = await db_select(select,table_name,where,order,flag)
+
+#     return res_dt
+
+
 @reportRouter.post('/sale_report')
 async def sale_report(sale:SaleReport):
-    if ({sale.br_id}.pop())>0:
-        select = "a.cust_name,a.phone_no,a.receipt_no,a.trn_date,count(b.receipt_no)no_of_items, SUM(b.qty) qty,a.price price,a.discount_amt discount_amt,a.cgst_amt cgst_amt,a.sgst_amt sgst_amt,a.round_off rount_off,a.net_amt,IF(a.pay_mode='C', 'Cash', IF(a.pay_mode='U', 'UPI', IF(a.pay_mode='D', 'Card', IF(a.pay_mode='R', 'Credit', '')))) pay_mode,c.user_name created_by"
-        table_name = "td_receipt a,td_item_sale b,md_user c"
-        where = f"a.receipt_no = b.receipt_no AND a.trn_date BETWEEN '{sale.from_date}' AND '{sale.to_date}' AND b.comp_id = {sale.comp_id} AND b.br_id = {sale.br_id} AND a.created_by=c.user_id and a.receipt_no not in (select receipt_no from td_receipt_cancel_new where date(cancelled_dt) between '{sale.from_date}' and '{sale.to_date}')"
-        order = "Group BY a.cust_name,a.phone_no,a.receipt_no,a.trn_date,a.price,a.discount_amt,a.cgst_amt,a.sgst_amt,a.round_off,a.net_amt,a.pay_mode,a.created_by Order by a.trn_date,a.receipt_no"
-        flag = 1
-        res_dt = await db_select(select,table_name,where,order,flag)
     
-    else:
-        select = "a.cust_name,a.phone_no,a.receipt_no,a.trn_date,count(b.receipt_no)no_of_items, SUM(b.qty) qty,a.price price,a.discount_amt discount_amt,a.cgst_amt cgst_amt,a.sgst_amt sgst_amt,a.round_off rount_off,a.net_amt,IF(a.pay_mode='C', 'Cash', IF(a.pay_mode='U', 'UPI', IF(a.pay_mode='D', 'Card', IF(a.pay_mode='R', 'Credit', '')))) pay_mode,c.user_name created_by"
-        table_name = "td_receipt a,td_item_sale b,md_user c"
-        where = f"a.receipt_no = b.receipt_no AND a.trn_date BETWEEN '{sale.from_date}' AND '{sale.to_date}' AND b.comp_id = {sale.comp_id} AND a.created_by=c.user_id and a.receipt_no not in (select receipt_no from td_receipt_cancel_new where date(cancelled_dt) between '{sale.from_date}' and '{sale.to_date}')"
-        order = "Group BY a.cust_name,a.phone_no,a.receipt_no,a.trn_date,a.price,a.discount_amt,a.cgst_amt,a.sgst_amt,a.round_off,a.net_amt,a.pay_mode,a.created_by Order by a.trn_date,a.receipt_no"
-        flag = 1
-        res_dt = await db_select(select,table_name,where,order,flag)
+    select = "a.cust_name,a.phone_no,a.receipt_no,a.trn_date,count(b.receipt_no)no_of_items, SUM(b.qty) qty,a.price price,a.discount_amt discount_amt,a.cgst_amt cgst_amt,a.sgst_amt sgst_amt,a.round_off rount_off,a.net_amt,IF(a.pay_mode='C', 'Cash', IF(a.pay_mode='U', 'UPI', IF(a.pay_mode='D', 'Card', IF(a.pay_mode='R', 'Credit', '')))) pay_mode,c.user_name created_by"
+    table_name = "td_receipt a,td_item_sale b,md_user c"
+    where = f"a.receipt_no = b.receipt_no AND a.trn_date BETWEEN '{sale.from_date}' AND '{sale.to_date}' AND b.comp_id = {sale.comp_id} AND b.br_id = {sale.br_id} AND a.created_by=c.user_id and a.receipt_no not in (select receipt_no from td_receipt_cancel_new where date(cancelled_dt) between '{sale.from_date}' and '{sale.to_date}')" if sale.br_id > 0 else f"a.receipt_no = b.receipt_no AND a.trn_date BETWEEN '{sale.from_date}' AND '{sale.to_date}' AND b.comp_id = {sale.comp_id} AND a.created_by=c.user_id and a.receipt_no not in (select receipt_no from td_receipt_cancel_new where date(cancelled_dt) between '{sale.from_date}' and '{sale.to_date}')"
+    order = "Group BY a.cust_name,a.phone_no,a.receipt_no,a.trn_date,a.price,a.discount_amt,a.cgst_amt,a.sgst_amt,a.round_off,a.net_amt,a.pay_mode,a.created_by Order by a.trn_date,a.receipt_no"
+    flag = 1
+    res_dt = await db_select(select,table_name,where,order,flag)
 
     return res_dt
 
@@ -102,69 +115,107 @@ async def gst_statement(gst:GSTstatement):
 # ==================================================================================================
 # GST Summary
 
+# @reportRouter.post('/gst_summary')
+# async def gst_summary(gst:GSTstatement):
+#     if ({gst.br_id}.pop())>0:
+#         select = "cgst_prtg, SUM(cgst_amt)cgst_amt, SUM(sgst_amt)sgst_amt, SUM(cgst_amt) + SUM(sgst_amt)total_tax"
+#         table_name = "td_item_sale"
+#         where = f"comp_id = {gst.comp_id} AND br_id = {gst.br_id} AND trn_date BETWEEN '{gst.from_date}' AND '{gst.to_date}'"
+#         order = "GROUP BY cgst_prtg"
+#         flag = 1
+#         res_dt = await db_select(select,table_name,where,order,flag)
+    
+#     else:
+#         select = "cgst_prtg, SUM(cgst_amt)cgst_amt, SUM(sgst_amt)sgst_amt, SUM(cgst_amt) + SUM(sgst_amt)total_tax"
+#         table_name = "td_item_sale"
+#         where = f"comp_id = {gst.comp_id} AND trn_date BETWEEN '{gst.from_date}' AND '{gst.to_date}'"
+#         order = "GROUP BY cgst_prtg"
+#         flag = 1
+#         res_dt = await db_select(select,table_name,where,order,flag)
+
+#     return res_dt
+
+
 @reportRouter.post('/gst_summary')
 async def gst_summary(gst:GSTstatement):
-    if ({gst.br_id}.pop())>0:
-        select = "cgst_prtg, SUM(cgst_amt)cgst_amt, SUM(sgst_amt)sgst_amt, SUM(cgst_amt) + SUM(sgst_amt)total_tax"
-        table_name = "td_item_sale"
-        where = f"comp_id = {gst.comp_id} AND br_id = {gst.br_id} AND trn_date BETWEEN '{gst.from_date}' AND '{gst.to_date}'"
-        order = "GROUP BY cgst_prtg"
-        flag = 1
-        res_dt = await db_select(select,table_name,where,order,flag)
-    
-    else:
-        select = "cgst_prtg, SUM(cgst_amt)cgst_amt, SUM(sgst_amt)sgst_amt, SUM(cgst_amt) + SUM(sgst_amt)total_tax"
-        table_name = "td_item_sale"
-        where = f"comp_id = {gst.comp_id} AND trn_date BETWEEN '{gst.from_date}' AND '{gst.to_date}'"
-        order = "GROUP BY cgst_prtg"
-        flag = 1
-        res_dt = await db_select(select,table_name,where,order,flag)
+
+    select = "cgst_prtg, SUM(cgst_amt)cgst_amt, SUM(sgst_amt)sgst_amt, SUM(cgst_amt) + SUM(sgst_amt)total_tax"
+    table_name = "td_item_sale"
+    where = f"comp_id = {gst.comp_id} AND br_id = {gst.br_id} AND trn_date BETWEEN '{gst.from_date}' AND '{gst.to_date}'" if gst.br_id > 0 else f"comp_id = {gst.comp_id} AND trn_date BETWEEN '{gst.from_date}' AND '{gst.to_date}'"
+    order = "GROUP BY cgst_prtg"
+    flag = 1
+    res_dt = await db_select(select,table_name,where,order,flag)
 
     return res_dt
 
 # ==================================================================================================
 #  Refund Report Details 
 
+# @reportRouter.post('/refund_report')
+# async def refund_report(data:RefundReport):
+#     if ({data.br_id}.pop())>0:
+#         select = "a.cust_name, a.phone_no, a.refund_rcpt_no, a.refund_dt,  count(b.refund_rcpt_no)no_of_items, SUM(b.qty) qty, a.price, a.discount_amt, a.cgst_amt, a.sgst_amt,a.round_off, a.net_amt, a.refund_by"
+#         table_name = "td_refund_bill a, td_refund_item b"
+#         where = f"a.refund_rcpt_no = b.refund_rcpt_no AND a.refund_dt BETWEEN '{data.from_date}' AND '{data.to_date}' AND b.comp_id = {data.comp_id} AND b.br_id = {data.br_id}"
+#         order = "group by a.cust_name, a.phone_no, a.refund_rcpt_no, a.refund_dt, a.refund_by"
+#         flag = 1
+#         res_dt = await db_select(select,table_name,where,order,flag)
+    
+#     else:
+#         select = "a.cust_name, a.phone_no, a.refund_rcpt_no, a.refund_dt,  count(b.refund_rcpt_no)no_of_items, SUM(b.qty) qty, a.price, a.discount_amt, a.cgst_amt, a.sgst_amt,a.round_off, a.net_amt, a.refund_by"
+#         table_name = "td_refund_bill a, td_refund_item b"
+#         where = f"a.refund_rcpt_no = b.refund_rcpt_no AND a.refund_dt BETWEEN '{data.from_date}' AND '{data.to_date}' AND b.comp_id = {data.comp_id}"
+#         order = "group by a.cust_name, a.phone_no, a.refund_rcpt_no, a.refund_dt, a.refund_by"
+#         flag = 1
+#         res_dt = await db_select(select,table_name,where,order,flag)
+
+#     return res_dt
+
+
 @reportRouter.post('/refund_report')
 async def refund_report(data:RefundReport):
-    if ({data.br_id}.pop())>0:
-        select = "a.cust_name, a.phone_no, a.refund_rcpt_no, a.refund_dt,  count(b.refund_rcpt_no)no_of_items, SUM(b.qty) qty, a.price, a.discount_amt, a.cgst_amt, a.sgst_amt,a.round_off, a.net_amt, a.refund_by"
-        table_name = "td_refund_bill a, td_refund_item b"
-        where = f"a.refund_rcpt_no = b.refund_rcpt_no AND a.refund_dt BETWEEN '{data.from_date}' AND '{data.to_date}' AND b.comp_id = {data.comp_id} AND b.br_id = {data.br_id}"
-        order = "group by a.cust_name, a.phone_no, a.refund_rcpt_no, a.refund_dt, a.refund_by"
-        flag = 1
-        res_dt = await db_select(select,table_name,where,order,flag)
-    
-    else:
-        select = "a.cust_name, a.phone_no, a.refund_rcpt_no, a.refund_dt,  count(b.refund_rcpt_no)no_of_items, SUM(b.qty) qty, a.price, a.discount_amt, a.cgst_amt, a.sgst_amt,a.round_off, a.net_amt, a.refund_by"
-        table_name = "td_refund_bill a, td_refund_item b"
-        where = f"a.refund_rcpt_no = b.refund_rcpt_no AND a.refund_dt BETWEEN '{data.from_date}' AND '{data.to_date}' AND b.comp_id = {data.comp_id}"
-        order = "group by a.cust_name, a.phone_no, a.refund_rcpt_no, a.refund_dt, a.refund_by"
-        flag = 1
-        res_dt = await db_select(select,table_name,where,order,flag)
+   
+    select = "a.cust_name, a.phone_no, a.refund_rcpt_no, a.refund_dt,  count(b.refund_rcpt_no)no_of_items, SUM(b.qty) qty, a.price, a.discount_amt, a.cgst_amt, a.sgst_amt,a.round_off, a.net_amt, a.refund_by"
+    table_name = "td_refund_bill a, td_refund_item b"
+    where = f"a.refund_rcpt_no = b.refund_rcpt_no AND a.refund_dt BETWEEN '{data.from_date}' AND '{data.to_date}' AND b.comp_id = {data.comp_id} AND b.br_id = {data.br_id}" if data.br_id>0 else f"a.refund_rcpt_no = b.refund_rcpt_no AND a.refund_dt BETWEEN '{data.from_date}' AND '{data.to_date}' AND b.comp_id = {data.comp_id}"
+    order = "group by a.cust_name, a.phone_no, a.refund_rcpt_no, a.refund_dt, a.refund_by"
+    flag = 1
+    res_dt = await db_select(select,table_name,where,order,flag)
 
     return res_dt
-
 # ======================================================================================================
 #  Credit Report Details 
 
+# @reportRouter.post('/credit_report')
+# async def credit_report(data:CreditReport):
+#     if ({data.br_id}.pop())>0:
+#         select = "trn_date, cust_name, phone_no, receipt_no, net_amt, received_amt as paid_amt, net_amt-received_amt as due_amt, created_by"
+#         table_name = "td_receipt"
+#         where = f"pay_mode = 'R' and net_amt-received_amt > 0 AND trn_date BETWEEN '{data.from_date}' AND '{data.to_date}' AND comp_id = {data.comp_id} AND br_id = {data.br_id}"
+#         order = "group by phone_no,receipt_no,trn_date,created_by"
+#         flag = 1
+#         res_dt = await db_select(select,table_name,where,order,flag)
+    
+#     else:
+#         select = "trn_date, cust_name, phone_no, receipt_no, net_amt, received_amt as paid_amt, net_amt-received_amt as due_amt, created_by"
+#         table_name = "td_receipt"
+#         where = f"pay_mode = 'R' and net_amt-received_amt > 0 AND trn_date BETWEEN '{data.from_date}' AND '{data.to_date}' AND comp_id = {data.comp_id}"
+#         order = "group by phone_no,receipt_no,trn_date,created_by"
+#         flag = 1
+#         res_dt = await db_select(select,table_name,where,order,flag)
+
+#     return res_dt
+
+
 @reportRouter.post('/credit_report')
 async def credit_report(data:CreditReport):
-    if ({data.br_id}.pop())>0:
-        select = "trn_date, cust_name, phone_no, receipt_no, net_amt, received_amt as paid_amt, net_amt-received_amt as due_amt, created_by"
-        table_name = "td_receipt"
-        where = f"pay_mode = 'R' and net_amt-received_amt > 0 AND trn_date BETWEEN '{data.from_date}' AND '{data.to_date}' AND comp_id = {data.comp_id} AND br_id = {data.br_id}"
-        order = "group by phone_no,receipt_no,trn_date,created_by"
-        flag = 1
-        res_dt = await db_select(select,table_name,where,order,flag)
     
-    else:
-        select = "trn_date, cust_name, phone_no, receipt_no, net_amt, received_amt as paid_amt, net_amt-received_amt as due_amt, created_by"
-        table_name = "td_receipt"
-        where = f"pay_mode = 'R' and net_amt-received_amt > 0 AND trn_date BETWEEN '{data.from_date}' AND '{data.to_date}' AND comp_id = {data.comp_id}"
-        order = "group by phone_no,receipt_no,trn_date,created_by"
-        flag = 1
-        res_dt = await db_select(select,table_name,where,order,flag)
+    select = "trn_date, cust_name, phone_no, receipt_no, net_amt, received_amt as paid_amt, net_amt-received_amt as due_amt, created_by"
+    table_name = "td_receipt"
+    where = f"pay_mode = 'R' and net_amt-received_amt > 0 AND trn_date BETWEEN '{data.from_date}' AND '{data.to_date}' AND comp_id = {data.comp_id} AND br_id = {data.br_id}" if data.br_id>0 else f"pay_mode = 'R' and net_amt-received_amt > 0 AND trn_date BETWEEN '{data.from_date}' AND '{data.to_date}' AND comp_id = {data.comp_id}"
+    order = "group by phone_no,receipt_no,trn_date,created_by"
+    flag = 1
+    res_dt = await db_select(select,table_name,where,order,flag)
 
     return res_dt
 
