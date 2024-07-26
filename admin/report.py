@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 from models.master_model import createResponse
 from models.masterApiModel import db_select, db_Insert
-from models.admin_form_model import SaleReport,CollectionReport,PayModeReport,UserWiseReport,GSTstatement,RefundReport,CreditReport,ItemReport,CancelReport,DaybookReport,CustomerLedger,RecveryReport,DueReport,dashboard
+from models.admin_form_model import UserList,SaleReport,CollectionReport,PayModeReport,UserWiseReport,GSTstatement,RefundReport,CreditReport,ItemReport,CancelReport,DaybookReport,CustomerLedger,RecveryReport,DueReport,dashboard
 from datetime import date
 reportRouter = APIRouter()
 
@@ -198,7 +198,7 @@ async def cancel_report(data:CancelReport):
     
     return res_dt
 
-#==================================================================================================
+#==========================================================================================================
 # Daybook Report
 
 @reportRouter.post('/daybook_report')
@@ -213,7 +213,7 @@ async def daybook_report(data:DaybookReport):
     
     return res_dt
 
-# ======================================================================================================
+# =========================================================================================================
 # Customer Ledger
 
 @reportRouter.post('/customer_ledger')
@@ -271,3 +271,17 @@ async def due_report(data:DueReport):
 # **************
 # SELECT a.item_id, a.stock, SUM(b.qty) stock_in, SUM(c.qty) stock_out FROM td_stock a, td_stock_in b, td_return c WHERE a.comp_id=b.comp_id AND b.comp_id=c.comp_id AND a.br_id=b.br_id and b.br_id=c.br_id AND a.item_id=b.item_id AND b.item_id=c.item_id AND a.comp_id=1 AND a.br_id=1 AND c.item_id=1;
 # **************
+
+
+# Stock Report
+
+@reportRouter.post('/stock_report')
+async def stock_report(data:UserList):
+    select = "a.id item_id,a.item_name,b.stock"
+    table_name = "md_items a, td_stock b"
+    where = f"a.id=b.item_id and a.comp_id=b.comp_id and a.comp_id = {data.comp_id} and b.br_id = {data.br_id}"
+    order = ""
+    flag = 1
+    res_dt = await db_select(select,table_name,where,order,flag)
+
+    return res_dt
