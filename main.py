@@ -12,8 +12,7 @@ app.mount("/uploads", StaticFiles(directory="upload_file"), name="uploads")
 
 
 origins = [
-    "http://localhost",
-    "http://localhost:3000",
+    "*",
 ]
 
 if __name__ == "__main__":

@@ -399,7 +399,7 @@ async def insert_excel(
     created_by: str = Form(...),
     file: UploadFile = File
 ):
-    
+    res_dt3 = []
     current_datetime = datetime.now()
     formatted_dt = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
     contents = await file.read()
@@ -432,6 +432,7 @@ async def insert_excel(
                 order = f''
                 flag = 1
                 res_dt2 = await db_select(select,table_name,where,order,flag)
+                print(res_dt2)
                 if res_dt2["suc"]>0:
                     for i in res_dt2["msg"]:
                         
