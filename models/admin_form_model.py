@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 from datetime import date
 from fastapi import File, UploadFile, Form
-from typing import Annotated, Union
+from typing import Annotated, Union, Optional
 
 # ======================================================================================================
 # Common Model 
@@ -355,13 +355,14 @@ class AddEditLocation(BaseModel):
 class AddEditCompany(BaseModel):
     id:int
     company_name:str
-    address:str
+    mode:str
+    address:Optional[str] = None
     location:int | None
-    contact_person:str | None
-    phone_no:int 
-    email_id:str 
-    logo:str | None
-    web_portal:str | None
+    contact_person:Optional[str] = None
+    phone_no:int | None
+    email_id:Optional[str] = None
+    # logo:str | None 
+    web_portal:Optional[str] = None
     active_flag:str
     max_user:int
     user_id:str
@@ -374,8 +375,8 @@ class AddEditUser(BaseModel):
     user_name:str
     user_type:str
     user_id:str
-    phone_no:int
-    email_id:str
+    # phone_no:int
+    # email_id:str
     # device_id:str | None
     password:str
     active_flag:str
@@ -392,11 +393,11 @@ class AddEditOutletS(BaseModel):
     br_id:int
     comp_id:int
     branch_name:str
-    branch_address:str
-    location:int
-    contact_person:str
-    phone_no:int
-    email_id:str
+    branch_address:str | None
+    location:int | None
+    contact_person:str | None
+    phone_no:int | None
+    email_id:str | None
     created_by:str
 
 # -------------------Manage Header Footer-------------------

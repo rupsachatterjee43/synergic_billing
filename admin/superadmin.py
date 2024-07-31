@@ -4,6 +4,7 @@ from pathlib import Path
 from models.master_model import createResponse
 from models.masterApiModel import db_select, db_Insert
 from models.admin_form_model import AddEditLocation,AddEditCompany,AddEditUser,AddEditOutletS,OneOutlet,AddHeaderFooter,AddEditSettings,AddEditUnit,Excel,EditItemDtls
+from utils import get_hashed_password,verify_password
 from datetime import datetime
 from typing import Annotated, Union, Optional
 from io import BytesIO
@@ -74,7 +75,7 @@ async def add_edit_location(data:AddEditLocation):
 # -------------------Select Company-----------------
 @superadminRouter.get('/S_Admin/select_shop')
 async def select_shop(id:int):
-    select = "id,company_name,address,location,phone_no,email_id,active_flag,max_user"
+    select = "id,company_name,mode,address,location,contact_person,phone_no,email_id,web_portal,active_flag,max_user"
     table_name = "md_company"
     where = f"id={id}" if id>0 else f""
     order = f""
@@ -88,13 +89,13 @@ async def add_edit_shop(data:AddEditCompany):
     current_datetime = datetime.now()
     formatted_dt = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
     table_name = f"md_company"
-    fields = f"company_name='{data.company_name}', address='{data.address}', location={data.location}, contact_person='{data.contact_person}', phone_no={data.phone_no}, email_id='{data.email_id}', logo='{data.logo}',web_portal='{data.web_portal}',active_flag='{data.active_flag}',max_user={data.max_user},modified_by='{data.user_id}', modified_dt='{formatted_dt}'" if data.id>0 else f"company_name,address,location,contact_person,phone_no,email_id,logo,web_portal,active_flag,max_user,created_by, created_dt"
-    values = None if data.id>0 else f"'{data.company_name}','{data.address}',{data.location},'{data.contact_person}',{data.phone_no},'{data.email_id}','{data.logo}','{data.web_portal}','{data.active_flag}',{data.max_user},'{data.user_id}', '{formatted_dt}'"
+    fields = f"company_name='{data.company_name}', mode='{data.mode}', address='{data.address}', location={data.location}, contact_person='{data.contact_person}', phone_no={data.phone_no}, email_id='{data.email_id}',web_portal='{data.web_portal}',active_flag='{data.active_flag}',max_user={data.max_user},modified_by='{data.user_id}', modified_dt='{formatted_dt}'" if data.id>0 else f"company_name,address,location,contact_person,phone_no,email_id,web_portal,active_flag,max_user,created_by, created_dt"
+    values = None if data.id>0 else f"'{data.company_name}','{data.address}',{data.location},'{data.contact_person}',{data.phone_no},'{data.email_id}','{data.web_portal}','{data.active_flag}',{data.max_user},'{data.user_id}', '{formatted_dt}'"
     where = f"id = {data.id}" if data.id>0 else None
     order = ""
     flag = 1 if data.id>0 else 0
     res_dt = await db_Insert(table_name,fields,values,where,flag)
-    
+    print(res_dt["lastId"],"22222222")
     return res_dt
 
 # =======================================================================================================
@@ -111,14 +112,40 @@ async def select_user(id:int):
     res_dt = await db_select(select,table_name,where,order,flag)
     return res_dt
 
+@superadminRouter.get('/S_Admin/select_user_by_shop')
+async def select_user(comp_id:int,br_id:int):
+    select = "id,comp_id,br_id,user_name,user_type,user_id,phone_no,email_id,active_flag,login_flag"
+    table_name = "md_user"
+    where = f"comp_id={comp_id} and br_id={br_id}"
+    order = f"ORDER BY user_type"
+    flag = 1
+    res_dt = await db_select(select,table_name,where,order,flag)
+    return res_dt
+
 # ---------------Add And Edit User---------------
 @superadminRouter.post('/S_Admin/add_edit_user')
 async def add_edit_user(data:AddEditUser):
     current_datetime = datetime.now()
     formatted_dt = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
+    pwd = get_hashed_password(data.password)
+
     table_name = f"md_user"
-    fields = f"comp_id={data.comp_id}, br_id={data.br_id}, user_name='{data.user_name}', user_type='{data.user_type}', user_id='{data.user_id}', phone_no={data.phone_no}, email_id='{data.email_id}', device_id='0',password='{data.password}',active_flag='{data.active_flag}',login_flag='{data.login_flag}',modified_by='{data.created_by}', modified_dt='{formatted_dt}'" if data.id>0 else f"comp_id,br_id,user_name,user_type,user_id,phone_no,email_id,device_id,password,active_flag,login_flag,created_by, created_dt"
-    values = None if data.id>0 else f"{data.comp_id},{data.br_id},'{data.user_name}','{data.user_type}','{data.user_id}',{data.phone_no},'{data.email_id}','0','{data.password}','{data.active_flag}','{data.login_flag}','{data.created_by}', '{formatted_dt}'"
+
+    # fields = f"comp_id={data.comp_id}, br_id={data.br_id}, user_name='{data.user_name}', user_type='{data.user_type}', user_id='{data.user_id}', phone_no={data.phone_no}, email_id='{data.email_id}', device_id='0',password='{pwd}',active_flag='{data.active_flag}',login_flag='{data.login_flag}',modified_by='{data.created_by}', modified_dt='{formatted_dt}'" if data.id>0 else f"comp_id,br_id,user_name,user_type,user_id,phone_no,email_id,device_id,password,active_flag,login_flag,created_by, created_dt"
+    # values = None if data.id>0 else f"{data.comp_id},{data.br_id},'{data.user_name}','{data.user_type}','{data.user_id}',{data.phone_no},'{data.email_id}','0','{pwd}','{data.active_flag}','{data.login_flag}','{data.created_by}', '{formatted_dt}'"
+
+    if data.user_type == 'A':
+
+        fields = f"comp_id={data.comp_id}, br_id={data.br_id}, user_name='{data.user_name}', user_type='{data.user_type}', user_id='{data.user_id}', email_id='{data.user_id}', device_id='0', password='{pwd}',active_flag='{data.active_flag}',login_flag='{data.login_flag}',modified_by='{data.created_by}', modified_dt='{formatted_dt}'" if data.id>0 else f"comp_id,br_id,user_name,user_type,user_id,email_id,device_id,password,active_flag,login_flag,created_by, created_dt"
+
+        values = None if data.id>0 else f"{data.comp_id},{data.br_id},'{data.user_name}','{data.user_type}','{data.user_id}','{data.user_id}','0','{pwd}','Y','N','{data.created_by}', '{formatted_dt}'"
+
+    else:
+
+        fields = f"comp_id={data.comp_id}, br_id={data.br_id}, user_name='{data.user_name}', user_type='{data.user_type}', user_id='{data.user_id}', phone_no='{data.user_id}', device_id='0', password='{pwd}',active_flag='{data.active_flag}',login_flag='{data.login_flag}',modified_by='{data.created_by}', modified_dt='{formatted_dt}'" if data.id>0 else f"comp_id,br_id,user_name,user_type,user_id,phone_no,device_id,password,active_flag,login_flag,created_by, created_dt"
+
+        values = None if data.id>0 else f"{data.comp_id},{data.br_id},'{data.user_name}','{data.user_type}','{data.user_id}','{data.user_id}','0','{pwd}','Y','N','{data.created_by}', '{formatted_dt}'"
+
     where = f"id = {data.id}" if data.id>0 else None
     order = ""
     flag = 1 if data.id>0 else 0
