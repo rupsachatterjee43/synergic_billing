@@ -246,9 +246,9 @@ async def add_edit_header_footer(data:AddHeaderFooter):
 
 @superadminRouter.get('/S_Admin/select_settings')
 async def select_settings(comp_id:int):
-    select = "comp_id,rcv_cash_flag,rcpt_type,gst_flag,gst_type,unit_flag,cust_inf,pay_mode,discount_flag,stock_flag,discount_type,discount_position,price_type,refund_days,kot_flag"
-    table_name = "md_receipt_settings"
-    where = f"comp_id={comp_id}" if comp_id>0 else f""
+    select = "a.comp_id,b.company_name,a.rcv_cash_flag,a.rcpt_type,a.gst_flag,a.gst_type,a.unit_flag,a.cust_inf,a.pay_mode,a.discount_flag,a.stock_flag,a.discount_type,a.discount_position,a.price_type,a.refund_days,a.kot_flag"
+    table_name = "md_receipt_settings a, md_company b"
+    where = f"a.comp_id=b.id and a.comp_id={comp_id}" if comp_id>0 else f"a.comp_id=b.id"
     order = f""
     flag = 1
     res_dt = await db_select(select,table_name,where,order,flag)
