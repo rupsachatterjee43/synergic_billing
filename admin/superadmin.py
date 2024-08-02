@@ -210,9 +210,9 @@ async def add__edit_outlet(data:AddEditOutletS):
 
 @superadminRouter.get('/S_Admin/select_header_footer')
 async def select_header_footer(comp_id:int):
-    select = "comp_id,header1,on_off_flag1,header2,on_off_flag2,footer1,on_off_flag3,footer2,on_off_flag4"
-    table_name = "md_header_footer"
-    where = f"comp_id={comp_id}" if comp_id>0 else f""
+    select = "a.comp_id,b.company_name,a.header1,a.on_off_flag1,a.header2,a.on_off_flag2,a.footer1,a.on_off_flag3,a.footer2,a.on_off_flag4"
+    table_name = "md_header_footer a, md_company b"
+    where = f"a.comp_id = b.id and a.comp_id={comp_id}" if comp_id>0 else f"a.comp_id=b.id"
     order = f""
     flag = 1
     res_dt = await db_select(select,table_name,where,order,flag)
