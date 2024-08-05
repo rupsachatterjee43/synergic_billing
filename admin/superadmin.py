@@ -1,5 +1,6 @@
 from fastapi import APIRouter, File, UploadFile, Depends, Form
 import pathlib
+import mysql.connector
 from pathlib import Path
 from models.master_model import createResponse
 from models.masterApiModel import db_select, db_Insert
@@ -418,11 +419,11 @@ async def item_detail(comp_id:int,item_id:int):
         
 #     return res_dt2
 
-
-@superadminRouter.post('/S_Admin/insert_excel')
+# *************************************************************************************************************
+@superadminRouter.post('/S_Admin/insert_item_excel')
 async def insert_excel(
     comp_id: int = Form(...),
-    catg_id: int = Form(...),
+    # catg_id: int = Form(...),
     created_by: str = Form(...),
     file: UploadFile = File
 ):
@@ -437,8 +438,8 @@ async def insert_excel(
     # print(df)
     for row in data:
         table_name = "md_items"
-        fields = "comp_id,catg_id,hsn_code,item_name,created_by,created_dt"
-        values =f"{comp_id},{catg_id},{row['hsn_code']},'{row['item_name']}', '{created_by}','{formatted_dt}'"
+        fields = "comp_id,hsn_code,item_name,created_by,created_dt"
+        values =f"{comp_id},{row['hsn_code']},'{row['item_name']}', '{created_by}','{formatted_dt}'"
         where = None
         order = f""
         flag = 0
@@ -471,6 +472,70 @@ async def insert_excel(
                         res_dt3= await db_Insert(table_name2,fields2,values2,where2,flag2)
         
     return res_dt3
+# **************************************************************************************************************
+
+# @superadminRouter.post('/S_Admin/insert_item_excel')
+# async def insert_excel(
+#     comp_id: int = Form(...),
+#     # catg_id: int = Form(...),
+#     created_by: str = Form(...),
+#     file: UploadFile = File
+# ):
+#     res_dt3 = []
+#     current_datetime = datetime.now()
+#     formatted_dt = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
+#     contents = await file.read()
+#     df = read_excel(BytesIO(contents))
+#     # print(df,"==============")
+#     data = df.to_dict(orient="records")
+#     # return data
+#     # print(df)
+#     for row in data:
+#         table_name = "md_items"
+#         fields = "comp_id,hsn_code,item_name,created_by,created_dt"
+#         values =f"{comp_id},{row['hsn_code']},'{row['item_name']}', '{created_by}','{formatted_dt}'"
+#         where = None
+#         order = f""
+#         flag = 0
+#         res_dt = await db_Insert(table_name,fields,values,where,flag)
+        
+#         if res_dt["suc"]>0:
+#             table_name = "md_item_rate"
+#             fields = "item_id,price,discount,cgst,sgst,created_by,created_dt"
+#             values =f"{res_dt['lastId']},{row['price']},{row['discount']},{row['cgst']},{row['sgst']},'{created_by}','{formatted_dt}'"
+#             where = None
+#             order = f""
+#             flag = 0
+#             res_dt1 = await db_Insert(table_name,fields,values,where,flag)
+#             if res_dt1["suc"] > 0:
+#                 select = "id"
+#                 table_name = "md_branch"
+#                 where = f"comp_id = {comp_id}"
+#                 order = f''
+#                 flag = 1
+#                 res_dt2 = await db_select(select,table_name,where,order,flag)
+#                 print(res_dt2)
+#                 if res_dt2["suc"]>0:
+#                     for i in res_dt2["msg"]:
+                        
+#                         table_name2 = "td_stock"
+#                         fields2 = "comp_id, br_id, item_id, stock, created_by, created_dt"
+#                         values2 = f"{comp_id},{i['id']},{res_dt['lastId']},{row['stock']},'{created_by}','{formatted_dt}'"
+#                         where2 = None
+#                         flag2 = 0
+#                         res_dt3= await db_Insert(table_name2,fields2,values2,where2,flag2)
+
+#                         if res_dt3["suc"]>0:
+#                             table_name3 = "td_stock_in"
+#                             fields3 = "comp_id, br_id, in_date, item_id, in_price, in_cgst, in_sgst, qty, created_by, created_at"
+#                             values3 = f"{comp_id},{i['id']},date('{formatted_dt}'),{res_dt['lastId']},{row['price']},{row['cgst']},{row['sgst']},{row['stock']},'{created_by}','{formatted_dt}'"
+#                             where3 = None
+#                             flag3 = 0
+#                             res_dt4= await db_Insert(table_name3,fields3,values3,where3,flag3)
+                
+        
+#     return res_dt4
+# ***************************************************************************************************************
 
 @superadminRouter.post('/S_Admin/edit_item_dtls')
 async def edit_item_dtls(data:EditItemDtls):
@@ -503,6 +568,31 @@ async def item_stock_dtls(comp_id:int,br_id:int):
     res_dt = await db_select(select,table_name,where,order,flag)
     return res_dt
 
+# @superadminRouter.post('/S_Admin/stock_in')
+# async def stock_in(
+#     comp_id: int = Form(...),
+#     br_id: int = Form(...),
+#     # catg_id: int = Form(...),
+#     created_by: str = Form(...),
+#     file: UploadFile = File
+# ):
+#     current_datetime = datetime.now()
+#     formatted_dt = current_datetime.strftime("%Y-%m-%d %H:%M:%S")
+#     contents = await file.read()
+#     df = read_excel(BytesIO(contents))
+#     data = df.to_dict(orient="records")
+
+#     for row in data:
+#         print(row)
+#         table_name = "td_stock"
+#         fields = f"stock = stock+{row['stock']}, created_by='{created_by}', created_dt='{formatted_dt}'"
+#         values = None
+#         where = f"comp_id = {comp_id} and br_id = {br_id} and item_id = {row['item_id']}"
+#         flag = 1
+#         res_dt= await db_Insert(table_name,fields,values,where,flag)
+
+#     return res_dt
+
 @superadminRouter.post('/S_Admin/stock_in')
 async def stock_in(
     comp_id: int = Form(...),
@@ -516,14 +606,34 @@ async def stock_in(
     contents = await file.read()
     df = read_excel(BytesIO(contents))
     data = df.to_dict(orient="records")
+    res_dt3 = {}
 
     for row in data:
-        print(row)
-        table_name = "td_stock"
-        fields = f"stock = stock+{row['stock']}, created_by='{created_by}', created_dt='{formatted_dt}'"
-        values = None
-        where = f"comp_id = {comp_id} and br_id = {br_id} and item_id = {row['item_id']}"
+        select = f"price, cgst, sgst"
+        table_name = "md_item_rate"
+        where = f"item_id = {row['item_id']}"
+        order = f''
         flag = 1
-        res_dt= await db_Insert(table_name,fields,values,where,flag)
+        res_dt = await db_select(select,table_name,where,order,flag)
+       
 
-    return res_dt
+        if res_dt['suc']>0:
+        # print(row)
+            table_name1 = "td_stock"
+            fields1 = f"stock = stock+{row['stock']}, created_by='{created_by}', created_dt='{formatted_dt}'"
+            values1 = None
+            where1 = f"comp_id = {comp_id} and br_id = {br_id} and item_id = {row['item_id']}"
+            flag1 = 1
+            res_dt2= await db_Insert(table_name1,fields1,values1,where1,flag1)
+
+            if res_dt2['suc']>0:
+                try:
+                    table_name2 = "td_stock_in"
+                    fields2 = f"comp_id, br_id, in_date, item_id, in_price, in_cgst, in_sgst, qty"
+                    values2 = f"{comp_id}, {br_id}, date('{formatted_dt}'), {row['item_id']}, {res_dt['msg'][0]['price']}, {res_dt['msg'][0]['cgst']}, {res_dt['msg'][0]['sgst']}, {row['stock']}"
+                    where2 = None
+                    flag2 = 0
+                    res_dt3= await db_Insert(table_name2,fields2,values2,where2,flag2)
+                except mysql.connector.Error as err:
+                    print(err)
+    return res_dt3
