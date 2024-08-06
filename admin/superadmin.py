@@ -4,7 +4,7 @@ import mysql.connector
 from pathlib import Path
 from models.master_model import createResponse
 from models.masterApiModel import db_select, db_Insert
-from models.admin_form_model import AddEditLocation,AddEditCompany,AddEditUser,AddEditOutletS,OneOutlet,AddHeaderFooter,AddEditSettings,AddEditUnit,Excel,EditItemDtls
+from models.admin_form_model import AddEditLocation,AddEditCompany,AddEditUser,AddEditOutletS,OneOutlet,AddHeaderFooter,AddEditSettings,AddEditUnit,Excel,EditItemDtls,Item
 from utils import get_hashed_password,verify_password
 from datetime import datetime
 from typing import Annotated, Union, Optional
@@ -638,9 +638,17 @@ async def stock_in(
                     print(err)
     return res_dt3
 
-# @superadminRouter.post("/S_Admin/list_of_items")
-# async def root(data: Item):
-#     list_names = []
-#     for nm in data.item_id:
-#         list_names.append(nm)
-#     return list_names
+@superadminRouter.post("/S_Admin/list_of_items")
+async def list_of_items(data:Item):
+    res_dt={}
+
+    for nm in data.item_id:
+       
+        table_name = "md_items"
+        fields = f"catg_id={data.catg_id}"
+        values = None
+        where = f"comp_id={data.comp_id} AND id={nm}"
+        flag = 1
+        res_dt= await db_Insert(table_name,fields,values,where,flag)
+        
+    return res_dt

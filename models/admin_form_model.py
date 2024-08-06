@@ -2,7 +2,7 @@ from pydantic import BaseModel
 import json
 from datetime import date
 from fastapi import File, UploadFile, Form
-from typing import Annotated, Union, Optional
+from typing import Annotated, Union, Optional, List
 
 # ======================================================================================================
 # Common Model 
@@ -379,7 +379,7 @@ class AddEditUser(BaseModel):
     # phone_no:int
     # email_id:str
     # device_id:str | None
-    password:str
+    password:str| None
     active_flag:str
     login_flag:str
     created_by:str
@@ -460,6 +460,7 @@ class EditItemDtls(BaseModel):
     sgst:float
     created_by:str
 
-# class Item(BaseModel):
-#     catg_id: int
-#     item_id: list = []
+class Item(BaseModel):
+    comp_id:int
+    catg_id: int
+    item_id: list[int] = []
