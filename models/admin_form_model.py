@@ -1,4 +1,5 @@
 from pydantic import BaseModel
+import json
 from datetime import date
 from fastapi import File, UploadFile, Form
 from typing import Annotated, Union, Optional
@@ -458,3 +459,7 @@ class EditItemDtls(BaseModel):
     cgst:float
     sgst:float
     created_by:str
+
+# class Item(BaseModel):
+#     catg_id: int
+#     item_id: list = []
