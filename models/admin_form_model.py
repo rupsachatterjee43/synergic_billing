@@ -461,6 +461,6 @@ class EditItemDtls(BaseModel):
     created_by:str
 
 class Item(BaseModel):
-    comp_id:int
+    comp_id: int
     catg_id: int
-    item_id: list[int] = []
+    item_id: list = []

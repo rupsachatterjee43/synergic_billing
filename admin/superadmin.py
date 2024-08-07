@@ -638,17 +638,29 @@ async def stock_in(
                     print(err)
     return res_dt3
 
-@superadminRouter.post("/S_Admin/list_of_items")
-async def list_of_items(data:Item):
+@superadminRouter.get('/S_Admin/catg_list')
+async def catg_list(comp_id:int):
+    select = f"sl_no catg_id,category_name"
+    table_name = "md_category"
+    where = f"comp_id = {comp_id}"
+    order = f''
+    flag = 1
+    res_dt = await db_select(select,table_name,where,order,flag)
+    return res_dt
+
+@superadminRouter.post("/S_Admin/categorywise_items")
+async def categorywise_items(data:Item):
     res_dt={}
 
     for nm in data.item_id:
-       
-        table_name = "md_items"
-        fields = f"catg_id={data.catg_id}"
-        values = None
-        where = f"comp_id={data.comp_id} AND id={nm}"
-        flag = 1
-        res_dt= await db_Insert(table_name,fields,values,where,flag)
+        try: 
+            table_name = "md_items"
+            fields = f"catg_id={data.catg_id}"
+            values = None
+            where = f"comp_id={data.comp_id} AND id={nm}"
+            flag = 1
+            res_dt= await db_Insert(table_name,fields,values,where,flag)
+        except mysql.connector.Error as err:
+            res_dt = {"suc": 0, "msg": err}
         
     return res_dt
