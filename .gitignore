@@ -2,5 +2,6 @@ __pycache__
 billing
 billing-env
 config
+cert
 env
 *.zip
